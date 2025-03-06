@@ -155,7 +155,7 @@ function Frontend.Drawer.Open(): ()
 	local Container = Instance.new("CanvasGroup")
 	local UiC = Instance.new("UICorner")
 
-    local TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
+	local TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
 
 	Container.Size = UDim2.new(1, 0, 1, 0)
 	Container.Position = UDim2.new(0, 0, 0, 0)
@@ -259,11 +259,11 @@ function Frontend.Drawer.Close(TimeToComplete: number): ()
 end
 
 function Frontend.Drawer.HoverBegin()
-print("over")
- end
+	print("over")
+end
 
-function Frontend.Drawer.HoverEnd() 
-    print("bye")
+function Frontend.Drawer.HoverEnd()
+	print("bye")
 end
 
 function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, FinalSize: UDim2): ()
