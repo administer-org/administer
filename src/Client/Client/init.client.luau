@@ -32,8 +32,27 @@ end) then
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
 
-Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(function()
-	Frontend.Drawer.Open(2)
+Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
+Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
+Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
+
+Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">Good {({
+	"morning",
+	"afternoon",
+	"evening",
+})[(os.date("*t").hour < 12 and 1 or os.date("*t").hour < 18 and 2 or 3)]}, <b>{Var.Services.Players.LocalPlayer.DisplayName}</b></stroke>. {Utilities.GetSetting(
+	"HomepageGreeting"
+)}`
+Var.MainFrame.Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
+	Var.Services.Players.LocalPlayer.UserId,
+	Enum.ThumbnailType.HeadShot,
+	Enum.ThumbnailSize.Size352x352
+)
+
+task.defer(function()
+	local PromColor = Var.Remotes.GetProminentColorFromUserID:InvokeServer(Var.Services.Players.LocalPlayer.UserId)
+
+	Var.MainFrame.Home.Gradient2.ImageLabel.ImageColor3 = Color3.fromRGB(PromColor[1], PromColor[2], PromColor[3])
 end)
 
 --// Button hooks
@@ -78,25 +97,6 @@ if not Success then
 
 	return
 end
-
-Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">Good {({
-	"morning",
-	"afternoon",
-	"evening",
-})[(os.date("*t").hour < 12 and 1 or os.date("*t").hour < 18 and 2 or 3)]}, <b>{Var.Services.Players.LocalPlayer.DisplayName}</b></stroke>. {Utilities.GetSetting(
-	"HomepageGreeting"
-)}`
-Var.MainFrame.Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
-	Var.Services.Players.LocalPlayer.UserId,
-	Enum.ThumbnailType.HeadShot,
-	Enum.ThumbnailSize.Size352x352
-)
-
-task.defer(function()
-	local PromColor = Var.Remotes.GetProminentColorFromUserID:InvokeServer(Var.Services.Players.LocalPlayer.UserId)
-
-	Var.MainFrame.Home.Gradient2.ImageLabel.ImageColor3 = Color3.fromRGB(PromColor[1], PromColor[2], PromColor[3])
-end)
 
 --// TODO (FloofyPlasma): Give this whole thing a rewrite for type checking...
 

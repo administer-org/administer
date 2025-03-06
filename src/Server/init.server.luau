@@ -99,6 +99,10 @@ NewRemote("CheckForUpdates", true, function(Player)
 	return FrontendAPI.VersionCheck(Player)
 end)
 
+NewRemote("GetProminentColorFromUserID", false, function(Player)
+	return Utils.GetProminentColor(Player.UserId)
+end)
+
 --// Admin routes
 
 Utils.Logging.Print(`[✓] OK in {os.clock() - Var.InitClock["TempInit"]}s`)

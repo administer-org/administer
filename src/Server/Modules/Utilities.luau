@@ -316,19 +316,18 @@ function Utils.Time.FormatSeconds(Seconds: number)
 	end
 end
 
-function Utils.GetGameOwner(IncludeType: boolean): number | { OwnerID: number, MemberType: "User" | "Group" }
+function Utils.GetGameOwner(): { ID: number, MemberType: string }
 	local _, Result, Type = pcall(function()
 		local GameInfo = Var.Services.MarketplaceService:GetProductInfo(game.PlaceId, Enum.InfoType.Asset)
 
 		if GameInfo.Creator.CreatorType == "User" then
-			return GameInfo.Creator.Id, IncludeType and "User" or nil
+			return GameInfo.Creator.Id, "User"
 		else
-			return Var.Services.GroupService:GetGroupInfoAsync(GameInfo.Creator.CreatorTargetId).Owner.Id,
-				IncludeType and "Group" or nil
+			return Var.Services.GroupService:GetGroupInfoAsync(GameInfo.Creator.CreatorTargetId).Owner.Id, "Group"
 		end
 	end)
 
-	return not IncludeType and Result or {
+	return {
 		ID = Result,
 		MemberType = Type,
 	}
@@ -371,6 +370,36 @@ function Utils.GetGameMedia()
 	end
 
 	return Default
+end
+
+function Utils.GetProminentColor(UserID)
+	local s, Content = pcall(function()
+		local Tries = 0
+		local Raw
+
+		repeat
+			Tries += 1
+			local success, data = pcall(function()
+				return Var.Services.HttpService:GetAsync(
+					`{Var.ProxyURL}/thumbnails/v1/users/avatar-headshot?userIds={UserID}&size=420x420&format=Png&isCircular=false`
+				)
+			end)
+			Raw = data
+		until success or Tries == 2
+
+		if Tries == 2 then return { 33, 53, 122 } end
+
+		local Decoded = Var.Services.HttpService:JSONDecode(Raw)
+		local UserURL = Decoded["data"][1]["imageUrl"]
+
+		return Var.Services.HttpService:JSONDecode(
+			Var.Services.HttpService:GetAsync(`{Var.DefaultAppServer}/api/misc/get_prominent_color?image_url={UserURL}`)
+		)
+	end)
+
+	Utils.Logging.Print("Got color", Content)
+
+	return s and Content or { 33, 53, 122 }
 end
 
 function Utils.GetFilteredString(Player: Player, String: string): Types.Response

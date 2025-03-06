@@ -14,6 +14,7 @@ Variables.Config                     = require(script.Parent.Configuration) --//
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
 Variables.EnableFreeAdmin            = false --// Free superadmin for all players. Not recommended for anything other than debugging.
 
+--Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
 Variables.DefaultAppServer           = "https://adm_unstable.notpyx.me" --// Must be an AOS app server instance.
 Variables.ProxyURL                   = "https://rblx.notpyx.me" --// Roblox proxy URL following format {{ domain }}/SUBDOMAIN/path
 Variables.Locales                    = script.Parent.Locales --// Locales location

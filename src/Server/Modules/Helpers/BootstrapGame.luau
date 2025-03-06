@@ -11,15 +11,18 @@ local Var = require(Root.Core.Variables)
 
 return function(): ()
 	Utils.Logging.Print("[-] Performing first-time setup...")
+	local Owner = Utils.GetGameOwner()
 
 	Var.IsFirstBoot = true
-
-	--// Make default Admin rank
 	Admins.Ranks.New({
 		Name = "Administrator",
 		Protected = true,
 		Members = {
-			Utils.GetGameOwner(true),
+			{
+				ID = Owner.ID,
+				MemberType = (Owner.MemberType) :: "Group" | "User",
+				GroupRank = 255,
+			},
 		},
 
 		AllowedApps = {
@@ -30,11 +33,14 @@ return function(): ()
 		ActingUser = 1,
 	})
 
-	Apps.ServerAPI.New(Var.DefaultAppServer)
+	Apps.ServerAPI.New(Var.DefaultAppServer, -1)
 	Apps.ServerAPI.InstallFromServer(
 		Var.DefaultAppServer, --// Assuming this is (hopefully) AOS
 		1
 	)
 
 	Utils.Logging.Print("[✓] Welcome to Administer!")
+	Utils.Logging.Print([[[!] Is Administer making too many print messages?
+Turn off the `misc.Verbose` setting to silence prints!
+]])
 end

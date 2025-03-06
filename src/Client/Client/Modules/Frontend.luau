@@ -150,10 +150,12 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 	end)
 end
 
-function Frontend.Drawer.Open(TimeToComplete: number): ()
+function Frontend.Drawer.Open(): ()
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Instance.new("CanvasGroup")
 	local UiC = Instance.new("UICorner")
+
+    local TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
 
 	Container.Size = UDim2.new(1, 0, 1, 0)
 	Container.Position = UDim2.new(0, 0, 0, 0)
@@ -256,9 +258,13 @@ function Frontend.Drawer.Close(TimeToComplete: number): ()
 	Clone:Destroy()
 end
 
-function Frontend.Drawer.HoverBegin() end
+function Frontend.Drawer.HoverBegin()
+print("over")
+ end
 
-function Frontend.Drawer.HoverEnd() end
+function Frontend.Drawer.HoverEnd() 
+    print("bye")
+end
 
 function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, FinalSize: UDim2): ()
 	local Blocker = Instance.new("Frame")

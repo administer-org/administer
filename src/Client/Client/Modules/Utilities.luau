@@ -12,7 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Frontend = { Log = function(...) end }
 local Var = require(script.Parent.Variables)
 
-function Utilities.GetSetting(Setting: string): string | boolean | nil
+function Utilities.GetSetting(Setting: string): any
 	return ""
 	--[[
 	local SettingModule = Settings
