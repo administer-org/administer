@@ -146,6 +146,7 @@ end
 
 -- Spawns a new admin notification. Yields, use with task.spawn to avoid.
 Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, NotificationSound, Options)
+	--// Type solver is dumb here, nothing I can do
 	local Panel
 	if
 		(
@@ -167,11 +168,13 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 	local OpenTime = 1.25
 
 	local Placeholder = Instance.new("Frame")
+
 	Placeholder.Parent = Panel.Notifications
 	Placeholder.BackgroundTransparency = 1
 	Placeholder.Size = UDim2.new(1.036, 0, 0.142, 0)
 
 	local Notification = Panel.Notifications.Template:Clone()
+
 	Notification.Visible = true
 	Notification = Notification.NotificationContent
 	Notification.Parent.Position = UDim2.new(0, 0, 1.3, 0)

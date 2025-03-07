@@ -3,7 +3,6 @@
 local Modules = script.Parent
 local Libs = script.Parent.Parent.Libraries
 
-local Frontend = require(Modules.Frontend)
 local Utilities = require(Modules.Utilities)
 local Var = require(Modules.Variables)
 
@@ -253,8 +252,7 @@ function Admins.RunCreatorApp()
 	local TweenService = game:GetService("TweenService")
 	local Page = 1
 	local CanGoBack = true
-	local CanProgress = true
-	local Env = require(script.Parent.AdminHelperEnv)
+	local Env = require(script.Parent.UI.AdminHelperEnv)
 
 	local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 		if type(Spin) == "number" then PageNumber = Spin end
@@ -410,7 +408,7 @@ function Admins.RunCreatorApp()
 		-- Verify the filtering service is online
 		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true, 1)
 
-		Env = require(script.Parent.AdminHelperEnv) --// Re-fetch config just incase it changed
+		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
 
 		if Env.EditModeIsProtected then
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
@@ -459,7 +457,7 @@ function Admins.RunCreatorApp()
 			if not v:GetAttribute("IsTemplate") and v:IsA("Frame") then v:Destroy() end
 		end
 
-		local function NewGroupCard(PresetID, PresetRank)
+		local function NewGroupCard(PresetID: number?, PresetRank: number?)
 			local Clone = Frames.Page3.Members.Members.GroupTemplate:Clone()
 			local Checking = false
 
@@ -485,13 +483,15 @@ function Admins.RunCreatorApp()
 				Checking = false
 			end
 
+			local Thread
 			ConnectionsTable["Check" .. math.random(1, 500)] = Clone.TextInput.FocusLost:Connect(function()
 				if Checking then
-					task.cancel(CheckTask) --// too quick, stop the old one...
-					task.spawn(CheckTask)
+					task.cancel(Thread) --// too quick, stop the old one...
+
+					Thread = task.spawn(CheckTask)
 				else
 					Checking = true
-					task.spawn(CheckTask)
+					Thread = task.spawn(CheckTask)
 				end
 			end)
 			ConnectionsTable["Close" .. math.random(1, 500)] = Clone.Delete.MouseButton1Click:Connect(function()
@@ -501,10 +501,10 @@ function Admins.RunCreatorApp()
 			Clone.TextInput.Text = PresetID or ""
 			Clone.GroupRankInput.Text = PresetRank or ""
 
-			CheckTask()
+			Thread = task.spawn(CheckTask)
 		end
 
-		local function NewUserCard(PresetID)
+		local function NewUserCard(PresetID: number?)
 			local Clone = Frames.Page3.Members.Members.PlayerTemplate:Clone()
 
 			Clone.Parent = Frames.Page3.Members.Members
@@ -554,7 +554,7 @@ function Admins.RunCreatorApp()
 			end),
 		}
 
-		for i, User in Env.EditModeMembers do
+		for i, User in Env.EditModeMembers :: { { MemberType: string, ID: number, GroupRank: number? } } do
 			if User.MemberType == "User" then
 				NewUserCard(User.ID)
 			else
@@ -611,7 +611,7 @@ function Admins.RunCreatorApp()
 			end
 		end
 
-		for i, App in Env.EditModeApps do
+		for i, App in Env.EditModeApps :: { { DisplayName: string, Icon: string, Name: string } } do
 			if Frames.Page4.Apps.Apps:FindFirstChild(App.DisplayName) then continue end
 
 			NewAppCard(
@@ -679,9 +679,9 @@ function Admins.RunCreatorApp()
 		else
 			print(Result)
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
-			Frames.Page5.Header.Text = require(script.Parent.AdminHelperEnv).Strings.FinHeaderError
+			Frames.Page5.Header.Text = require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError
 			Frames.Page5.Body.Text =
-				string.format(require(script.Parent.AdminHelperEnv).Strings.FinHeaderError, Result["Message"])
+				string.format(require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError, Result["Message"])
 		end
 	end)
 
@@ -689,7 +689,6 @@ function Admins.RunCreatorApp()
 		SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
 		Frames.BottomData.RankTitle.Text = "Creating a rank"
 		CanGoBack = true
-		CanProgress = true
 	end)
 
 	Frames.BottomData.Controls.Exit.MouseButton1Click:Connect(function()
@@ -704,13 +703,13 @@ function Admins.RunCreatorApp()
 
 		task.delay(1, function()
 			if Page == 2 then
-				SwapPages(Frames.Page2, Frames.Page1, "rbxassetid://18151072839", 1)
+				SwapPages(Frames.Page2, Frames.Page1, "rbxassetid://18151072839", false, 1)
 			elseif Page == 3 then
-				SwapPages(Frames.Page3, Frames.Page1, "rbxassetid://18151072839", 1)
+				SwapPages(Frames.Page3, Frames.Page1, "rbxassetid://18151072839", false, 1)
 			elseif Page == 4 then
-				SwapPages(Frames.Page4, Frames.Page1, "rbxassetid://18151072839", 1)
+				SwapPages(Frames.Page4, Frames.Page1, "rbxassetid://18151072839", false, 1)
 			elseif Page == 5 then
-				SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", 1)
+				SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
 			end
 		end)
 	end)

@@ -111,9 +111,11 @@ return {
 	["Notepad.Header.Head"] = "Notepad",
 	["Welcome.Initial.HeaderLabel"] = "Good %s, <b>%s</b>! %s",
 	["Welcome.Initial.Subheading1"] = "You're going to like it here. Welcome to the admin panel with everything you need and none of what you don't.",
-	["administer..widgets.NotFound.Welcome"] = "It probably got uninstalled. Please select another one.",
-	["administer..widgets.NotSelected.Welcome"] = "Select an app to display here.",
-	["administer..widgets.WelcomeMsg.Welcome"] = "To get started with widgets, just install some apps and then click the edit button.",
+
+	["widgets.uninstalled.Header"] = "This widget is missing.",
+	["widgets.uninstalled.Body"] = "It probably got uninstalled. Please select another one.",
+	["widgets.notselected.Header"] = "Select an app to display here.",
+	["widgets.welcome.Body"] = "To get started with widgets, just install some apps and then click the edit button.",
 
 	["admincheck.OVERRIDE"] = "Found in AdminID Override",
 	["admincheck.SUDO"] = "Sandbox mode (sudo) is enabled in your game settings or Variables script.",
@@ -131,7 +133,7 @@ return {
 	["admin.ranktype.Protected.meta"] = "This rank is protected.",
 	["admin.rankcreator.BadData"] = "You must provide a valid AdminRank!",
 	["admin.rank.Default"] = "Added by System for first-time setup.",
-	["admin.rankcreator.error.Generic"] = "`We couldn't process that request right now, try again later.\n\n%s`",
+	["admin.rankcreator.error.Generic"] = "We couldn't process that request right now, try again later.\n\n%s",
 	["admin.rank.created"] = "Created this from the rank editor.",
 
 	["generic.Unauthorized"] = "Unauthorized",

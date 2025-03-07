@@ -192,7 +192,7 @@ function Widgets.Edit(
 			:Create(
 				Editing.Preview,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.043, 0, 0, 0), Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1 }
+				{ Position = UDim2.new(0.043, 0, 0, 0), Size = UDim2.new(0.957, 0, 1, 0), BackgroundTransparency = 1 }
 			)
 			:Play()
 		Var.Services.TweenService:Create(Editing.Background, TweenInfo.new(AnimSpeed), { ImageTransparency = 1 }):Play()
@@ -417,8 +417,6 @@ function Widgets.Initialize()
 				UI:SetAttribute("InitialWidgetName", string.split(Widget["Identifier"], "\\")[2])
 
 				table.insert(Widgets.Active, Widget)
-			else
-				print(Widget["Identifier"], WidgetData)
 			end
 		end
 	end

@@ -2,8 +2,6 @@ local Utilities = {
 	Logging = {},
 }
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 --local RequestSettingsRemote = AdministerRemotes:WaitForChild("SettingsRemote", 10):WaitForChild("RequestSettings", 10)
 --local Settings = RequestSettingsRemote:InvokeServer()
 
@@ -46,13 +44,7 @@ function Utilities.GetSetting(Setting: string): any
     ]]
 end
 
--- TODO (FloofyPlasma): Find a way to bake this in w/o this nasty loop...
-function Utilities.StartSettingsCheck(): ()
-	while true do
-		task.wait(tonumber(Utilities.GetSetting("SettingsCheckTime")))
-		Settings = RequestSettingsRemote:InvokeServer()
-	end
-end
+function Utilities.StartSettingsCheck(): () end
 
 function Utilities.ShortNumber(Number: number): string
 	return math.floor(

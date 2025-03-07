@@ -314,7 +314,8 @@ function Apps.LoadPage(Configuration, AppsMenu)
 							end,
 						},
 					},
-					App["AppButtonConfig"]["Icon"]
+					App["AppButtonConfig"]["Icon"],
+					App
 				)
 			end)
 
@@ -345,7 +346,8 @@ function Apps.LoadPage(Configuration, AppsMenu)
 							end,
 						},
 					},
-					App["AppButtonConfig"]["Icon"]
+					App["AppButtonConfig"]["Icon"],
+					App
 				)
 			end)
 
