@@ -64,4 +64,44 @@ function FrontendAPI.VersionCheck(Plr: Player): Types.Response
 	end, nil, nil)
 end
 
+function FrontendAPI.UpdateHomePage(Player, Data)
+	--// do some checks
+	if Data == nil then return {
+		UserFacingMessage = "Bad data sent by client.",
+		Result = "fail",
+	} end
+
+	local HomeInfo
+
+	if Data["EventType"] == "UPDATE" then
+		--// check current data?
+		HomeInfo = Var.DataStores.HomeDS:GetAsync(Player.UserId)
+
+		if not HomeInfo then
+			--// This shouldn't happen in practice but best to check?
+			HomeInfo = Var.BaseHomeInfo
+		end
+
+		HomeInfo[Data["WidgetID"]] = Data["NewIdentifier"]
+	end
+
+	if
+		pcall(function()
+			Utils.Logging.Print(`Saving homescreen data for {Player.Name}!`)
+
+			Var.DataStores.HomeDS:SetAsync(Player.UserId, HomeInfo)
+		end)
+	then
+		return {
+			Result = "success",
+			UserFacingMessage = "Done!",
+		}
+	else
+		return {
+			Result = "fail",
+			UserFacingMessage = "Something happened on Roblox's end, please try again later.",
+		}
+	end
+end
+
 return FrontendAPI

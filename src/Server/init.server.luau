@@ -94,6 +94,9 @@ NewRemote("DirectTranslate", false, function(Player, Key)
 	return Utils.t(Player, Key)
 end)
 
+--// Homepage
+NewRemote("UpdateHomePage", true, FrontendAPI.UpdateHomePage)
+
 --// Utilities
 NewRemote("CheckForUpdates", true, function(Player)
 	return FrontendAPI.VersionCheck(Player)
@@ -101,6 +104,10 @@ end)
 
 NewRemote("GetProminentColorFromUserID", false, function(Player)
 	return Utils.GetProminentColor(Player.UserId)
+end)
+
+NewRemote("GetIconPack", false, function(Player)
+	return require(script.Core.Icons) :: any
 end)
 
 --// Admin routes

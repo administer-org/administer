@@ -1,8 +1,10 @@
---// Administer (2.0.0)
+--// Administer
 
---// pyxfluff (2024-2025)
+--// pyxfluff 2024-2025
 
-local Widgets = {}
+local Widgets = {
+	Active = {},
+}
 
 local Modules = script.Parent
 
@@ -16,7 +18,6 @@ function Widgets.GetAvailableWidgets(): { Small: { {} }, Large: { {} } }
 		local WidgetFolder: Folder? = Widget:FindFirstChild(".widgets")
 		if not WidgetFolder or not WidgetFolder:IsA("Folder") then continue end
 
-		--// TODO (FloofyPlasma): Make this not a pcall...
 		xpcall(function()
 			local Module: Instance? = WidgetFolder:FindFirstChild(".widgetconfig")
 			local Config
@@ -29,7 +30,7 @@ function Widgets.GetAvailableWidgets(): { Small: { {} }, Large: { {} } }
 				)
 			end
 
-			local SplitGenerator = string.split(Config["_generator"], "-")
+			local SplitGenerator = string.split(Config._generator, "-")
 			if SplitGenerator[1] ~= "AdministerWidgetConfig" then
 				Utilities.Logging.Error(
 					`{Widget.Name}: Not a valid Administer widget configuration file (bad .widgetconfig, please read the docs!)`
@@ -41,18 +42,21 @@ function Widgets.GetAvailableWidgets(): { Small: { {} }, Large: { {} } }
 				)
 			end
 
-			for _, Widget in Config["Widgets"] do
-				if Widget["Type"] == "SMALL_LABEL" then
-					table.insert(Widgets["Small"], Widget)
-				elseif Widget["Type"] == "LARGE_BOX" then
-					table.insert(Widgets["Large"], Widget)
+			for Key, FinalWidget in Config["Widgets"] do
+				if FinalWidget["Type"] == "SMALL_LABEL" then
+					table.insert(Widgets["Small"], FinalWidget)
+				elseif FinalWidget["Type"] == "LARGE_BOX" then
+					table.insert(Widgets["Large"], FinalWidget)
 				else
 					Utilities.Logging.Error(`{Widget.Name}: Bad widget type (not in predefined list)`)
 				end
-				Widget["Identifier"] = `{Widget.Name}\\{Widget["Name"]}`
-				Widget["AppName"] = Widget.Name
+				FinalWidget["Identifier"] = `{Widget.Name}\\{Key}`
+				FinalWidget["AppName"] = Widget.Name
 			end
-		end, function() end)
+		end, function(z)
+			Utilities.Logging.Warn(z)
+			Utilities.Logging.Error(`{Widget.Name}: This does not appear to be a valid Administer widget (failure)`)
+		end)
 	end
 
 	return Widgets
@@ -62,7 +66,7 @@ function Widgets.Edit(
 	ContainingUI --// DO NOT TYPE THIS FOR NOW
 ): ()
 	local Editing = ContainingUI.Editing
-	local AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 1.2
+	local AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2
 	local Selected = ""
 	local SelectedTable = {}
 	local Tweens: { Tween } = {}
@@ -83,7 +87,6 @@ function Widgets.Edit(
 
 	NewPreviewContent.Parent = Editing:FindFirstChild("Preview")
 
-	--// TODO: Springs
 	Tweens = {
 		Var.Services.TweenService:Create(Editing.Preview, TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart), {
 			Size = UDim2.new(0.459, 0, 0.551, 0),
@@ -153,12 +156,15 @@ function Widgets.Edit(
 		end
 		Editing.Preview.Select.Visible = false
 
-		AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 0.4
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 0.4
 
 		Tweens = {
 			Var.Services.TweenService:Create(
 				Editing.Preview,
-				TweenInfo.new(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 1.2, Enum.EasingStyle.Quart),
+				TweenInfo.new(
+					((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2,
+					Enum.EasingStyle.Quart
+				),
 				{ Position = UDim2.new(0.264, 0, 0.189, 0) }
 			),
 			Var.Services.TweenService:Create(Editing.AppName, TweenInfo.new(AnimSpeed), { TextTransparency = 1 }),
@@ -180,7 +186,7 @@ function Widgets.Edit(
 		end
 
 		Tweens[1].Completed:Wait()
-		AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 1.2
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2
 
 		Var.Services.TweenService
 			:Create(
@@ -193,8 +199,6 @@ function Widgets.Edit(
 		Var.Services.TweenService
 			:Create(Editing.Preview.DefaultCorner_, TweenInfo.new(AnimSpeed), { CornerRadius = UDim.new(0, 0) })
 			:Play()
-
-		task.wait(AnimSpeed)
 
 		if Selected == "" then
 			--// just exit
@@ -209,16 +213,18 @@ function Widgets.Edit(
 			return
 		end
 
+		Var.Remotes.UpdateHomePage:InvokeServer({
+			EventType = "UPDATE",
+			EventID = `ChangeWidget-{ContainingUI.Name}`,
+			WidgetID = ContainingUI.Name,
+			NewIdentifier = Selected,
+		})
+
+		task.wait(AnimSpeed)
+
 		ContainingUI.SideData.Banner.Text = SelectedTable["Name"]
 		ContainingUI.SideData.BannerIcon.Image = SelectedTable["Icon"]
 		ContainingUI.Content:ClearAllChildren()
-
-		local _ = Var.Remotes.UpdateHomePage:InvokeServer({
-			["EventType"] = "UPDATE",
-			["EventID"] = `ChangeWidget-{ContainingUI.Name}`,
-			["WidgetID"] = ContainingUI.Name,
-			["NewIdentifier"] = Selected,
-		})
 
 		for _, Element in Editing.Preview:GetChildren() do
 			if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
@@ -240,7 +246,7 @@ function Widgets.Edit(
 
 		if Count > #Widgets then Count = 1 end
 
-		AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 2
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2
 		Tweens = {
 			Var.Services.TweenService:Create(
 				Editing.Preview,
@@ -280,7 +286,7 @@ function Widgets.Edit(
 		Editing.WidgetName.Position = UDim2.new(1, 0, 0.647, 0)
 		Editing.WidgetName.Text = Widget["Name"]
 		Editing.AppName.Text = Widget["AppName"]
-		AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 2.45
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2.45
 		SelectedTable = Widget
 
 		Tweens = {
@@ -319,7 +325,7 @@ function Widgets.Edit(
 
 		if Count > #Widgets then Count = 1 end
 
-		AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 2
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2
 		Tweens = {
 			Var.Services.TweenService:Create(
 				Editing.Preview,
@@ -359,7 +365,7 @@ function Widgets.Edit(
 		Editing.WidgetName.Position = UDim2.new(-0.7, 0, 0.647, 0)
 		Editing.WidgetName.Text = Widget["Name"]
 		Editing.AppName.Text = Widget["AppName"]
-		AnimSpeed = tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 2.45
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2.45
 		SelectedTable = Widget
 
 		Tweens = {
@@ -390,6 +396,32 @@ end
 
 function Widgets.ActivateWidget(WidgetNumber, WidgetConfig) end
 
-function Widgets.Initialize() end
+function Widgets.Initialize()
+	local WidgetData = game:GetService("HttpService"):JSONDecode(Var.MainFrame.Parent:GetAttribute("_HomeWidgets"))
+	local Available = Widgets.GetAvailableWidgets()["Large"]
+
+	for _, UI in Var.MainFrame.Home:GetChildren() do
+		if not table.find({ "Widget1", "Widget2" }, UI.Name) then continue end
+
+		for _, Widget in Available do
+			if Widget["Identifier"] == WidgetData[UI.Name] then
+				xpcall(function()
+					UI.SideData.Banner.Text = Widget["Name"]
+					UI.SideData.BannerIcon.Image = Widget["Icon"]
+				end, function() end)
+				Widget["BaseUIFrame"].Parent = UI.Content
+				Widget["BaseUIFrame"].Visible = true
+				Widget["OnRender"](Var.Services.Players.LocalPlayer, UI.Content)
+
+				UI:SetAttribute("AppName", string.split(Widget["Identifier"], "\\")[1])
+				UI:SetAttribute("InitialWidgetName", string.split(Widget["Identifier"], "\\")[2])
+
+				table.insert(Widgets.Active, Widget)
+			else
+				print(Widget["Identifier"], WidgetData)
+			end
+		end
+	end
+end
 
 return Widgets

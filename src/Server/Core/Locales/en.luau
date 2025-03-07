@@ -3,6 +3,12 @@ return {
 	["_locale_display"] = "English (United States)",
 	["_locale_display_localized"] = "English (United States)",
 
+	["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
+
 	["Apps.MainFrame.Config.Desc"] = "Configure Administer, admins, and install new apps.",
 	["Apps.MainFrame.Config.Title"] = "Configuration",
 	["Apps.MainFrame.Home.Desc"] = "Everything you need to see at a glance.",
@@ -103,7 +109,7 @@ return {
 	["NotFound.PageBroken.TextLabel"] = "This page did something that Roblox or Administer could not understand. It cannot continue loading.",
 	["NotFound.PageBroken.sending"] = "This app ({APP_NAME}) had some form of runtime or Administer API error, which is fatal and would freeze something otherwise. Please report this error to the developer.",
 	["Notepad.Header.Head"] = "Notepad",
-	["Welcome.Initial.HeaderLabel"] = "Good morning, <b>Roblox</b>! Welcome to Administer.",
+	["Welcome.Initial.HeaderLabel"] = "Good %s, <b>%s</b>! %s",
 	["Welcome.Initial.Subheading1"] = "You're going to like it here. Welcome to the admin panel with everything you need and none of what you don't.",
 	["administer..widgets.NotFound.Welcome"] = "It probably got uninstalled. Please select another one.",
 	["administer..widgets.NotSelected.Welcome"] = "Select an app to display here.",

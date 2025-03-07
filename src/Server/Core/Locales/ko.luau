@@ -152,7 +152,7 @@ return {
 	["generic.Forward"] = "다음",
 	["generic.Exit"] = "종료",
 
-	["onboarding.Welcome"] = "%s 로드됨! 당신은 %s입니다. 패널에 들어가려면 Shift + %s를 누르세요.",
+	["onboarding.Welcome"] = "%s 로드됨! 당신은 %s입니다. 패널에 들어가려면 %s를 누르세요.",
 	["onboarding.Head"] = "Administer에 오신 것을 환영합니다!",
 
 	["apps.NoFetch"] = "앱을 가져오는 데 실패했습니다!",

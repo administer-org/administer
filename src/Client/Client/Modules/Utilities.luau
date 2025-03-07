@@ -239,14 +239,24 @@ function Utilities.CreateReflection(Image: string): EditableImage
 	return RealEI
 end
 
-function Utilities.Translate(StringIdentifier): string
+function Utilities.Translate(StringIdentifier: string): string | { string }
 	if Var.LocaleModule["_"] == "_init" then
 		Var.LocaleModule = Var.Remotes.GetTranslationModule:InvokeServer(
 			string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
 		)
 	end
 
+	if not Var.LocaleModule[StringIdentifier] then
+		if not StringIdentifier:find("__") then
+			return StringIdentifier
+		else
+			return { StringIdentifier, StringIdentifier, StringIdentifier, StringIdentifier, StringIdentifier }
+		end
+	end
+
 	return Var.LocaleModule[StringIdentifier]
 end
+
+Utilities.Icon = (Var.Remotes.GetIconPack:InvokeServer())
 
 return Utilities

@@ -23,8 +23,6 @@ Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 	if KeyCode.KeyCode == Enum.KeyCode.F2 then Frontend.Open() end
 end)
 
-print(t("admin.RankDefault"))
-
 if not pcall(function()
 	Var.Remotes.Ping:InvokeServer()
 end) then
@@ -32,17 +30,27 @@ end) then
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
 
+Widgets.Initialize()
+
+Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
+	Widgets.Edit(Var.MainFrame.Home.Widget1)
+end)
+
+Var.MainFrame.Home.Widget2.Edit.MouseButton1Click:Connect(function()
+	Widgets.Edit(Var.MainFrame.Home.Widget2)
+end)
+
 Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
 Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
 Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
 
-Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">Good {({
-	"morning",
-	"afternoon",
-	"evening",
-})[(os.date("*t").hour < 12 and 1 or os.date("*t").hour < 18 and 2 or 3)]}, <b>{Var.Services.Players.LocalPlayer.DisplayName}</b></stroke>. {Utilities.GetSetting(
-	"HomepageGreeting"
-)}`
+Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
+	t("Welcome.Initial.HeaderLabel") :: string,
+	(t("__TIMES__") :: { string })[(os.date("*t").hour < 12 and 1 or os.date("*t").hour < 18 and 2 or 3)],
+	Var.Services.Players.LocalPlayer.DisplayName,
+	Utilities.GetSetting("HomepageGreeting")
+)}</stroke>`
+
 Var.MainFrame.Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
 	Var.Services.Players.LocalPlayer.UserId,
 	Enum.ThumbnailType.HeadShot,
