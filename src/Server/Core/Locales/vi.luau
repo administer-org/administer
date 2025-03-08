@@ -3,7 +3,12 @@ return {
 	["_locale"] = "vi-vn",
 	["_locale_display"] = "Vietnamese",
 	["_locale_display_localized"] = "Tiếng Việt",
-	["_is_default"] = false,
+	
+    ["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
 
 	["Apps.MainFrame.Config.Desc"] = "Điều chỉnh các trình quản lý trong Administer, và cài đặt thêm tiện ích.",
 	["Apps.MainFrame.Config.Title"] = "Điều chỉnh",

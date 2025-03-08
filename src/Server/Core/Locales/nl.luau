@@ -3,6 +3,12 @@ return {
 	["_locale_display"] = "Nederlands (Nederland)",
 	["_locale_display_localized"] = "Nederlands (Nederland)",
 
+    ["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
+
 	["Apps.MainFrame.Config.Desc"] = "Configureer Administer, beheerders en installeer nieuwe apps.",
 	["Apps.MainFrame.Config.Title"] = "Configuratie",
 	["Apps.MainFrame.Home.Desc"] = "Alles wat je in één oogopslag nodig hebt.",
@@ -105,9 +111,11 @@ return {
 	["Notepad.Header.Head"] = "Notitieblok",
 	["Welcome.Initial.HeaderLabel"] = "Goedemorgen, <b>Roblox</b>! Welkom bij Administer.",
 	["Welcome.Initial.Subheading1"] = "Je gaat het hier geweldig vinden. Welkom bij het beheerpaneel met alles wat je nodig hebt en niets wat je niet nodig hebt.",
-	["administer..widgets.NotFound.Welcome"] = "Het is waarschijnlijk verwijderd. Selecteer een andere.",
-	["administer..widgets.NotSelected.Welcome"] = "Selecteer een app om hier weer te geven.",
-	["administer..widgets.WelcomeMsg.Welcome"] = "Om te beginnen met widgets, installeer eerst enkele apps en klik vervolgens op de bewerkknop.",
+
+    ["widgets.uninstalled.Header"] = "This widget is missing.",
+	["widgets.uninstalled.Body"] = "Het is waarschijnlijk verwijderd. Selecteer een andere.",
+	["widgets.notselected.Header"] = "Selecteer een app om hier weer te geven.",
+	["widgets.welcome.Body"] = "Om te beginnen met widgets, installeer eerst enkele apps en klik vervolgens op de bewerkknop.",
 
 	["admincheck.OVERRIDE"] = "Gevonden in AdminID Override",
 	["admincheck.SUDO"] = "Sandbox-modus (sudo) is ingeschakeld in je game-instellingen of Variables-script.",

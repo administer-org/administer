@@ -3,6 +3,12 @@ return {
 	["_locale_display"] = "中文 (中国)",
 	["_locale_display_localized"] = "中文 (中国)",
 
+    ["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
+
 	["Apps.MainFrame.Config.Desc"] = "配置 Administer、管理员，以及安装新应用。",
 	["Apps.MainFrame.Config.Title"] = "配置",
 	["Apps.MainFrame.Home.Desc"] = "一目了然，所有您需要的信息。",

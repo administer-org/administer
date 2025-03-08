@@ -151,11 +151,22 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 end
 
 function Frontend.Drawer.Open(): ()
+	if not Var.DoHeaderEffects then return end --// Stops clicking the button multiple times which results in broken UI
+	Frontend.Drawer.HoverEnd()
+	
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Instance.new("CanvasGroup")
 	local UiC = Instance.new("UICorner")
-
-	local TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
+	local TimeToComplete
+	
+	Var.DoHeaderEffects = false
+	
+	xpcall(function()
+		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
+	end, function(e)
+		--// This is a temporary fix
+		TimeToComplete = 2
+	end)
 
 	Container.Size = UDim2.new(1, 0, 1, 0)
 	Container.Position = UDim2.new(0, 0, 0, 0)
@@ -202,68 +213,96 @@ function Frontend.Drawer.Open(): ()
 end
 
 function Frontend.Drawer.Close(TimeToComplete: number): ()
-	local Apps = Var.MainFrame.Apps
-	local Clone = Apps.Var.MainFrame:Clone()
+	local Apps = Var.MainFrame.AppDrawer
+	local Container = Apps.AppDrawerCover.CanvasGroup
 
-	Apps.Var.MainFrame.Visible = false
-
-	Clone.Visible = true
-	Clone.Name = "Duplicate"
-	Clone.Parent = Apps
+	xpcall(function()
+		TimeToComplete = TimeToComplete or tonumber(Utilities.GetSetting("AnimationSpeed")) or 1
+	end, function(e)
+		--// This is a temporary fix
+		TimeToComplete = TimeToComplete or 2
+	end)
+	
+	Container.Parent.Parent = Var.MainFrame
+	Container.Parent.Size = UDim2.new(.75,0,1,0)
+	Container.Parent.Position = UDim2.new(.25,0,0,0)
 
 	Var.Services.TweenService
-		:Create(
-			Apps,
-			TweenInfo.new(
-				TimeToComplete + (TimeToComplete * 0.4),
-				Enum.EasingStyle.Quart,
-				Enum.EasingDirection.Out,
-				0,
-				false
-			),
-			{ BackgroundTransparency = 1 }
-		)
+		:Create(Apps, TweenInfo.new(TimeToComplete * 0.75, Enum.EasingStyle.Quart), {
+			Position = UDim2.new(0, 0, 1, 0),
+		})
 		:Play()
+	
 	Var.Services.TweenService
-		:Create(Apps.Background, TweenInfo.new(TimeToComplete + 0.2, Enum.EasingStyle.Quart), { ImageTransparency = 1 })
+		:Create(Apps.AppHolder, TweenInfo.new(TimeToComplete * 0.55, Enum.EasingStyle.Quart), {
+			Position = UDim2.new(0, 0, .75, 0),
+			GroupTransparency = 1,
+		})
 		:Play()
 
-	local Tween = Var.Services.TweenService:Create(
-		Clone,
-		TweenInfo.new(TimeToComplete, Enum.EasingStyle.Quart),
-		{ Size = UDim2.fromScale(0.965, 0.928) }
-	) --// TODO (FloofyPlasma): Make this a better number
+	Var.Services.TweenService
+		:Create(Container.Parent, TweenInfo.new(TimeToComplete * .6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
+			Position = UDim2.new(0.5,0,0.5,0),
+			Size = UDim2.new(1,0,1,0),
+			
+			AnchorPoint = Vector2.new(.5,.5),
+			BackgroundTransparency = 1
+		})
+		:Play()
+	
+	task.wait(TimeToComplete * .6)
+	
+	Var.Services.TweenService
+		:Create(Container, TweenInfo.new(TimeToComplete * 0.5, Enum.EasingStyle.Quart), {
+			Size = UDim2.new(1,0,1,0),
+			
+			BackgroundTransparency = 1,
+			GroupTransparency = 0
+		})
+		:Play()
 
-	for _, Item: Instance | CanvasGroup in Clone:GetChildren() do
-		if not Item:IsA("CanvasGroup") then continue end
 
-		Var.Services.TweenService
-			:Create(
-				Item,
-				TweenInfo.new(TimeToComplete + 0.2, Enum.EasingStyle.Quart),
-				{ GroupTransparency = 1, BackgroundTransparency = 1 }
-			)
-			:Play()
-
-		local Stroke = Item:FindFirstChildOfClass("UIStroke")
-		if not Stroke then continue end
-		Var.Services.TweenService
-			:Create(Stroke, TweenInfo.new(TimeToComplete + 0.2, Enum.EasingStyle.Quart), { Transparency = 1 })
-			:Play()
+	
+	task.wait(TimeToComplete * .5)
+	
+	for _, Child in Container:GetChildren() do
+		if Child:IsA("Frame") and Child.Visible == true then Child.Parent = Var.MainFrame end
 	end
-
-	Tween:Play()
-	Tween.Completed:Wait()
-
-	Clone:Destroy()
+	
+	Var.DoHeaderEffects = true
 end
 
 function Frontend.Drawer.HoverBegin()
-	print("over")
+	print(Var.DoHeaderEffects)
+	if not Var.DoHeaderEffects then return end
+	
+	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
+	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
+	
+	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
+		Size = UDim2.new(.75,0,.75,0)
+	}):Play()
+	
+	Var.Services.TweenService:Create(MarkBox.AppIcon, QuickTI, {
+		Size = UDim2.new(.25,0,.25,0),
+		ImageTransparency = .75
+	}):Play()
 end
 
 function Frontend.Drawer.HoverEnd()
-	print("bye")
+	if not Var.DoHeaderEffects then return end
+	
+	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
+	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
+
+	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
+		Size = UDim2.new(0,0,0,0)
+	}):Play()
+	
+	Var.Services.TweenService:Create(MarkBox.AppIcon, QuickTI, {
+		Size = UDim2.new(1,0,1,0),
+		ImageTransparency = 0
+	}):Play()
 end
 
 function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, FinalSize: UDim2): ()

@@ -3,6 +3,12 @@ return {
 	["_locale_display"] = "German (Germany)",
 	["_locale_display_localized"] = "Deutsch (Deutschland)",
 
+    ["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
+
 	["Apps.MainFrame.Config.Desc"] = "Administratoren konfigurieren, verwalten und neue Apps installieren.",
 	["Apps.MainFrame.Config.Title"] = "Konfiguration",
 	["Apps.MainFrame.Home.Desc"] = "Alles, was Sie auf einen Blick sehen müssen.",

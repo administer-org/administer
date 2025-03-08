@@ -239,29 +239,34 @@ function Widgets.Edit(
 	local Widgets = Widgets.GetAvailableWidgets()["Large"]
 	local Count = 0 --// 0 by default because ideally they have one already?
 	local Buttons = {}
-
-	Buttons[1] = Editing.Next.MouseButton1Click:Connect(function()
+	
+	local function ClickNext()
 		ShouldHover = false
 		Count += 1
 
 		if Count > #Widgets then Count = 1 end
 
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2
+		if Widgets[Count].CanDiscover == false then
+			Count += 1
+			return ClickNext()
+		end
+
+		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 3
 		Tweens = {
 			Var.Services.TweenService:Create(
 				Editing.Preview,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(-0.5, 0, 0.057, 0), GroupTransparency = 1 }
+				{ Position = UDim2.new(-1, 0, 0.057, 0), GroupTransparency = 1 }
 			),
 			Var.Services.TweenService:Create(
 				Editing.AppName,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(-0.5, 0, 0.81, 0), TextTransparency = 1 }
+				{ Position = UDim2.new(-1, 0, 0.81, 0), TextTransparency = 1 }
 			),
 			Var.Services.TweenService:Create(
 				Editing.WidgetName,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(-0.5, 0, 0.647, 0), TextTransparency = 1 }
+				{ Position = UDim2.new(-1, 0, 0.647, 0), TextTransparency = 1 }
 			),
 		}
 		for _, t in Tweens do
@@ -312,7 +317,9 @@ function Widgets.Edit(
 
 		Tweens[1].Completed:Wait()
 		ShouldHover = true
-	end)
+	end
+
+	Buttons[1] = Editing.Next.MouseButton1Click:Connect(ClickNext)
 
 	Buttons[2] = Editing.Last.MouseButton1Click:Connect(function()
 		ShouldHover = false
@@ -409,9 +416,10 @@ function Widgets.Initialize()
 					UI.SideData.Banner.Text = Widget["Name"]
 					UI.SideData.BannerIcon.Image = Widget["Icon"]
 				end, function() end)
+				
 				Widget["BaseUIFrame"].Parent = UI.Content
 				Widget["BaseUIFrame"].Visible = true
-				Widget["OnRender"](Var.Services.Players.LocalPlayer, UI.Content)
+				Widget["OnRender"](Var.Services.Players.LocalPlayer, Widget["BaseUIFrame"])
 
 				UI:SetAttribute("AppName", string.split(Widget["Identifier"], "\\")[1])
 				UI:SetAttribute("InitialWidgetName", string.split(Widget["Identifier"], "\\")[2])

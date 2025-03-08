@@ -3,6 +3,12 @@ return {
 	["_locale_display"] = "French",
 	["_locale_display_localized"] = "French",
 
+    ["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
+
 	["Apps.MainFrame.Config.Desc"] = "Configurez l'administration, les administrateurs et installez de nouvelles applications.",
 	["Apps.MainFrame.Config.Title"] = "Configuration",
 	["Apps.MainFrame.Home.Desc"] = "Tout ce que vous devez voir en un coup d'œil.",
@@ -105,9 +111,11 @@ return {
 	["Notepad.Header.Head"] = "Notepad",
 	["Welcome.Initial.HeaderLabel"] = "Bonjour, <b>Roblox</b> ! Bienvenue sur Administrer.",
 	["Welcome.Initial.Subheading1"] = "Vous allez l'aimer ici. Bienvenue dans le panneau d'administration avec tout ce dont vous avez besoin et rien de ce dont vous n'avez pas besoin.",
-	["administer..widgets.NotFound.Welcome"] = "Il a probablement été désinstallé. Veuillez en sélectionner un autre.",
-	["administer..widgets.NotSelected.Welcome"] = "Sélectionnez une application à afficher ici.",
-	["administer..widgets.WelcomeMsg.Welcome"] = "Pour commencer avec les widgets, installez simplement quelques applications, puis cliquez sur le bouton Modifier.",
+
+    ["widgets.uninstalled.Header"] = "This widget is missing.",
+	["widgets.uninstalled.Body"] = "Il a probablement été désinstallé. Veuillez en sélectionner un autre.",
+	["widgets.notselected.Header"] = "Sélectionnez une application à afficher ici.",
+	["widgets.welcome.Body"] = "Pour commencer avec les widgets, installez simplement quelques applications, puis cliquez sur le bouton Modifier.",
 
 	["admincheck.OVERRIDE"] = "Trouvé dans le remplacement de l'ID Admin",
 	["admincheck.SUDO"] = "Le mode Sandbox (sudo) est activé dans vos paramètres de jeu ou dans votre script Variables.",

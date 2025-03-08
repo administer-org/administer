@@ -17,6 +17,7 @@ Variables.IsOpen = true
 Variables.IsPanelAnimating = false
 Variables.EnableEditableImages = true
 Variables.LastPage = "Home"
+Variables.DoHeaderEffects = true
 
 Variables.Panel = nil
 Variables.OpenSound = script.Parent --// TODO

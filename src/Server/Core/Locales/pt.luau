@@ -3,6 +3,12 @@ return {
 	["_locale_display"] = "Portuguese (Portugal)",
 	["_locale_display_localized"] = "Português (Portugal)",
 
+    ["__TIMES__"] = {
+		"morning",
+		"afternoon",
+		"evening",
+	},
+
 	["Apps.MainFrame.Config.Desc"] = "Configurar o Administer, administradores e instalar novas aplicações.",
 	["Apps.MainFrame.Config.Title"] = "Configuração",
 	["Apps.MainFrame.Home.Desc"] = "Tudo o que precisas de ver num piscar de olhos",
