@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "Spanish (Spain)",
 	["_locale_display_localized"] = "Español (españa)",
 
-    ["__TIMES__"] = {
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",
@@ -112,13 +112,13 @@ return {
 	["Welcome.Initial.HeaderLabel"] = "Buenos días, <b>Roblox</b>. Bienvenido a Administer.",
 	["Welcome.Initial.Subheading1"] = "Esto te va a gustar. Bienvenido al panel de administración con todo lo que necesitas y nada de lo que no.",
 
-    ["widgets.uninstalled.Header"] = "This widget is missing.",
+	["widgets.uninstalled.Header"] = "This widget is missing.",
 	["widgets.uninstalled.Body"] = "Probablemente se ha desinstalado. Por favor, seleccione otro.",
 	["widgets.notselected.Header"] = "Seleccionar una aplicación para mostrarla aquí.",
 	["widgets.welcome.Body"] = "Para empezar con los widgets, sólo tienes que instalar algunas aplicaciones y pulsar el botón de edición.",
 
 	["admincheck.OVERRIDE"] = "Encontrado en AdminID Override",
-    ["admincheck.SUDO"] = "Sandbox mode is enabled in your game settings or Variables script.",
+	["admincheck.SUDO"] = "Sandbox mode is enabled in your game settings or Variables script.",
 	["admincheck.RANKINDEX"] = "Encontrado en el índice de rangos",
 	["admincheck.GROUP"] = "Datos basados en el rango del grupo",
 	["admincheck.nil"] = "Usuario no encontrado en el índice admin",
@@ -134,7 +134,7 @@ return {
 	["admin.rankcreator.BadData"] = "Debe proporcionar un AdminRank válido.",
 	["admin.rank.Default"] = "Añadido por el sistema para la primera configuración.",
 	["admin.rankcreator.error.Generic"] = '`No hemos podido procesar esa solicitud en este momento, inténtelo más tarde.\n\n{Result[2] or "No se ha devuelto ningún error por alguna razón... ¡intente comprobar el registro!"}`',
-    ["admin.rank.created"] = "Created this from the rank editor.",
+	["admin.rank.created"] = "Created this from the rank editor.",
 
 	["generic.Unauthorized"] = "No autorizado",
 	["generic.error.CheckLogs"] = "Algo ha ido mal, consulte los registros.",
@@ -152,8 +152,8 @@ return {
 	["generic.Yes"] = "Si",
 	["generic.No"] = "No",
 	["generic.UI"] = "UI",
-    ["generic.OK"] = "OK",
-    ["generic.Done"] = "Done",
+	["generic.OK"] = "OK",
+	["generic.Done"] = "Done",
 	["generic.Cancel"] = "Cancelar",
 	["generic.Confirm"] = "Confirmar",
 	["generic.Download"] = "Descargar",

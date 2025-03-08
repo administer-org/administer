@@ -22,52 +22,48 @@ local function loadDataStore(key: string): any
 	local success, data = pcall(function()
 		return HttpService:JSONDecode(SettingsDataStore:GetAsync(key))
 	end)
-	if success then return data else return nil end
+	if success then
+		return data
+	else
+		return nil
+	end
 end
 
 function SettingsAPI.new(setting: SettingsGroup): MainSettings
 	local APIController = {}
 	local Setting = {}
 	local changedEvents = {}
-	
+
 	function APIController:Changed()
 		local disconnectChangedConnection = {}
-		changedEvents[#changedEvents + 1] = function()
-			
-		end
-		function disconnectChangedConnection:Disconnect()
-			
-		end 
+		changedEvents[#changedEvents + 1] = function() end
+		function disconnectChangedConnection:Disconnect() end
 		return disconnectChangedConnection
 	end
-	
+
 	function APIController:with(name: string, callback)
 		local retrievedSetting: Setting = nil -- TODO: get setting from string
-		
+
 		return function(...)
 			callback(setting, ...)
 		end
 	end
-	
+
 	function APIController:Get(name: string): Setting
 		local retrievedSetting: Setting = nil -- TODO: get setting from string
 		return retrievedSetting
 	end
-	
-	function APIController:GetCategory(name: string): {Setting}
+
+	function APIController:GetCategory(name: string): { Setting }
 		local retrievedCategory: SettingsGroup = nil
-		
 	end
-	
+
 	function APIController:Set(value: any?): boolean
 		if not value then value = "" end
-		
 	end
-	
+
 	return APIController
 end
-
-
 
 return SettingsAPI
 

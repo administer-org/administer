@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "Nederlands (Nederland)",
 	["_locale_display_localized"] = "Nederlands (Nederland)",
 
-    ["__TIMES__"] = {
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",
@@ -112,7 +112,7 @@ return {
 	["Welcome.Initial.HeaderLabel"] = "Goedemorgen, <b>Roblox</b>! Welkom bij Administer.",
 	["Welcome.Initial.Subheading1"] = "Je gaat het hier geweldig vinden. Welkom bij het beheerpaneel met alles wat je nodig hebt en niets wat je niet nodig hebt.",
 
-    ["widgets.uninstalled.Header"] = "This widget is missing.",
+	["widgets.uninstalled.Header"] = "This widget is missing.",
 	["widgets.uninstalled.Body"] = "Het is waarschijnlijk verwijderd. Selecteer een andere.",
 	["widgets.notselected.Header"] = "Selecteer een app om hier weer te geven.",
 	["widgets.welcome.Body"] = "Om te beginnen met widgets, installeer eerst enkele apps en klik vervolgens op de bewerkknop.",

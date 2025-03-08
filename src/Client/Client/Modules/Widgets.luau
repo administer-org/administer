@@ -239,7 +239,7 @@ function Widgets.Edit(
 	local Widgets = Widgets.GetAvailableWidgets()["Large"]
 	local Count = 0 --// 0 by default because ideally they have one already?
 	local Buttons = {}
-	
+
 	local function ClickNext()
 		ShouldHover = false
 		Count += 1
@@ -416,7 +416,7 @@ function Widgets.Initialize()
 					UI.SideData.Banner.Text = Widget["Name"]
 					UI.SideData.BannerIcon.Image = Widget["Icon"]
 				end, function() end)
-				
+
 				Widget["BaseUIFrame"].Parent = UI.Content
 				Widget["BaseUIFrame"].Visible = true
 				Widget["OnRender"](Var.Services.Players.LocalPlayer, Widget["BaseUIFrame"])

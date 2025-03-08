@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "Korean",
 	["_locale_display_localized"] = "한국어 (대한민국)",
 
-    ["__TIMES__"] = {
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",

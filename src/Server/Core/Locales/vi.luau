@@ -3,8 +3,8 @@ return {
 	["_locale"] = "vi-vn",
 	["_locale_display"] = "Vietnamese",
 	["_locale_display_localized"] = "Tiếng Việt",
-	
-    ["__TIMES__"] = {
+
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",

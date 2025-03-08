@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "中文 (中国)",
 	["_locale_display_localized"] = "中文 (中国)",
 
-    ["__TIMES__"] = {
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",

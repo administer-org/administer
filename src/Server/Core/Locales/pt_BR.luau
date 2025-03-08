@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "Portuguese (Brazil)",
 	["_locale_display_localized"] = "Português (Brasil)",
 
-    ["__TIMES__"] = {
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",

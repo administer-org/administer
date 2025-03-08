@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "French",
 	["_locale_display_localized"] = "French",
 
-    ["__TIMES__"] = {
+	["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",
@@ -112,7 +112,7 @@ return {
 	["Welcome.Initial.HeaderLabel"] = "Bonjour, <b>Roblox</b> ! Bienvenue sur Administrer.",
 	["Welcome.Initial.Subheading1"] = "Vous allez l'aimer ici. Bienvenue dans le panneau d'administration avec tout ce dont vous avez besoin et rien de ce dont vous n'avez pas besoin.",
 
-    ["widgets.uninstalled.Header"] = "This widget is missing.",
+	["widgets.uninstalled.Header"] = "This widget is missing.",
 	["widgets.uninstalled.Body"] = "Il a probablement été désinstallé. Veuillez en sélectionner un autre.",
 	["widgets.notselected.Header"] = "Sélectionnez une application à afficher ici.",
 	["widgets.welcome.Body"] = "Pour commencer avec les widgets, installez simplement quelques applications, puis cliquez sur le bouton Modifier.",

@@ -153,14 +153,14 @@ end
 function Frontend.Drawer.Open(): ()
 	if not Var.DoHeaderEffects then return end --// Stops clicking the button multiple times which results in broken UI
 	Frontend.Drawer.HoverEnd()
-	
+
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Instance.new("CanvasGroup")
 	local UiC = Instance.new("UICorner")
 	local TimeToComplete
-	
+
 	Var.DoHeaderEffects = false
-	
+
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
 	end, function(e)
@@ -222,87 +222,97 @@ function Frontend.Drawer.Close(TimeToComplete: number): ()
 		--// This is a temporary fix
 		TimeToComplete = TimeToComplete or 2
 	end)
-	
+
 	Container.Parent.Parent = Var.MainFrame
-	Container.Parent.Size = UDim2.new(.75,0,1,0)
-	Container.Parent.Position = UDim2.new(.25,0,0,0)
+	Container.Parent.Size = UDim2.new(0.75, 0, 1, 0)
+	Container.Parent.Position = UDim2.new(0.25, 0, 0, 0)
 
 	Var.Services.TweenService
 		:Create(Apps, TweenInfo.new(TimeToComplete * 0.75, Enum.EasingStyle.Quart), {
 			Position = UDim2.new(0, 0, 1, 0),
 		})
 		:Play()
-	
+
 	Var.Services.TweenService
 		:Create(Apps.AppHolder, TweenInfo.new(TimeToComplete * 0.55, Enum.EasingStyle.Quart), {
-			Position = UDim2.new(0, 0, .75, 0),
+			Position = UDim2.new(0, 0, 0.75, 0),
 			GroupTransparency = 1,
 		})
 		:Play()
 
 	Var.Services.TweenService
-		:Create(Container.Parent, TweenInfo.new(TimeToComplete * .6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
-			Position = UDim2.new(0.5,0,0.5,0),
-			Size = UDim2.new(1,0,1,0),
-			
-			AnchorPoint = Vector2.new(.5,.5),
-			BackgroundTransparency = 1
-		})
+		:Create(
+			Container.Parent,
+			TweenInfo.new(TimeToComplete * 0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false),
+			{
+				Position = UDim2.new(0.5, 0, 0.5, 0),
+				Size = UDim2.new(1, 0, 1, 0),
+
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				BackgroundTransparency = 1,
+			}
+		)
 		:Play()
-	
-	task.wait(TimeToComplete * .6)
-	
+
+	task.wait(TimeToComplete * 0.6)
+
 	Var.Services.TweenService
 		:Create(Container, TweenInfo.new(TimeToComplete * 0.5, Enum.EasingStyle.Quart), {
-			Size = UDim2.new(1,0,1,0),
-			
+			Size = UDim2.new(1, 0, 1, 0),
+
 			BackgroundTransparency = 1,
-			GroupTransparency = 0
+			GroupTransparency = 0,
 		})
 		:Play()
 
+	task.wait(TimeToComplete * 0.5)
 
-	
-	task.wait(TimeToComplete * .5)
-	
 	for _, Child in Container:GetChildren() do
 		if Child:IsA("Frame") and Child.Visible == true then Child.Parent = Var.MainFrame end
 	end
-	
+
 	Var.DoHeaderEffects = true
 end
 
 function Frontend.Drawer.HoverBegin()
 	print(Var.DoHeaderEffects)
 	if not Var.DoHeaderEffects then return end
-	
+
 	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
-	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
-	
-	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
-		Size = UDim2.new(.75,0,.75,0)
-	}):Play()
-	
-	Var.Services.TweenService:Create(MarkBox.AppIcon, QuickTI, {
-		Size = UDim2.new(.25,0,.25,0),
-		ImageTransparency = .75
-	}):Play()
+	local QuickTI = TweenInfo.new(0.25, Enum.EasingStyle.Quart)
+
+	Var.Services.TweenService
+		:Create(MarkBox.GridIcon, QuickTI, {
+			Size = UDim2.new(0.75, 0, 0.75, 0),
+		})
+		:Play()
+
+	Var.Services.TweenService
+		:Create(MarkBox.AppIcon, QuickTI, {
+			Size = UDim2.new(0.25, 0, 0.25, 0),
+			ImageTransparency = 0.75,
+		})
+		:Play()
 end
 
 function Frontend.Drawer.HoverEnd()
 	if not Var.DoHeaderEffects then return end
-	
-	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
-	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
 
-	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
-		Size = UDim2.new(0,0,0,0)
-	}):Play()
-	
-	Var.Services.TweenService:Create(MarkBox.AppIcon, QuickTI, {
-		Size = UDim2.new(1,0,1,0),
-		ImageTransparency = 0
-	}):Play()
+	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
+	local QuickTI = TweenInfo.new(0.25, Enum.EasingStyle.Quart)
+
+	Var.Services.TweenService
+		:Create(MarkBox.GridIcon, QuickTI, {
+			Size = UDim2.new(0, 0, 0, 0),
+		})
+		:Play()
+
+	Var.Services.TweenService
+		:Create(MarkBox.AppIcon, QuickTI, {
+			Size = UDim2.new(1, 0, 1, 0),
+			ImageTransparency = 0,
+		})
+		:Play()
 end
 
 function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, FinalSize: UDim2): ()
