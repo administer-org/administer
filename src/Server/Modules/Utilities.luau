@@ -430,9 +430,11 @@ function Utils.t(Player: Player | nil, Key: string): string
 	else
 		local LocaleResult = (
 			Var.CachedLocales[Player.UserId] or Var.DataStores.Settings:GetAsync(Player.UserId .. "Locale")
-		)
+		) or "en"
+		
+		print(LocaleResult)
 
-		return (require(Locales:FindFirstChild(LocaleResult and LocaleResult or "en-us")) :: any)[Key] or Key
+		return (require(Locales:FindFirstChild(LocaleResult)) :: any)[Key] or Key
 	end
 end
 
