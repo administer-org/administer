@@ -1,6 +1,8 @@
 local SettingsAPI = {}
+SettingsAPI.__index = SettingsAPI
 
 local Types = require(script.Parent.Parent.Core.Types)
+local Signal = require(script.Signal)
 
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
@@ -22,48 +24,75 @@ local function loadDataStore(key: string): any
 	local success, data = pcall(function()
 		return HttpService:JSONDecode(SettingsDataStore:GetAsync(key))
 	end)
-	if success then
-		return data
+	if success then return data else return nil end
+end
+
+local function settingFromString(settingName: string, categoryName: string?, settingsGroup: SettingsGroup)
+	if categoryName then
+		return settingsGroup[categoryName][settingName]
 	else
-		return nil
+		for i, category in settingsGroup do
+			local setting: Setting = category[settingName]
+			if setting then return setting end
+		end
+	end
+end
+
+local function categoryFromString(settingName: string, settingsGroup: SettingsGroup)
+	for i, category in settingsGroup do
+		local setting: Setting = category[settingName]
+		if setting then return i end
 	end
 end
 
 function SettingsAPI.new(setting: SettingsGroup): MainSettings
 	local APIController = {}
 	local Setting = {}
-	local changedEvents = {}
+	local settingsGroup = setting
 
-	function APIController:Changed()
-		local disconnectChangedConnection = {}
-		changedEvents[#changedEvents + 1] = function() end
-		function disconnectChangedConnection:Disconnect() end
-		return disconnectChangedConnection
+	function APIController:Changed(name: string)
+		local changedSignal = Signal.new()
+		function onChanged() -- TODO: fire this when set is called
+			changedSignal:Fire()
+		end
+		return changedSignal
 	end
 
 	function APIController:with(name: string, callback)
-		local retrievedSetting: Setting = nil -- TODO: get setting from string
+		local retrievedSetting: Setting = settingFromString(name, nil, settingsGroup)
 
 		return function(...)
-			callback(setting, ...)
+			callback(settingsGroup, ...)
 		end
 	end
 
 	function APIController:Get(name: string): Setting
-		local retrievedSetting: Setting = nil -- TODO: get setting from string
+		local retrievedSetting: Setting = settingFromString(name, nil, settingsGroup)
 		return retrievedSetting
 	end
 
-	function APIController:GetCategory(name: string): { Setting }
-		local retrievedCategory: SettingsGroup = nil
+	function APIController:GetCategory(name: string): {Setting}
+		local retrievedCategory: SettingsGroup = settingsGroup[name]
+		return retrievedCategory
 	end
 
-	function APIController:Set(value: any?): boolean
+	function APIController:Set(name: string, value: any?): boolean
 		if not value then value = "" end
+		local success = pcall(function()
+			local setting: Setting = settingFromString(name, nil, settingsGroup)
+			setting.Value.Value = value
+			local category = categoryFromString(name, settingsGroup)
+			local newSettingsGroup = settingsGroup
+			newSettingsGroup[category][name] = setting
+			settingsGroup = newSettingsGroup
+		end)
+		return success
 	end
 
 	return APIController
 end
+
+
 
 return SettingsAPI
 

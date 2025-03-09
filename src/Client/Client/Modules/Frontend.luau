@@ -4,11 +4,12 @@
 
 local Frontend = { Popup = {}, Drawer = {} }
 
-local Modules = script.Parent
 local Libraries = script.Parent.Parent.Libraries
+local Modules = script.Parent
 
 local Utilities = require(Modules.Utilities)
 local Var = require(Modules.Variables)
+local Types = require(Modules.Types)
 
 function Frontend.Render() end
 
@@ -150,6 +151,12 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 	end)
 end
 
+local Hovers = {}
+local CurrentlyActive
+local Ready = true
+local IsQueued = false
+local ShouldAnimate = true
+
 function Frontend.Drawer.Open(): ()
 	if not Var.DoHeaderEffects then return end --// Stops clicking the button multiple times which results in broken UI
 	Frontend.Drawer.HoverEnd()
@@ -160,6 +167,27 @@ function Frontend.Drawer.Open(): ()
 	local TimeToComplete
 
 	Var.DoHeaderEffects = false
+	ShouldAnimate = true
+	Ready = true
+
+	local function Clear(MainPageStaysVisible: bool)
+		for _, Frame in Container:GetChildren() do
+			if Frame.Name == "Header" and not Frame:GetAttribute("AdmLinkSinglePage") then continue end
+
+			if Frame:GetAttribute("AdmLinkSinglePage") then 
+				Frame.Visible = false
+
+				continue
+			end
+			for _, Frame in Frame:GetChildren() do
+				if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") then continue end
+
+				Frame.Visible = false
+			end
+
+			Var.ActivePage.Visible = MainPageStaysVisible
+		end
+	end
 
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
@@ -185,12 +213,20 @@ function Frontend.Drawer.Open(): ()
 	Apps.AppHolder.Position = UDim2.new(0, 0, 0.45, 0)
 
 	for _, Child in Var.MainFrame:GetChildren() do
-		if Child:IsA("Frame") and Child.Visible == true and Child ~= Apps then Child.Parent = Container end
+		if (Child:IsA("Frame") or Child:IsA("CanvasGroup")) and Child.Name ~= "AppDrawer" then
+			Child.Parent = Container 
+
+			if Child.Name == Var.ActivePage.Name then
+				CurrentlyActive = Child
+			end
+		end
 	end
+
+	Clear(true)
 
 	Var.Services.TweenService
 		:Create(Container, TweenInfo.new(TimeToComplete, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
-			GroupTransparency = 0.2,
+			GroupTransparency = 0,
 			BackgroundTransparency = 0.25,
 			Size = UDim2.new(0.95, 0, 0.95, 0),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -210,22 +246,81 @@ function Frontend.Drawer.Open(): ()
 			Position = UDim2.new(0, 0, 0, 0),
 		})
 		:Play()
+
+	for _, Button in Apps.AppHolder:GetDescendants() do
+		if Button.Name ~= "Activator" or Button:FindFirstAncestor("MultiThread") or Button:FindFirstAncestor("SingleThread") then continue end
+
+		local function AppOver(SubIcon, AppVisible)
+			--print(IsQueued, Ready, ShouldAnimate)
+			--print("expected: {} true true")
+			IsQueued = true
+			repeat task.wait() until Ready
+			Ready = false
+
+			if not ShouldAnimate then return end
+
+			Var.Services.TweenService:Create(Container, TweenInfo.new(.2), { GroupTransparency = 1 }):Play()
+
+			if IsQueued then
+				IsQueued = false
+				Ready = true
+			end
+
+			Clear(false)
+			task.wait(.2)
+
+			--// Check again?
+			if not ShouldAnimate then return end
+
+			CurrentlyActive.Visible = not AppVisible
+			SubIcon.Frame.Visible = AppVisible
+
+			Var.Services.TweenService:Create(Container, TweenInfo.new(.2), { GroupTransparency = 0 }):Play()
+
+			Ready = true
+		end
+
+		Button.MouseEnter:Connect(function()
+			--// Recursively find the frame bc idk!!
+			for _, Object in Var.CombinedButtonConfig do
+				for _, SubIcon in Object.SubIcons do
+					if SubIcon.Icon ~= Button.Parent.Icon.Image then continue end
+
+					AppOver(SubIcon, true)
+				end
+			end
+		end)
+
+		Button.MouseLeave:Connect(function()
+			--// Same dumb logic as above
+			for _, Object in Var.CombinedButtonConfig do
+				for _, SubIcon in Object.SubIcons do
+
+					if SubIcon.Icon ~= Button.Parent.Icon.Image then continue end
+					AppOver(SubIcon, false)
+				end
+			end
+		end)
+	end
 end
 
-function Frontend.Drawer.Close(TimeToComplete: number): ()
+function Frontend.Drawer.Close(): ()
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Apps.AppDrawerCover.CanvasGroup
+	local TimeToComplete
+
+	ShouldAnimate = false
 
 	xpcall(function()
-		TimeToComplete = TimeToComplete or tonumber(Utilities.GetSetting("AnimationSpeed")) or 1
+		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed")) or 1
 	end, function(e)
 		--// This is a temporary fix
-		TimeToComplete = TimeToComplete or 2
+		TimeToComplete = 2
 	end)
 
 	Container.Parent.Parent = Var.MainFrame
-	Container.Parent.Size = UDim2.new(0.75, 0, 1, 0)
-	Container.Parent.Position = UDim2.new(0.25, 0, 0, 0)
+	Container.Parent.Size = UDim2.new(.75,0,1,0)
+	Container.Parent.Position = UDim2.new(.25,0,0,0)
 
 	Var.Services.TweenService
 		:Create(Apps, TweenInfo.new(TimeToComplete * 0.75, Enum.EasingStyle.Quart), {
@@ -235,84 +330,79 @@ function Frontend.Drawer.Close(TimeToComplete: number): ()
 
 	Var.Services.TweenService
 		:Create(Apps.AppHolder, TweenInfo.new(TimeToComplete * 0.55, Enum.EasingStyle.Quart), {
-			Position = UDim2.new(0, 0, 0.75, 0),
+			Position = UDim2.new(0, 0, .75, 0),
 			GroupTransparency = 1,
 		})
 		:Play()
 
 	Var.Services.TweenService
-		:Create(
-			Container.Parent,
-			TweenInfo.new(TimeToComplete * 0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false),
-			{
-				Position = UDim2.new(0.5, 0, 0.5, 0),
-				Size = UDim2.new(1, 0, 1, 0),
+		:Create(Container.Parent, TweenInfo.new(TimeToComplete * .6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
+			Position = UDim2.new(0.5,0,0.5,0),
+			Size = UDim2.new(1,0,1,0),
 
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				BackgroundTransparency = 1,
-			}
-		)
+			AnchorPoint = Vector2.new(.5,.5),
+			BackgroundTransparency = 1
+		})
 		:Play()
 
-	task.wait(TimeToComplete * 0.6)
+	task.wait(TimeToComplete * .6)
 
 	Var.Services.TweenService
 		:Create(Container, TweenInfo.new(TimeToComplete * 0.5, Enum.EasingStyle.Quart), {
-			Size = UDim2.new(1, 0, 1, 0),
+			Size = UDim2.new(1,0,1,0),
 
 			BackgroundTransparency = 1,
-			GroupTransparency = 0,
+			GroupTransparency = 0
 		})
 		:Play()
 
-	task.wait(TimeToComplete * 0.5)
+	task.wait(TimeToComplete * .5)
 
 	for _, Child in Container:GetChildren() do
-		if Child:IsA("Frame") and Child.Visible == true then Child.Parent = Var.MainFrame end
+		if Child:IsA("Frame") or Child:IsA("CanvasGroup") then Child.Parent = Var.MainFrame end
 	end
 
+	Container.Parent.Parent      = Apps
+	Container.Parent.Size        = UDim2.new(3,0,1,0)
+	Container.Parent.Position    = UDim2.new(1,0,0,0)
+	Container.Parent.AnchorPoint = Vector2.new(0,0)
+
+	Container:Destroy()
+
 	Var.DoHeaderEffects = true
+	Ready = true
 end
 
 function Frontend.Drawer.HoverBegin()
-	print(Var.DoHeaderEffects)
 	if not Var.DoHeaderEffects then return end
 
 	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
-	local QuickTI = TweenInfo.new(0.25, Enum.EasingStyle.Quart)
+	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
 
-	Var.Services.TweenService
-		:Create(MarkBox.GridIcon, QuickTI, {
-			Size = UDim2.new(0.75, 0, 0.75, 0),
-		})
-		:Play()
+	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
+		Size = UDim2.new(.75,0,.75,0)
+	}):Play()
 
-	Var.Services.TweenService
-		:Create(MarkBox.AppIcon, QuickTI, {
-			Size = UDim2.new(0.25, 0, 0.25, 0),
-			ImageTransparency = 0.75,
-		})
-		:Play()
+	Var.Services.TweenService:Create(MarkBox.AppIcon, QuickTI, {
+		Size = UDim2.new(.25,0,.25,0),
+		ImageTransparency = .75
+	}):Play()
 end
 
 function Frontend.Drawer.HoverEnd()
 	if not Var.DoHeaderEffects then return end
 
 	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
-	local QuickTI = TweenInfo.new(0.25, Enum.EasingStyle.Quart)
+	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
 
-	Var.Services.TweenService
-		:Create(MarkBox.GridIcon, QuickTI, {
-			Size = UDim2.new(0, 0, 0, 0),
-		})
-		:Play()
+	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
+		Size = UDim2.new(0,0,0,0)
+	}):Play()
 
-	Var.Services.TweenService
-		:Create(MarkBox.AppIcon, QuickTI, {
-			Size = UDim2.new(1, 0, 1, 0),
-			ImageTransparency = 0,
-		})
-		:Play()
+	Var.Services.TweenService:Create(MarkBox.AppIcon, QuickTI, {
+		Size = UDim2.new(1,0,1,0),
+		ImageTransparency = 0
+	}):Play()
 end
 
 function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, FinalSize: UDim2): ()
@@ -341,7 +431,6 @@ function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, Final
 	UICornerTween:Play()
 	MainGroupTween:Play()
 
-	--// TODO (FloofyPlasma): Find a better way to do this...
 	local SizeStr: { string } = string.split(tostring(FinalSize), ",")
 	local X: number = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1]) :: number
 	local Y: number = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2]) :: number
@@ -374,7 +463,7 @@ function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, Final
 end
 
 function Frontend.Popup.Close(Popup: CanvasGroup, CanvasGroup: CanvasGroup): ()
-	--// TODO (FloofyPlasma): Find a better way to do this...
+	--// TODO find a better way to do this
 	local SizeStr: { string } = string.split(tostring(Popup.Size), ",")
 	local X: number = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1]) :: number
 	local Y: number = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2]) :: number
@@ -451,6 +540,38 @@ function Frontend.Popup.new(
 	Apps.MessageBox.Button2.MouseButton1Click:Connect(function()
 		Options[2].Callback(ClosePopup)
 	end)
+end
+
+function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Button)
+	local NewFrame
+
+	if Clicked == 0 then
+		NewFrame = AppConfig.MainButtonFrame
+	else
+		NewFrame = AppConfig.SubIcons[Clicked].Frame
+	end
+
+
+	for _, Frame in Var.MainFrame:GetChildren() do
+		--// Use their descendants, not the parent
+		if Frame.Name == "Header" or Frame.Name == "AppDrawer" and not Frame:GetAttribute("AdmLinkSinglePage") then continue end
+
+		for _, Frame in Frame:GetChildren() do
+			if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") then continue end
+
+			Frame.Visible = false
+		end
+	end
+
+	NewFrame.Visible = true
+
+	Var.ActivePage = NewFrame
+
+	repeat task.wait() until Var.MainFrame:FindFirstChild("Header") --// close animation 
+
+	Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer{Clicked ~= 0 and ` {AppConfig.AppName}` or ""}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
+	Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = AppConfig.Icon
+	Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and "rbxassetid://116599744136879" or AppConfig.SubIcons[Clicked].Icon
 end
 
 return Frontend

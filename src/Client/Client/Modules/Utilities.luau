@@ -250,6 +250,18 @@ function Utilities.Translate(StringIdentifier: string): string | { string }
 	return Var.LocaleModule[StringIdentifier]
 end
 
-Utilities.Icon = (Var.Remotes.GetIconPack:InvokeServer())
+Utilities.Icon = function(IconName)
+	if not Var.Icons then 
+		Var.Icons = Var.Remotes.GetIconPack:InvokeServer()
+	end
+	
+	print(Var.Icons, IconName, Var.Icons[IconName])
+	
+	return `rbxassetid://{Var.Icons[IconName]}`
+end
+
+function Utilities.ToSentenceCase(Sentence)
+	return Sentence:sub(1, 1):upper() .. Sentence:sub(2):lower()
+end
 
 return Utilities

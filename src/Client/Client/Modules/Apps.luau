@@ -1,13 +1,84 @@
 --// pyxfluff 2025
 
-local Modules = script.Parent
+--// This is mostly for the Marketplace but has some other app-related functions.
 
-local Frontend = require(Modules.Frontend)
+local Modules   = script.Parent
+
+local Types     = require(Modules.Types)
+local Var       = require(Modules.Variables)
+local Frontend  = require(Modules.Frontend)
 local Utilities = require(Modules.Utilities)
-local Var = require(Modules.Variables)
 
 local Apps = {}
 local Connections = {}
+
+function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
+	table.insert(Var.CombinedButtonConfig, ButtonConfig)
+	
+	local AppsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
+	
+	if #ButtonConfig.SubIcons == 0 then
+		--// Just make the one
+		local Button = AppsHolder.SingleThread:Clone()
+		
+		Button.Parent = AppsHolder
+		Button.Icon.Image = ButtonConfig.Icon
+		Button.Title.Text = ButtonConfig.AppName
+		
+		Button.Visible = true
+		
+		Button.Activator.MouseButton1Click:Connect(function()
+			ButtonConfig.MainButtonClick()
+			Frontend.Drawer.Close()
+			Frontend.SwapApps(ButtonConfig, 0, Button)
+		end)
+		
+		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true)
+		
+		return Button
+	else
+		local Button = AppsHolder.MultiThread:Clone()
+		local Height = 0
+
+		Button.Name = ButtonConfig.AppName
+		Button.Parent = AppsHolder
+		Button.Icon.Image = ButtonConfig.Icon
+		Button.Title.Text = ButtonConfig.AppName
+
+		Button.Visible = true
+
+		Button.Activator.MouseButton1Click:Connect(function()
+			if ButtonConfig.MainButtonFrame == nil then return end
+			
+			ButtonConfig.MainButtonClick()
+			Frontend.Drawer.Close()
+			Frontend.SwapApps(ButtonConfig, 0, Button)
+		end)
+		
+		for Index, Icon in ButtonConfig.SubIcons do
+			local Clone = Button.SubCollection.Object:Clone()
+			
+			Clone.Icon.Image = Icon.Icon
+			Clone.Title.Text = Icon.Name
+			
+			Clone.Activator.MouseButton1Click:Connect(function()
+				Icon.Click()
+				Frontend.Drawer.Close()
+				Frontend.SwapApps(ButtonConfig, Index, Clone)
+			end)
+			
+			Clone.Parent = Button.SubCollection
+			Clone.Visible = true
+			Clone.Name = Icon.Name
+			
+			Height += .23
+		end
+		
+		Button.SubHierarchyLine.Size = UDim2.new(.025, 0, Height, 0)
+
+		return Button
+	end
+end
 
 function Apps.GetVersionLabel(RequestedAPIVersion: number): string
 	return `<font color="rgb(139,139,139)">Your version </font>{RequestedAPIVersion == Var.AppAPIVersion and `<font color="rgb(56,218,111)">is supported! ({Var.VersionString})</font>` or `<font color="rgb(255,72,72)">may not be supported ({Var.VersionString})</font>`}`
@@ -21,13 +92,14 @@ function Apps.Show(ServerURL, ID, Reason): string
 	end)
 
 	if not Success then
-		warn(`Failed to fetch app {ID} from {ServerURL} - is the server active and alive?`)
-		print(Data)
+		Utilities.Logging.Warn(`Failed to fetch app {ID} from {ServerURL} - is the server active and responsive?`)
+		Utilities.Logging.Print(Data)
 		return "The server didn't return an OK status code."
 	elseif Data["Error"] ~= nil then
-		warn(`App server lookup returned external error: {Data["Error"]}`)
+		Utilities.Logging.Warn(`App server lookup returned external error:`, Data["Error"])
 		return "Something went wrong, check logs."
 	elseif Data[1] == 404 then
+		Utilities.Logging.Warn()
 		return "This app is missing."
 	end
 

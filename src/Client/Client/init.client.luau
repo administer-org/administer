@@ -24,13 +24,57 @@ Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 end)
 
 if not pcall(function()
-	Var.Remotes.Ping:InvokeServer()
-end) then
+		Var.Remotes.Ping:InvokeServer()
+	end) then
 	--Utilities.NewNotification("Administer", "")
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
 
 Widgets.Initialize()
+
+Apps.AddAppDrawerButton({
+	AppName = t("Apps.MainFrame.Home.Title"),
+	Description = t("Apps.MainFrame.Template.Desc"),
+	Icon = Utilities.Icon "home",
+
+	MainButtonClick = function() end,
+	MainButtonFrame = Var.MainFrame.Home,
+
+	SubIcons = {}
+})
+
+Apps.AddAppDrawerButton({
+	AppName = t("Apps.MainFrame.Config.Title"),
+	Description = t("Apps.MainFrame.Config.Desc"),
+	Icon = Utilities.Icon "media",
+
+	SubIcons = {
+		{
+			Name = t("Configuration.MenuBar.New.AInfoPage.HeaderLabel"),
+			Icon = Utilities.Icon "info",
+			Click = function() end,
+			Frame = Var.MainFrame.Configuration.InfoPage
+		},
+		{
+			Name = Utilities.ToSentenceCase(t("Configuration.Apps.Content.Template.Settings.HeaderLabel")),
+			Icon = Utilities.Icon "gear",
+			Click = function() end,
+			Frame = Var.MainFrame.Configuration.Settings
+		},
+		{
+			Name = Utilities.ToSentenceCase(t("Header.AppDrawer.HeaderLabel")),
+			Icon = Utilities.Icon "grid",
+			Click = function() end,
+			Frame = Var.MainFrame.Configuration.Marketplace
+		},
+		{
+			Name = t("Configuration.Admins.Container.Admins.Header.TLabel"),
+			Icon = Utilities.Icon "user-clip",
+			Click = function() end,
+			Frame = Var.MainFrame.Configuration.Admins
+		}
+	}
+})
 
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
 	Widgets.Edit(Var.MainFrame.Home.Widget1)
