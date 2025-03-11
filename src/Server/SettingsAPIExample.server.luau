@@ -1,4 +1,4 @@
-local SettingsAPI = require(script.Parent.Loader.Core.Settings)
+local SettingsAPI = require(script.Parent.Modules.SettingsAPI)
 
 local Settings = SettingsAPI.new({
 	-- if you use an array here rather than keys, luau will sort it in the order of definition.
@@ -20,6 +20,7 @@ local Settings = SettingsAPI.new({
 			["SettingDisplayType"] = "InputBox",
 
 			["Value"] = {
+				["Value"] = 1,
 				["Default"] = 1,
 			},
 		},
@@ -32,7 +33,7 @@ local Settings = SettingsAPI.new({
 				"English",
 				"Spanish",
 				"French",
-
+				["Value"] = "English",
 				["Default"] = "English",
 			},
 		},
@@ -51,6 +52,7 @@ local Settings = SettingsAPI.new({
 			["InputDisplayType"] = "Slider",
 
 			["Value"] = {
+				["Value"] = 1,
 				["Default"] = 1,
 				["Min"] = 0.25,
 				["Max"] = 5,
