@@ -110,6 +110,13 @@ NewRemote("GetIconPack", false, function(Player)
 	return require(script.Core.Icons) :: any
 end)
 
+--// Apps
+NewRemote("GetAppList", true, function(Player, QueryType)
+	return AppsModule.ServerAPI.GetList("http://192.168.0.40:8000", QueryType)
+end)
+
+NewRemote("GetAppInfo", true, AppsModule.ServerAPI.GetApp)
+
 --// Admin routes
 
 Utils.Logging.Print(`[✓] OK in {os.clock() - Var.InitClock["TempInit"]}s`)

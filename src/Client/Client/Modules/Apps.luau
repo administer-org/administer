@@ -14,27 +14,27 @@ local Connections = {}
 
 function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 	table.insert(Var.CombinedButtonConfig, ButtonConfig)
-	
+
 	local AppsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
-	
+
 	if #ButtonConfig.SubIcons == 0 then
 		--// Just make the one
 		local Button = AppsHolder.SingleThread:Clone()
-		
+
 		Button.Parent = AppsHolder
 		Button.Icon.Image = ButtonConfig.Icon
 		Button.Title.Text = ButtonConfig.AppName
-		
+
 		Button.Visible = true
-		
+
 		Button.Activator.MouseButton1Click:Connect(function()
-			ButtonConfig.MainButtonClick()
 			Frontend.Drawer.Close()
 			Frontend.SwapApps(ButtonConfig, 0, Button)
+			ButtonConfig.MainButtonClick()
 		end)
-		
+
 		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true)
-		
+
 		return Button
 	else
 		local Button = AppsHolder.MultiThread:Clone()
@@ -49,31 +49,31 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 		Button.Activator.MouseButton1Click:Connect(function()
 			if ButtonConfig.MainButtonFrame == nil then return end
-			
-			ButtonConfig.MainButtonClick()
+
 			Frontend.Drawer.Close()
 			Frontend.SwapApps(ButtonConfig, 0, Button)
+			ButtonConfig.MainButtonClick()
 		end)
-		
+
 		for Index, Icon in ButtonConfig.SubIcons do
 			local Clone = Button.SubCollection.Object:Clone()
-			
+
 			Clone.Icon.Image = Icon.Icon
 			Clone.Title.Text = Icon.Name
-			
+
 			Clone.Activator.MouseButton1Click:Connect(function()
-				Icon.Click()
 				Frontend.Drawer.Close()
 				Frontend.SwapApps(ButtonConfig, Index, Clone)
+				Icon.Click()
 			end)
-			
+
 			Clone.Parent = Button.SubCollection
 			Clone.Visible = true
 			Clone.Name = Icon.Name
-			
+
 			Height += .23
 		end
-		
+
 		Button.SubHierarchyLine.Size = UDim2.new(.025, 0, Height, 0)
 
 		return Button
@@ -88,7 +88,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	Utilities.Logging.Print("Downloading full info for that app...")
 
 	local Success, Data = pcall(function()
-		return Var.Services.ReplicatedStorage.Var.Remotes.GetAppInfo:InvokeServer(ServerURL, ID)
+		return Var.Remotes.GetAppInfo:InvokeServer(ServerURL, ID)
 	end)
 
 	if not Success then
@@ -103,13 +103,11 @@ function Apps.Show(ServerURL, ID, Reason): string
 		return "This app is missing."
 	end
 
-	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.Install
+	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox
 
-	AppInfoFrame.Titlebar.Bar.Title.Text = Data["AppTitle"]
-	AppInfoFrame.MetaCreated.Label.Text = `Created {Utilities.FormatRelativeTime(Data["AppCreatedUnix"])}`
-	AppInfoFrame.MetaUpdated.Label.Text = `Updated {Utilities.FormatRelativeTime(Data["AppUpdatedUnix"])}`
-	AppInfoFrame.MetaVersion.Label.Text =
-		Apps.GetVersionLabel(tonumber(Data["AdministerMetadata"]["AdministerAppAPIPreferredVersion"]) :: number)
+	AppInfoFrame.Head.Text = Data["Title"]
+	AppInfoFrame.Metadata.Text = 
+		`Created {Utilities.FormatRelativeTime(Data["Metadata"]["CreatedAt"])}\n\nUpdated {Utilities.FormatRelativeTime(Data["Metadata"]["UpdatedAt"])}\n\nUses AppPlatform {Data["Metadata"]["AppAPIPreferredVersion"]}, which is supported by your Administer version.`
 	if Reason == nil then
 		AppInfoFrame.MetaServer.Label.Text =
 			`Shown because <b>You're subscribed to {string.split(ServerURL, "/")[3]}</b>`
@@ -117,9 +115,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		AppInfoFrame.MetaServer.Label.Text = `Shown because <b>{Reason}</b>`
 	end
 	AppInfoFrame.MetaInstalls.Label.Text = `<b>{Utilities.ShortNumber(Data["AppDownloadCount"])}</b> installs`
-	AppInfoFrame.AppClass.Icon.Image = Data["AppType"] == "Theme" and "http://www.roblox.com/asset/?id=14627761757"
-		or "http://www.roblox.com/asset/?id=14114931854"
-	AppInfoFrame.Install.HeaderLabel.Text = "Install"
+	AppInfoFrame.ImportantInfo.Creator.ItemType.Image = Data["AppType"] == "Theme" and Utilities.Icon "pencil-paintbrush" or Utilities.Icon "plugin"
 
 	AppInfoFrame.UserInfo.PFP.Image = Var.Services.Players:GetUserThumbnailAsync(
 		Var.Services.Players:GetUserIdFromNameAsync(Data["AppDeveloper"]),
@@ -243,12 +239,14 @@ end
 local InProgress = false
 
 function Apps.LoadList(List: {} | nil): ()
+	local Market = Var.MainFrame.Configuration.Marketplace
+
 	Utilities.Logging.Print("Refreshing app list...")
-	Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = false
+	Market.MPFrozen.Visible = false
 
 	if InProgress then
 		Utilities.Logging.Warn("You're clicking too fast or your app servers are unresponsive! Please slow down.")
-		Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = true
+		Market.MPFrozen.Visible = true
 
 		return
 	end
@@ -259,41 +257,70 @@ function Apps.LoadList(List: {} | nil): ()
 		(Connection :: RBXScriptConnection):Disconnect()
 	end
 
-	for _, Item in Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content:GetChildren() do
-		if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
+	local function Card(CardData, ListLoc)
+		local NewCard: Instance = ListLoc.Template:Clone()
+		NewCard.Parent = ListLoc
+		NewCard.Name = CardData.name
+		NewCard.Visible = true
+
+		NewCard.ObjName.Text = CardData.name
+		NewCard.Server.Text = `App by @{CardData.developer.Name} from {CardData.Server}`
+
+		NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
+		NewCard.Stats.Rating.Label.Text = CardData.rating
+
+		NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
+			Apps.Show(CardData.Server, CardData.id, CardData.Server)
+		end)
 	end
 
-	local AppList = List or Var.Remotes.GetAppList:InvokeServer()
+	local AppList = List or Var.Remotes.GetAppList:InvokeServer(Var.Marketplace.ActivePageType)
+
+	if Var.Marketplace.ActivePage == "Featured" then
+		local Featured = {}
+		local Index = 1
+
+		for _, Item in Market.MainMarketplace.Featured.TopGrid:GetChildren() do
+			if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
+		end
+
+		repeat
+			for SUrl, Server in AppList do
+				--// This does not work, do not uncomment it, I do not know why.
+				--if pcall(function() Server[Index]["processed_in"] = Server[Index]["processed_in"] end) then continue end
+
+				table.insert(Featured, Server[Index])
+			end
+
+			Index += 1
+		until #Featured == 4 or Index == 30
+
+		print(Featured)
+
+		for _, App in Featured do
+			Card(App, Market.MainMarketplace.Featured.TopGrid)
+		end
+	end
+
+
 
 	if AppList[1] == false then
 		Utilities.Logging.Warn("You're clicking too fast or your app servers are unresponsive! Please slow down.")
 		Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = true
 		Var.MainFrame.Configuration.Marketplace.MPFrozen.Subheading1.Text =
-			`Sorry, but one or more app servers returned an error while processing that (code: {AppList[2]}, route /list). This may be a ban, a temporary ratelimit, or it may be unavailbable. Please retry your request again soon.\n\nIf you keep seeing this page please check the log and remove any defective app servers.`
+			`Sorry, but one or more app servers returned an error while processing that (code: {AppList[2]}, route /directory). This may be a ban, a temporary ratelimit, or it may be unavailbable. Please retry your request again soon.\n\nIf you keep seeing this page please check the log and remove any defective app servers.`
 
 		return
 	end
 
-	Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Input.FocusLost:Connect(
-		function(EnterPressed: boolean, InputThatCausedFocusLoss: InputObject)
-			if not EnterPressed then return end
-
-			Var.MainFrame.Configuration.Marketplace.PartialSearch.Visible = false
-			Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = false
-
-			Apps.Search( --// TODO
-				Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Input.Text
-			)
-		end
-	)
-
 	for Index, App in AppList do
+		print(App)
 		if App["processed_in"] ~= nil then
 			Utilities.Logging.Print(`Loaded {#AppList - 1} apps from the database in {App["processed_in"]}s`)
 			continue
 		end
 
-		local Frame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content.Template:Clone()
+		local Frame = Market.MainMarketplace.Content.Template:Clone()
 		Frame.Parent = Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content
 
 		Frame.AppName.Text = App["Name"]
@@ -317,6 +344,21 @@ function Apps.LoadList(List: {} | nil): ()
 	end
 
 	InProgress = false
+end
+
+function Apps.InitSerarchbar() --// TODO
+	Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Input.FocusLost:Connect(
+		function(EnterPressed: boolean, InputThatCausedFocusLoss: InputObject)
+			if not EnterPressed then return end
+
+			Var.MainFrame.Configuration.Marketplace.PartialSearch.Visible = false
+			Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = false
+
+			Apps.Search( --// TODO
+				Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Input.Text
+			)
+		end
+	)
 end
 
 function Apps.LoadPage(Configuration, AppsMenu)

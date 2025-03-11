@@ -255,7 +255,7 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 		["ID"] = AppID,
 		["InstallDate"] = os.time(),
 		["InstallSource"] = InstallContext or "Manual ID install",
-		["Name"] = AppName ~= nil and AppName or "Unknown", --// surely wont cause any issues
+		["Name"] = AppName ~= nil and AppName or "Unknown" --// surely wont cause any issues
 	})
 
 	Var.DataStores.AppDB:SetAsync("AppList", AppList)
@@ -263,29 +263,36 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 end
 
 --// Marketplace functions
-function App.ServerAPI.GetList(SpecificServer: string): {}
-	local FullList = {}
+function App.ServerAPI.GetList(
+	SpecificServer: string, 
+	Area: string
+): {}
+	local Combined = {}
 
 	if Utils.GetSetting("DisableAppServerFetch") == true then
 		Utils.Logging.Print("App server call ignored due to configuration.")
 		return {}
 	end
 
-	for i, Server in (SpecificServer ~= nil and { SpecificServer } or Var.DataStores.AppDB:GetAsync("AppServerList")) do
-		HTTP.GetRoute(Server, "/api/list", function(Apps, ResponseData)
+	for i, Server in (SpecificServer ~= nil and {{ ServerURL = SpecificServer }} or Var.DataStores.AppDB:GetAsync("AppServerList")) do
+		local FullList = {}
+		
+		return HTTP.GetRoute(Server.ServerURL, `/api/directory?asset_type={Area}`, function(Apps, ResponseData): {}
 			for i, v in Apps do
-				v["AppServer"] = Server
-
+				v["Server"] = Server.ServerURL
+				
 				table.insert(FullList, v)
 			end
 
-			return { true, "OK" }
-		end, function(sc)
-			return { false, `Failed to fetch apps: {sc}` }
+			return {[Server.ServerURL] = FullList}
+		end, function(sc): {}
+			return {[Server.ServerURL] = {false, sc}}
 		end)
 	end
+	
+	print(Combined)
 
-	return FullList
+	return Combined
 end
 
 function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response

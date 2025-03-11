@@ -64,7 +64,7 @@ Apps.AddAppDrawerButton({
 		{
 			Name = Utilities.ToSentenceCase(t("Header.AppDrawer.HeaderLabel")),
 			Icon = Utilities.Icon "grid",
-			Click = function() end,
+			Click = Apps.LoadList,
 			Frame = Var.MainFrame.Configuration.Marketplace
 		},
 		{

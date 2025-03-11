@@ -234,8 +234,7 @@ end
 function Utilities.Translate(StringIdentifier: string): string | { string }
 	if Var.LocaleModule["_"] == "_init" then
 		Var.LocaleModule = Var.Remotes.GetTranslationModule:InvokeServer(
-			--string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
-			"es"
+			string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
 		)
 	end
 
