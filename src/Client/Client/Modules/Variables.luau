@@ -36,6 +36,8 @@ Variables.Marketplace = {
 	ActivePageType = "FEATURED"
 }
 
+Variables.Icons = { ["_"] = false }
+
 Variables.LocaleModule = { ["_"] = "_init" }
 
 function Variables.init() end

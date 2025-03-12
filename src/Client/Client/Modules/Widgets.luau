@@ -231,7 +231,7 @@ function Widgets.Edit(
 	end)
 
 	--// start finding other widgets to use
-	local Widgets = Widgets.GetAvailableWidgets()["Large"]
+	local Widgets: {} = Widgets.GetAvailableWidgets()["Large"]
 	local Count = 0 --// 0 by default because ideally they have one already?
 	local Buttons = {}
 	

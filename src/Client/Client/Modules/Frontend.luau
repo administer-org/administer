@@ -170,8 +170,8 @@ function Frontend.Drawer.Open(): ()
 	ShouldAnimate = true
 	Ready = true
 
-	local function Clear(MainPageStaysVisible: bool)
-		for _, Frame in Container:GetChildren() do
+	local function Clear(MainPageStaysVisible: boolean)
+		for _, Frame in Container:GetChildren() :: { Frame } do
 			if Frame.Name == "Header" and not Frame:GetAttribute("AdmLinkSinglePage") then continue end
 
 			if Frame:GetAttribute("AdmLinkSinglePage") then 
@@ -179,7 +179,7 @@ function Frontend.Drawer.Open(): ()
 
 				continue
 			end
-			for _, Frame in Frame:GetChildren() do
+			for _, Frame in Frame:GetChildren() :: { Instance } do
 				if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") then continue end
 
 				Frame.Visible = false
