@@ -1,3 +1,21 @@
---// TODO (FloofyPlasma): Implement types here
+local Types = {}
 
-return {}
+export type ButtonConfig = {
+	Icon: string,
+	AppName: string,
+	Background: string,
+	Description: string,
+	MainButtonClick: () -> (),
+	MainButtonFrame: Frame | CanvasGroup?,
+
+	SubIcons: {
+		{
+			Icon: string,
+			Name: string,
+			Frame: Frame | CanvasGroup,
+			Click: () -> ()
+		}
+	}
+}
+
+return Types

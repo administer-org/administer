@@ -1,6 +1,7 @@
 --// Administer
 --// pyxfluff 2024 - 2025
 
+--local imageTable =
 return {
 	["Meta"] = {
 		Name = "UIcons",
@@ -89,6 +90,7 @@ return {
 	["pause"] = "16261077642",
 	["pen"] = "16105444946",
 	["pencil"] = "97515617542810",
+	["pencil-paintbrish"] = "14627761757",
 	["photo-gallery"] = "11724564850",
 	["pin-filled"] = "15406916916",
 	["play"] = "15477628389",
@@ -124,5 +126,5 @@ return {
 	["users"] = "15317927036",
 	["volume"] = "13703642008",
 	["warning-filled"] = "17402667535",
-	["x"] = "15105963940",
+	["x"] = "15105963940"
 }

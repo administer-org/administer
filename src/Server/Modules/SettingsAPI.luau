@@ -1,12 +1,11 @@
 local SettingsAPI = {}
-SettingsAPI.__index = SettingsAPI
 
 local Types = require(script.Parent.Parent.Core.Types)
 local Signal = require(script.Signal)
 
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
-local SettingsDataStore = DataStoreService:GetDataStore("Administer_Setting_Preferences")
+local SettingsDataStore = DataStoreService:GetDataStore("Administer_SettingPresets")
 
 type Setting = Types.Setting
 type SettingsGroup = Types.SettingsGroup
@@ -20,14 +19,14 @@ local function saveDataStore(key: string, data: {}): boolean
 	return success
 end
 
-local function loadDataStore(key: string): any
+local function loadDataStore(key: string): {}
 	local success, data = pcall(function()
 		return HttpService:JSONDecode(SettingsDataStore:GetAsync(key))
 	end)
-	if success then return data else return nil end
+	if success then return data else return {} end
 end
 
-local function settingFromString(settingName: string, categoryName: string?, settingsGroup: SettingsGroup)
+local function settingFromString(settingName: string, settingsGroup: SettingsGroup, categoryName: string?, returnAsString: boolean?)
 	if categoryName then
 		return settingsGroup[categoryName][settingName]
 	else
@@ -41,58 +40,85 @@ end
 local function categoryFromString(settingName: string, settingsGroup: SettingsGroup)
 	for i, category in settingsGroup do
 		local setting: Setting = category[settingName]
-		if setting then return i end
+		if setting and i ~= "_CategoryOpts" then return i end
 	end
 end
 
-function SettingsAPI.new(setting: SettingsGroup): MainSettings
+function SettingsAPI.new(setting, dataStoreKey: string)
 	local APIController = {}
 	local Setting = {}
-	local settingsGroup = setting
+	local changedSignal = Signal.new()
+	local settingsGroup
+	if #Setting == 0 then settingsGroup = loadDataStore("Presets") else settingsGroup = setting end
 
-	function APIController:Changed(name: string)
-		local changedSignal = Signal.new()
-		function onChanged() -- TODO: fire this when set is called
-			changedSignal:Fire()
+	function APIController.Changed(names: {settingName: string}, callback) -- fires when either setting changes
+		for i, name in names do
+			changedSignal:Connect(name, function()
+				callback(setting)
+			end)
+			return changedSignal
 		end
-		return changedSignal
 	end
 
-	function APIController:with(name: string, callback)
-		local retrievedSetting: Setting = settingFromString(name, nil, settingsGroup)
-
+	function APIController.with(names: {string}, callback)
 		return function(...)
-			callback(settingsGroup, ...)
+			for i, name in names do
+				local retrievedSetting: Setting = settingFromString(name, settingsGroup)
+				callback(retrievedSetting, ...)
+			end
 		end
 	end
 
-	function APIController:Get(name: string): Setting
-		local retrievedSetting: Setting = settingFromString(name, nil, settingsGroup)
-		return retrievedSetting
+
+	function APIController.Get(names: any): any
+		if typeof(names) == "table" then
+		local returnTable = {}
+		for i, name in names do
+			local retrievedSetting: Setting = settingFromString(name, settingsGroup)
+			returnTable[name] = retrievedSetting["Value"]["Value"]
+		end
+		return returnTable
+		else
+			local retrievedSetting: Setting = settingFromString(names, settingsGroup)
+			return retrievedSetting["Value"]["Value"]
+		end
 	end
 
-	function APIController:GetCategory(name: string): {Setting}
+	function APIController.GetCategory(name: string): {Setting}
 		local retrievedCategory: SettingsGroup = settingsGroup[name]
 		return retrievedCategory
 	end
 
-	function APIController:Set(name: string, value: any?): boolean
+	function APIController.Set(name: string, value: any?): boolean
 		if not value then value = "" end
 		local success = pcall(function()
-			local setting: Setting = settingFromString(name, nil, settingsGroup)
+			local setting: Setting = settingFromString(name, settingsGroup)
 			setting.Value.Value = value
 			local category = categoryFromString(name, settingsGroup)
 			local newSettingsGroup = settingsGroup
 			newSettingsGroup[category][name] = setting
 			settingsGroup = newSettingsGroup
 		end)
+		if success then changedSignal:Fire(name) end
 		return success
 	end
-
+	
+	function APIController.Save(): boolean
+		local success, err = pcall(function()
+			saveDataStore(dataStoreKey, settingsGroup)
+		end)
+		return success
+	end
+	
+	function APIController.Load(customSettings: SettingsGroup?): boolean
+		if customSettings then settingsGroup = customSettings end
+		local success, err = pcall(function()
+			settingsGroup = loadDataStore(dataStoreKey)
+		end)
+		return success
+	end
 	return APIController
 end
-
-
 
 return SettingsAPI
 

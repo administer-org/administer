@@ -19,8 +19,8 @@ local AppsModule     = require(Modules.Apps)
 local FrontendAPI    = require(Modules.Frontend)
 local HttpRunner     = require(Modules.HTTPRunner)
 local Utils          = require(Modules.Utilities)
-local _Debugging     = require(Modules.Debugging)
-local _SettingsAPI   = require(Modules.SettingsAPI)
+local Debugging      = require(Modules.Debugging)
+local SettingsAPI    = require(Modules.SettingsAPI)
 
 local Configuration  = require(Core.Configuration)
 local Types          = require(Core.Types)
@@ -40,9 +40,10 @@ xpcall(function()
 	Var.IsFirstBoot = (Var.IsFirstBoot or Var.DataStores.Settings:GetAsync("HasInit") == nil and true or false)
 
 	Utils.Logging.Print(`[✓] DataStoreService connection established in {os.clock() - Var.InitClock["TempInit"]}s`)
-
+	local Settings
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
+		Settings = SettingsAPI.new(Configuration.Settings) --// Initialize for the first time
 
 		--// This system is better than the old one because it allows the user
 		--// to uninstall AOS without causing the system to overwrite stuff
@@ -50,7 +51,13 @@ xpcall(function()
 	end
 
 	--// Now load settings
-	--SettingsAPI(Configuration.Settings)
+	if not Settings then
+		Settings = SettingsAPI.new(Configuration.Settings)
+		Settings:Load()
+		
+		print(Settings.GetCategory("interface"))
+	end
+	
 end, function(e)
 	Utils.Logging.Warn(e)
 	Utils.Logging.Error(

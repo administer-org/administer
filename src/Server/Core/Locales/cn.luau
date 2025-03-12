@@ -3,7 +3,7 @@ return {
 	["_locale_display"] = "中文 (中国)",
 	["_locale_display_localized"] = "中文 (中国)",
 
-	["__TIMES__"] = {
+    ["__TIMES__"] = {
 		"morning",
 		"afternoon",
 		"evening",
@@ -109,7 +109,7 @@ return {
 	["NotFound.PageBroken.TextLabel"] = "此页面执行了 Roblox 或 Administer 无法理解的操作，无法继续加载。",
 	["NotFound.PageBroken.sending"] = "此应用（{APP_NAME}）出现了某种运行时或 Administer API 错误，这是致命的，可能导致其他内容冻结。请向开发者报告此错误。",
 	["Notepad.Header.Head"] = "记事本",
-	["Welcome.Initial.HeaderLabel"] = "早上好，<b>Roblox</b>！欢迎使用 Administer.",
+	["Welcome.Initial.HeaderLabel"] = "好 %s，<b>%s</b>！欢迎使用 Administer.",
 	["Welcome.Initial.Subheading1"] = "您一定会喜欢这里。欢迎来到拥有您所需而不包含多余内容的管理面板。",
 	["administer..widgets.NotFound.Welcome"] = "它可能被卸载了。请选择其他项。",
 	["administer..widgets.NotSelected.Welcome"] = "请选择要显示的应用。",

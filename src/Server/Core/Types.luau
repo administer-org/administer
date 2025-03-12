@@ -1,3 +1,5 @@
+--!strict
+
 --// Administer
 --// pyxfluff 2024 - 2025
 
@@ -223,5 +225,59 @@ export type InvocationAPI = {
 	RichConfig: () -> RichConfig,
 	Construct: (RichConfig, {}) -> AppFunction,
 }
+
+
+
+
+--// Settings
+export type Setting = {
+	Description: string,
+	DisplayName: string?,
+
+	SettingType: "Enum" | "Number" | "Bool" | "String",
+	InputDisplayType: "InputBox" | "NumberRange" | "Dropdown",
+
+	Value: {
+		Value: any?,
+		Default: any?,
+		Min: number?,
+		Max: number?,
+		Step: number?,
+		EnforceEnumValue: boolean?
+	}
+}
+
+
+export type SettingsGroup = {
+	_SettingsMeta: {
+		Name: string,
+		Description: string
+	},
+
+	Category: {
+		CategoryOptions: {
+			DisplayName: string,
+			Color: string,
+			Description: string
+		},
+
+		Settings: {Setting}
+	}
+}
+
+export type MainSettings = {
+	Changed: ({ Setting: string }) -> (() -> (Setting)),
+	with: ({ Setting: string }) -> ((...any) -> (Settings: { Setting }, ...any) -> (...any)),
+	Get: ({ Setting: string }) -> ({ Setting }),
+	GetCategory: (Category: string) -> ({ Setting }),
+	Set: (Setting: string) -> ()
+}
+
+export type SettingsAPI = {
+	New: (SettingsGroup) -> (MainSettings),
+	GetRaw: (SettingPath: string) -> (Setting),
+	SetRaw: (SettingPath: string, NewValue: any) -> (any)
+}
+
 
 return {}

@@ -100,23 +100,23 @@ function App.LoadLocal(
 	Path: number | Instance,
 	AppMeta: { InstallDate: number, InstallSource: string, AppID: number }
 ): Types.Response
-    -- stylua: ignore end
+	-- stylua: ignore end
 	Utils.Logging.Print(
 		`[-] Loading app from source {string.lower(typeof(Path))}_{(typeof(Path) == "Instance" and Path:GetFullName() or Path)}`
 	)
 
-    Ticks[Path] = tick()
-    local Extras = {
-        RunContext = typeof(Path) == "Instance" and "LocalAppsFolder" or "AOSDownload", 
-        TechID = Path
-    }
+	Ticks[Path] = tick()
+	local Extras = {
+		RunContext = typeof(Path) == "Instance" and "LocalAppsFolder" or "AOSDownload", 
+		TechID = Path
+	}
 	local TargetApp, App = nil, require(Path)(App.InvocationAPI, Extras) :: any
 
-    print(App)
+	print(App)
 
-    if not App[1] then
-        Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
-    end
+	if not App[1] then
+		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
+	end
 
 	--// Construct UI here
 
@@ -276,11 +276,11 @@ function App.ServerAPI.GetList(
 
 	for i, Server in (SpecificServer ~= nil and {{ ServerURL = SpecificServer }} or Var.DataStores.AppDB:GetAsync("AppServerList")) do
 		local FullList = {}
-		
+
 		return HTTP.GetRoute(Server.ServerURL, `/api/directory?asset_type={Area}`, function(Apps, ResponseData): {}
 			for i, v in Apps do
 				v["Server"] = Server.ServerURL
-				
+
 				table.insert(FullList, v)
 			end
 
@@ -289,7 +289,7 @@ function App.ServerAPI.GetList(
 			return {[Server.ServerURL] = {false, sc}}
 		end)
 	end
-	
+
 	print(Combined)
 
 	return Combined

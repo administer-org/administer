@@ -31,6 +31,11 @@ Variables.Services = {
 	LocalizationService = game:GetService("LocalizationService"),
 }
 
+Variables.Marketplace = {
+	ActivePage = "Featured",
+	ActivePageType = "FEATURED"
+}
+
 Variables.LocaleModule = { ["_"] = "_init" }
 
 function Variables.init() end

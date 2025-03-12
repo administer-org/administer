@@ -307,8 +307,7 @@ function Apps.LoadList(List: {} | nil): ()
 	if AppList[1] == false then
 		Utilities.Logging.Warn("You're clicking too fast or your app servers are unresponsive! Please slow down.")
 		Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = true
-		Var.MainFrame.Configuration.Marketplace.MPFrozen.Subheading1.Text =
-			`Sorry, but one or more app servers returned an error while processing that (code: {AppList[2]}, route /directory). This may be a ban, a temporary ratelimit, or it may be unavailbable. Please retry your request again soon.\n\nIf you keep seeing this page please check the log and remove any defective app servers.`
+		Var.MainFrame.Configuration.Marketplace.MPFrozen.Subheading1.Text = Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1")
 
 		return
 	end
@@ -334,8 +333,8 @@ function Apps.LoadList(List: {} | nil): ()
 			Frame.Install.MouseButton1Click:Connect(function()
 				Frame.InstallIcon.Image = "rbxassetid://84027648824846"
 				Frame.InstallLabel.Text = "Loading..."
+				
 				Frame.InstallLabel.Text = Apps.Show(App["AppServer"], App["AppID"], "")
-
 				Frame.InstallIcon.Image = "rbxassetid://16467780710"
 			end)
 		)
