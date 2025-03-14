@@ -46,14 +46,14 @@ return {
 	--// or ignored by the system. They are just default values.
 	Settings = {
 		["_SettingsMeta"] = {
-			["Name"] = "Administer",
+			["Name"] = "Administer"
 		},
 
 		["Admins"] = {
 			["_CategoryOpts"] = {
 				["DisplayName"] = "Admins",
 				["Color"] = "#fff",
-				["Description"] = "Change how ranks and admins operate.",
+				["Description"] = "Change how ranks and admins operate."
 			},
 
 			["RefreshTime"] = {
@@ -68,8 +68,8 @@ return {
 					["Default"] = 120,
 					["Min"] = 15,
 					["Max"] = 1000,
-					["Step"] = 1,
-				},
+					["Step"] = 1
+				}
 			},
 
 			["AllowProtectedEdits"] = {
@@ -82,15 +82,15 @@ return {
 				["Value"] = {
 					["Value"] = false,
 					["Default"] = false
-				},
-			},
+				}
+			}
 		},
 
 		["Interface"] = {
 			["_CategoryOpts"] = {
 				["DisplayName"] = "Interface",
 				["Color"] = "#000",
-				["Description"] = "Customize the user interface.",
+				["Description"] = "Customize the user interface."
 			},
 
 			["Language"] = {
@@ -113,8 +113,19 @@ return {
 					["Default"] = 1,
 					["Min"] = 0,
 					["Max"] = 5,
-					["Step"] = 0.1,
-				},
+					["Step"] = 0.1
+				}
+			},
+			
+			["AllowThemeScriptHooks"] = {
+				["DisplayName"] = "Allow themes to run Lua",
+				["Description"] = "If enabled, all themes will be allowed to run external Luau code. This is useful for more advanced themes or other modifications.",
+				["SettingType"] = "boolean",
+				
+				["Value"] = {
+					["Value"] = true,
+					["Default"] = true
+				}
 			},
 
 			["DisableUnofficialAppWarning"] = {
@@ -126,34 +137,34 @@ return {
 
 				["Value"] = {
 					["Value"] = false,
-					["Default"] = false,
-				},
+					["Default"] = false
+				}
 			},
 
 			["EnableEditableImages"] = {
 				["DisplayName"] = "Enable EditableImages",
-				["Description"] = "Enables EditableImage features such as app card backgrounds, reflections, and other blurring effects. Currently nonfunctional outside of Studio due to Roblox limitations.",
+				["Description"] = "Enables EditableImage features such as app card backgrounds, reflections, and other blurring effects. Requires the game permission and ID verification due to Roblox limitations.",
 				["SettingType"] = "Boolean",
 				["SettingDisplayType"] = "Toggle",
 				["RequiresRestart"] = false,
 
 				["Value"] = {
 					["Value"] = true,
-					["Default"] = true,
-				},
+					["Default"] = true
+				}
 			},
 
 			["HomepageGreeting"] = {
 				["DisplayName"] = "Homepage Greeting",
-				["Description"] = 'This is the text that displays after the "Good morning, username!" text on the homepage.',
+				["Description"] = 'This is the text that displays after the "Hello, username!" text on the homepage.',
 				["SettingType"] = "String",
 				["SettingDisplayType"] = "InputBox",
 				["RequiresRestart"] = false,
 
 				["Value"] = {
 					["Value"] = "Welcome to Administer!",
-					["Default"] = "Welcome to Administer!",
-				},
+					["Default"] = "Welcome to Administer!"
+				}
 			},
 
 			["PanelKeybind"] = {
@@ -165,8 +176,8 @@ return {
 
 				["Value"] = {
 					["Value"] = "F2",
-					["Default"] = "F2",
-				},
+					["Default"] = "F2"
+				}
 			},
 
 			["EnableClickEffects"] = {
@@ -178,9 +189,9 @@ return {
 
 				["Value"] = {
 					["Value"] = true,
-					["Default"] = true,
-				},
-			},
+					["Default"] = true
+				}
+			}
 		},
 
 		["Apps"] = {
@@ -213,28 +224,28 @@ return {
 
 				["Value"] = {
 					["Value"] = false,
-					["Default"] = false,
-				},
+					["Default"] = false
+				}
 			},
 
 			["LoadApps"] = {
-				["Description"] = "Controls the ability for the server to load external apps.",
+				["Description"] = "Controls the ability for the server to load apps.",
 				["SettingType"] = "Boolean",
 				["SettingDisplayType"] = "Toggle",
 				["RequiresRestart"] = true,
 
 				["Value"] = {
 					["Value"] = true,
-					["Default"] = true,
-				},
-			},
+					["Default"] = true
+				}
+			}
 		},
 
 		["Accessibility"] = {
 			["_CategoryOpts"] = {
 				["DisplayName"] = "Accessibility",
 				["Color"] = "#888",
-				["Description"] = "Adjust accessibility settings.",
+				["Description"] = "Adjust accessibility settings."
 			},
 
 			["ChatCommand"] = {
@@ -245,8 +256,8 @@ return {
 
 				["Value"] = {
 					["Value"] = true,
-					["Default"] = true,
-				},
+					["Default"] = true
+				}
 			},
 
 			["MobileOpenGesture"] = {

@@ -86,7 +86,8 @@ end
 
 function Apps.Show(ServerURL, ID, Reason): string
 	Utilities.Logging.Print("Downloading full info for that app...")
-
+	
+	local TI = TweenInfo.new((tonumber(Utilities.GetSetting("AnimationSpeed")) or 1) * 2, Enum.EasingStyle.Quart)
 	local Success, Data = pcall(function()
 		return Var.Remotes.GetAppInfo:InvokeServer(ServerURL, ID)
 	end)
@@ -97,75 +98,89 @@ function Apps.Show(ServerURL, ID, Reason): string
 		return "The server didn't return an OK status code."
 	elseif Data["Error"] ~= nil then
 		Utilities.Logging.Warn(`App server lookup returned external error:`, Data["Error"])
-		return "Something went wrong, check logs."
-	elseif Data[1] == 404 then
-		Utilities.Logging.Warn()
-		return "This app is missing."
+		return "Something went wrong."
+	elseif Data[2] == 404 then
+		Utilities.Logging.Warn(Data[2])
+		return "App not found."
 	end
 
 	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox
 
-	AppInfoFrame.Head.Text = Data["Title"]
-	AppInfoFrame.Metadata.Text = 
-		`Created {Utilities.FormatRelativeTime(Data["Metadata"]["CreatedAt"])}\n\nUpdated {Utilities.FormatRelativeTime(Data["Metadata"]["UpdatedAt"])}\n\nUses AppPlatform {Data["Metadata"]["AppAPIPreferredVersion"]}, which is supported by your Administer version.`
-	if Reason == nil then
-		AppInfoFrame.MetaServer.Label.Text =
-			`Shown because <b>You're subscribed to {string.split(ServerURL, "/")[3]}</b>`
-	else
-		AppInfoFrame.MetaServer.Label.Text = `Shown because <b>{Reason}</b>`
-	end
-	AppInfoFrame.MetaInstalls.Label.Text = `<b>{Utilities.ShortNumber(Data["AppDownloadCount"])}</b> installs`
-	AppInfoFrame.ImportantInfo.Creator.ItemType.Image = Data["AppType"] == "Theme" and Utilities.Icon "pencil-paintbrush" or Utilities.Icon "plugin"
+	Data = Data[2]
+	print(Data)
+	
+	AppInfoFrame.AppIcon.Image = `rbxassetid://{Data["IconID"]}`
+	AppInfoFrame.AppIconBG.Image = `rbxassetid://{Data["BlurredIconID"]}`
 
-	AppInfoFrame.UserInfo.PFP.Image = Var.Services.Players:GetUserThumbnailAsync(
-		Var.Services.Players:GetUserIdFromNameAsync(Data["AppDeveloper"]),
+	AppInfoFrame.Metadata.Text = 
+		`{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaCreated.Label"), "{{ }}", Utilities.FormatRelativeTime(Data["Metadata"]["CreatedAt"]))}` .. 
+		`\n\n{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaUpdated.Labe"), "{{ }}",  Utilities.FormatRelativeTime(Data["Metadata"]["UpdatedAt"]))}` ..
+		`\n\n{string.format(Utilities.Translate("appplatform.Supported"), Data["Metadata"]["AppAPIPreferredVersion"])}`
+	--if Reason == nil then Configuration.Marketplace.Install.MetaServer.Label
+	--	AppInfoFrame.MetaServer.Label.Text =
+	--		`Shown because <b>You're subscribed to {string.split(ServerURL, "/")[3]}</b>`
+	--else
+	--	AppInfoFrame.MetaServer.Label.Text = `Shown because <b>{Reason}</b>`
+	--end
+	AppInfoFrame.Details.Downloads.Value.Text = Data["Downloads"]
+	
+	
+	AppInfoFrame.ImportantInfo.Others.ItemType.Image = Data["AppType"] == "Theme" and Utilities.Icon "pencil-paintbrush" or Utilities.Icon "plugin"
+
+	AppInfoFrame.Details.Creator.Icon.Image = Var.Services.Players:GetUserThumbnailAsync(
+		Data["Developer"]["ID"],
 		Enum.ThumbnailType.HeadShot,
 		Enum.ThumbnailSize.Size180x180
 	)
-	AppInfoFrame.UserInfo.Creator.Text = `@{Data["AppDeveloper"]}`
-	for _, Tag in AppInfoFrame.Tags:GetChildren() do
-		if Tag.Name ~= "Tag" and Tag:IsA("Frame") then Tag:Destroy() end
+	AppInfoFrame.Details.Creator.Value.Text = `@{Data["Developer"]["Name"]}`
+	for _, Tag in AppInfoFrame.Details:GetChildren() do
+		if Tag:GetAttribute("IsTag") then Tag:Destroy() end
 	end
 
-	for _, TagData in Data["AppTags"] do
-		local Tag = AppInfoFrame.Tags.Tag:Clone()
+	for _, TagData in Data["Tags"] do
+		local Tag = AppInfoFrame.Details.TagTemplate:Clone()
 
-		Tag.TagText.Text = TagData
+		Tag.Value.Text = TagData
 		Tag.Name = TagData
 		Tag.Visible = true
-		Tag.TagText.TextTransparency = 0
-		Tag.Parent = AppInfoFrame.Tags
+		Tag.Parent = AppInfoFrame.Details
+		
+		Tag:SetAttribute("IsTag", true)
 	end
+	
+	AppInfoFrame.Head.Text = Data["Name"]
+	AppInfoFrame.Subheader.Text = Data["Title"]
+	AppInfoFrame.Description.Text = Data["LongDescription"]
+	
+	AppInfoFrame.Details.Votes.Dislikes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Dislikes"])
+	AppInfoFrame.Details.Votes.Likes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Likes"])
+	AppInfoFrame.Details.Favorites.Value.Text = Utilities.ShortNumber(Data["Votes"]["Favorites"])
 
-	AppInfoFrame.Head.HeaderLabel.Text = `Install {Data["AppName"]}`
-	AppInfoFrame.Description.Text = Data["AppLongDescription"]
-	AppInfoFrame.Dislikes.Text = Utilities.ShortNumber(Data["AppDislikes"])
-	AppInfoFrame.Likes.Text = Utilities.ShortNumber(Data["AppLikes"])
+	local Percent = tonumber(Data["Votes"]["Likes"]) / (tonumber(Data["Votes"]["Dislikes"])
+		+ tonumber(Data["Votes"]["Likes"]))
+	
 
-	local Percent = tonumber(Data["AppLikes"]) :: number
-		/ (tonumber(Data["AppDislikes"]) :: number + tonumber(Data["AppLikes"]) :: number)
-	AppInfoFrame.RatingBar.Positive.Size = UDim2.new(Percent, 0, 1, 0)
-	AppInfoFrame.RatingBar.Positive.Percentage.Text = math.round(Percent * 100) .. "%"
+	AppInfoFrame.Details.Downloads.Install.MouseButton1Click:Connect(function()
+		AppInfoFrame.Details.Downloads.Value.Text = Utilities.Translate("generic.Loading") .. "..."
+		AppInfoFrame.Details.Downloads.Icon.Image = Utilities.Icon "hourglass-wait"
+		
+		print(Var.Remotes.InstallApp:InvokeServer(ServerURL, ID, Data["Name"]))
 
-	AppInfoFrame.Install.MouseButton1Click:Connect(function()
-		AppInfoFrame.Install.HeaderLabel.Text = "Installing..."
-		AppInfoFrame.Install.ImageLabel.Image = "rbxassetid://84027648824846"
-
-		AppInfoFrame.Install.HeaderLabel.Text = Var.Remotes.InstallApp:InvokeServer(ServerURL, ID)[2]
-		AppInfoFrame.Install.ImageLabel.Image = "rbxassetid://14651353224"
+		AppInfoFrame.Details.Downloads.Value.Text = "Done!"
+		AppInfoFrame.Details.Downloads.Icon.Image = Utilities.Icon "download"
+		
+		task.delay(5, function()
+			AppInfoFrame.Details.Downloads.Value.Text = Utilities.ShortNumber(Data["Downloads"])
+		end)
 	end)
 
-	AppInfoFrame.Head.Close.MouseButton1Click:Connect(function()
-		Frontend.Popup.Close(AppInfoFrame, AppInfoFrame.Parent.MainMarketplace)
-	end)
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+	AppInfoFrame.Visible = true
 
-	Frontend.Popup.Open(
-		Var.MainFrame.Configuration.Marketplace.Install,
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace,
-		UDim2.fromScale(0.868, 1)
-	)
-
-	return "More"
+	Var.Services.TweenService:Create(AppInfoFrame.Details.Votes.VotePercentage, TI, { Size = UDim2.new(Percent, 0, 1, 0) })
+		:Play()
+	
+	return "Get"
 end
 
 function Apps.Clear(): ()
@@ -179,7 +194,7 @@ function Apps.Clear(): ()
 end
 
 function Apps.Search(Query: string): {}
-	local Result = Var.Remotes.SearchAppsByMarketplaceServer:InvokeServer("https://administer.notpyx.me", Query)
+	local Result = Var.Remotes.SearchAppsByMarketplaceServer:InvokeServer(Var.Marketplace.Servers, Query)
 	local Final: { { Type: string, Value: any } } = {}
 
 	if Result.SearchIndex == "NoResultsFound" then
@@ -264,7 +279,7 @@ function Apps.LoadList(List: {} | nil): ()
 		NewCard.Visible = true
 
 		NewCard.ObjName.Text = CardData.name
-		NewCard.Server.Text = `App by @{CardData.developer.Name} from {CardData.Server}`
+		NewCard.Server.Text = `{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}\n\n{Utilities.ToSentenceCase(CardData.object_type)} by @{CardData.developer.Name} from {CardData.Server}`
 
 		NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
 		NewCard.Stats.Rating.Label.Text = CardData.rating
@@ -312,35 +327,35 @@ function Apps.LoadList(List: {} | nil): ()
 		return
 	end
 
-	for Index, App in AppList do
-		print(App)
-		if App["processed_in"] ~= nil then
-			Utilities.Logging.Print(`Loaded {#AppList - 1} apps from the database in {App["processed_in"]}s`)
-			continue
-		end
+	--for Index, App in AppList do
+	--	print(App)
+	--	if App["processed_in"] ~= nil then
+	--		Utilities.Logging.Print(`Loaded {#AppList - 1} apps from the database in {App["processed_in"]}s`)
+	--		continue
+	--	end
 
-		local Frame = Market.MainMarketplace.Content.Template:Clone()
-		Frame.Parent = Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content
+	--	local Frame = Market.MainMarketplace.Content.Template:Clone()
+	--	Frame.Parent = Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content
 
-		Frame.AppName.Text = App["Name"]
-		Frame.ShortDesc.Text = App["ShortDescription"]
-		Frame.InstallCount.Text = App["DownloadCount"]
-		Frame.Rating.Text = string.sub(string.gsub(App["AppRating"], "0.", ""), 1, 2) .. "%"
-		Frame.Name = Index
+	--	Frame.AppName.Text = App["Name"]
+	--	Frame.ShortDesc.Text = App["ShortDescription"]
+	--	Frame.InstallCount.Text = App["DownloadCount"]
+	--	Frame.Rating.Text = string.sub(string.gsub(App["AppRating"], "0.", ""), 1, 2) .. "%"
+	--	Frame.Name = Index
 
-		table.insert(
-			Connections,
-			Frame.Install.MouseButton1Click:Connect(function()
-				Frame.InstallIcon.Image = "rbxassetid://84027648824846"
-				Frame.InstallLabel.Text = "Loading..."
-				
-				Frame.InstallLabel.Text = Apps.Show(App["AppServer"], App["AppID"], "")
-				Frame.InstallIcon.Image = "rbxassetid://16467780710"
-			end)
-		)
+	--	table.insert(
+	--		Connections,
+	--		Frame.Install.MouseButton1Click:Connect(function()
+	--			Frame.InstallIcon.Image = "rbxassetid://84027648824846"
+	--			Frame.InstallLabel.Text = "Loading..."
 
-		Frame.Visible = true
-	end
+	--			Frame.InstallLabel.Text = Apps.Show(App["AppServer"], App["AppID"], "")
+	--			Frame.InstallIcon.Image = "rbxassetid://16467780710"
+	--		end)
+	--	)
+
+	--	Frame.Visible = true
+	--end
 
 	InProgress = false
 end

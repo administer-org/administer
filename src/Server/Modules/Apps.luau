@@ -229,9 +229,9 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 	Utils.Logging.Print(`[-] Attempting to load app`)
 	local _, res = xpcall(function(): Types.Response
 		App.LoadLocal(AppID, {
-			["InstallDate"] = os.time(),
-			["InstallSource"] = InstallContext,
-			["AppID"] = AppID,
+			InstallDate = os.time(),
+			InstallSource = InstallContext,
+			AppID = AppID
 		})
 
 		return { true, "OK" }
@@ -243,19 +243,19 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 	if res[1] == false then return res end
 	Utils.Logging.Print(`[✓] App bootstrap OK, installing!`)
 
-	local AppList = Var.DataStores.AppDB:GetAsync("AppList")
+	local AppList = Var.DataStores.AppDB:GetAsync("AppList") or {}
 	for i, App in AppList do
-		if App["ID"] == AppID then
+		if App.ID == AppID then
 			Utils.Logging.Warn("[x] Not continuing because this app is a duplicate!")
 			return { false, Utils.t(nil, "apps.DupeDetected") }
 		end
 	end
 
 	table.insert(AppList, {
-		["ID"] = AppID,
-		["InstallDate"] = os.time(),
-		["InstallSource"] = InstallContext or "Manual ID install",
-		["Name"] = AppName ~= nil and AppName or "Unknown" --// surely wont cause any issues
+		ID = AppID,
+		InstallDate = os.time(),
+		InstallSource = InstallContext or "Manual ID install",
+		Name = AppName ~= nil and AppName or "Unknown" --// surely wont cause any issues
 	})
 
 	Var.DataStores.AppDB:SetAsync("AppList", AppList)
@@ -324,16 +324,17 @@ function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 end
 
 function App.ServerAPI.GetApp(Player: Player, AppServer: string, AppID: number): Types.Response
-	return HTTP.GetRoute(AppServer, `/api/app/{AppID}`, function(Data)
+	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
 		return { true, Data }
-	end, function(Data)
-		return { false, Data }
+	end, function(...)
+		return { false, ... }
 	end)
 end
 
 function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Types.Response
-	return HTTP.GetRoute(ServerURL, `/api/app/{AppID}`, function(Content)
-		local RealID = Content["AppInstallID"]
+	print(ServerURL, AppID)
+	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
+		local RealID = Content["InstallID"]
 		if RealID == 0 then
 			return { false, "This server gave us bad data, please report the error to the server owner." }
 		end

@@ -14,8 +14,8 @@ Variables.Config                     = require(script.Parent.Configuration) --//
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
 Variables.EnableFreeAdmin            = true --// Free superadmin for all players. Not recommended for anything other than debugging.
 
---Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
-Variables.DefaultAppServer           = "https://adm_unstable.notpyx.me" --// Must be an AOS app server instance.
+Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
+--Variables.DefaultAppServer           = "https://adm_unstable.notpyx.me" --// Must be an AOS app server instance.
 Variables.ProxyURL                   = "https://rblx.notpyx.me" --// Roblox proxy URL following format {{ domain }}/SUBDOMAIN/path
 Variables.Locales                    = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit            = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
@@ -81,12 +81,12 @@ Variables.Admins = {
 
 	OutOfGame = {},
 
-	TotalRunningCount = 0,
+	TotalRunningCount = 0
 }
 
 Variables.InitClock = {
 	RealInit = os.clock(),
-	TempInit = os.clock(),
+	TempInit = os.clock()
 }
 
 Variables.DefaultRank = {
@@ -101,14 +101,14 @@ Variables.DefaultRank = {
 	["Modifications"] = {},
 
 	["CreatorID"] = 0,
-	["AdmRankVersion"] = 2,
+	["AdmRankVersion"] = 2
 }
 
 Variables.DefaultRankData = {
 	Count = 1,
 	Names = {},
 	GroupAdminIDs = {},
-	AdminIDs = {},
+	AdminIDs = {}
 }
 
 Variables.CurrentBranch = { Name = "" }
@@ -116,41 +116,39 @@ Variables.Branches = {
 	Internal = {
 		ImageID = "rbxassetid://18841275783",
 		Name = "Administer Internal",
-		IsActive = true,
+		IsActive = true
 	},
 
 	QualityAssurance = {
 		ImageID = "rbxassetid://76508533583525",
 		Name = "Administer QA Release",
-		IsActive = false,
+		IsActive = false
 	},
 
 	Fresh = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer (git)",
-		IsActive = false,
+		IsActive = false
 	},
 
 	Beta = {
 		ImageID = "rbxassetid://18770010888",
 		Name = "Administer Public Beta",
-		IsActive = false,
+		IsActive = false
 	},
 
 	Production = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
-		IsActive = false,
-	},
+		IsActive = false
+	}
 }
 
 Variables.Panel = {
-	Path = Root.Resources.AdministerMainPanel,
+	Path = Root.Resources.AdministerMainPanel
 }
 
-Variables.CachedLocales = {
-	[133017837] = "es",
-}
+Variables.CachedLocales = {}
 
 Variables.AppServers = Variables.DataStores.AppDB:GetAsync("AppServerList") or {}
 
@@ -186,7 +184,7 @@ Variables.Init = function()
 
 	Variables.InitTimestamp = {
 		Time = os.time(),
-		Tick = tick(),
+		Tick = tick()
 	}
 end
 

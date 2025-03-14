@@ -38,12 +38,14 @@ Utils.Logging.Print(`[✓] Init() OK in {os.clock() - Var.InitClock["TempInit"]}
 Var.InitClock.TempInit = os.clock()
 xpcall(function()
 	Var.IsFirstBoot = (Var.IsFirstBoot or Var.DataStores.Settings:GetAsync("HasInit") == nil and true or false)
-
+	
 	Utils.Logging.Print(`[✓] DataStoreService connection established in {os.clock() - Var.InitClock["TempInit"]}s`)
+	
 	local Settings
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
 		Settings = SettingsAPI.new(Configuration.Settings) --// Initialize for the first time
+		Settings:Save()
 
 		--// This system is better than the old one because it allows the user
 		--// to uninstall AOS without causing the system to overwrite stuff
@@ -53,9 +55,10 @@ xpcall(function()
 	--// Now load settings
 	if not Settings then
 		Settings = SettingsAPI.new(Configuration.Settings)
-		Settings:Load()
+		--Settings:Load()
+		print(Configuration.Settings)
 		
-		print(Settings.GetCategory("interface"))
+		print(Settings.GetCategory("Interface"))
 	end
 	
 end, function(e)
@@ -119,10 +122,13 @@ end)
 
 --// Apps
 NewRemote("GetAppList", true, function(Player, QueryType)
-	return AppsModule.ServerAPI.GetList("http://192.168.0.40:8000", QueryType)
+	return AppsModule.ServerAPI.GetList(nil, QueryType)
 end)
 
 NewRemote("GetAppInfo", true, AppsModule.ServerAPI.GetApp)
+NewRemote("InstallApp", true, function(_, ...)
+	return AppsModule.ServerAPI.InstallFromServer(...)
+end)
 
 --// Admin routes
 

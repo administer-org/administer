@@ -233,6 +233,8 @@ end
 
 function Utilities.Translate(StringIdentifier: string): string | { string }
 	if Var.LocaleModule["_"] == "_init" then
+		Utilities.Logging.Print(`Getting locale {string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]}`)
+		
 		Var.LocaleModule = Var.Remotes.GetTranslationModule:InvokeServer(
 			string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
 		)
@@ -249,17 +251,17 @@ function Utilities.Translate(StringIdentifier: string): string | { string }
 	return Var.LocaleModule[StringIdentifier]
 end
 
-Utilities.Icon = function(
-    IconName: string
-): string
-	if Var.Icons["_"] == false then 
+Utilities.Icon = function(IconName)
+	if not Var.Icons then 
+		Utilities.Logging.Print(`Fetching icon pack...`)
+		
 		Var.Icons = Var.Remotes.GetIconPack:InvokeServer()
 	end
-
+	
 	return `rbxassetid://{Var.Icons[IconName]}`
 end
 
-function Utilities.ToSentenceCase(Sentence: string)
+function Utilities.ToSentenceCase(Sentence)
 	return Sentence:sub(1, 1):upper() .. Sentence:sub(2):lower()
 end
 
