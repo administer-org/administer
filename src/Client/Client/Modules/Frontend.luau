@@ -17,7 +17,7 @@ function Frontend.CloneElement(Element: GuiObject, Props: {}, OnClone: ((Clone: 
 	local Clone = Element:Clone()
 
 	for Property, Value in Props do
-		--Clone[Property] = Value
+		Clone[Property] = Value
 	end
 
 	Clone.Parent = Element.Parent

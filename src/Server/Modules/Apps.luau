@@ -91,16 +91,14 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 		Modules = Modules :: any,
 	})
 
-	return { true, "Done" }
+	return { true, Config }
 end
 
--- stylua: ignore start
 --// Core App functions
 function App.LoadLocal(
 	Path: number | Instance,
 	AppMeta: { InstallDate: number, InstallSource: string, AppID: number }
 ): Types.Response
-	-- stylua: ignore end
 	Utils.Logging.Print(
 		`[-] Loading app from source {string.lower(typeof(Path))}_{(typeof(Path) == "Instance" and Path:GetFullName() or Path)}`
 	)
@@ -110,29 +108,33 @@ function App.LoadLocal(
 		RunContext = typeof(Path) == "Instance" and "LocalAppsFolder" or "AOSDownload", 
 		TechID = Path
 	}
-	local TargetApp, App = nil, require(Path)(App.InvocationAPI, Extras) :: any
+	local TargetApp, RealApp = {}, require(Path)(App.InvocationAPI, Extras) :: any
 
-	print(App)
-
-	if not App[1] then
+	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
 	end
 
 	--// Construct UI here
 
 	xpcall(function()
-		TargetApp.BuildTime = string.sub(tostring(tick() - Ticks[Path]), 1, 5)
-		TargetApp.PrivateAppDesc = App.Description
-		TargetApp.InstalledSince = AppMeta.InstallDate
-		TargetApp.InstallSource = App.Version or "v0"
 		TargetApp.AppID = (typeof(Path) == "number") and Path or AppMeta.AppID
+		TargetApp.BuildTime = string.sub(tostring(tick() - Ticks[Path]), 1, 5)
+		TargetApp.Description = RealApp[2].AppMeta.Description
+		TargetApp.InstallSource = AppMeta.InstallSource
+		TargetApp.InstalledSince = AppMeta.InstallDate
+		TargetApp.Copyright = RealApp[2].AppMeta.Copyright
+		TargetApp.Version = RealApp[2].AppMeta.Version
+		TargetApp.Icon = RealApp[2].AppMeta.Icon
+		TargetApp.Name = RealApp[2].AppMeta.Name
 
 		Utils.Logging.Print(`[✓] App bootstrap OK in {string.sub(tostring(tick() - Ticks[Path]), 1, 6)}s`)
+		
+		App.RunningApps[RealApp[2].AppMeta.Name] = TargetApp
 	end, function(e)
-		Utils.Logging.Error(`[X] Failed bootstrapping app: {e}`)
+		Utils.Logging.Warn(`[X] Failed bootstrapping app: {e}`) --// We cannot Logging.Error() here because the thread will suppress it for some reason
 	end)
 
-	return { true, "OK" }
+	return { true, TargetApp }
 end
 
 function App.Initialize(): boolean
@@ -165,13 +167,14 @@ function App.Initialize(): boolean
 				InstallSource = AppObj.InstallSource,
 				AppID = AppObj.ID,
 			})
+			i += 1
 		end)
 	end
 
 	repeat
 		task.wait(0.05)
 		TotalAttempts += 1
-	until i == AppsCount or TotalAttempts == Var.AppPollingLimit
+	until i >= AppsCount or TotalAttempts == Var.AppPollingLimit
 
 	if TotalAttempts == Var.AppPollingLimit then
 		Utils.Logging.Warn(
@@ -203,7 +206,7 @@ function App.GetAll(Source: string): Types.TableWildcard
 	if Source == nil or Source == "Bootstrapped" then
 		return { true, App.RunningApps }
 	elseif Source == "DataStore_Raw" then
-		return Var.DataStores.AppDB:GetAsync("AppList")
+		return {true, Var.DataStores.AppDB:GetAsync("AppList")}
 	elseif Source == "Combined" then
 		local AppList = Var.DataStores.AppDB:GetAsync("AppList")
 		local Final = {}
@@ -214,14 +217,14 @@ function App.GetAll(Source: string): Types.TableWildcard
 		end
 
 		for i, Object in App.RunningApps do
-			Object["ObjSource"] = "AppAPI"
+			Object["ObjSource"] = "AppPlatform"
 			table.insert(Final, Object)
 		end
 
-		return Final
+		return {true, Final}
 	end
 
-	return { false, "No data" }
+	return { false, "Source must be of value nil | Bootstrapped | DataStore_Raw | Combined" }
 end
 
 function App.Install(AppID: number, InstallContext: string, AppName: string): Types.Response
@@ -323,7 +326,7 @@ function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 	return { false, Utils.t(nil, "generic.error.Generic") }
 end
 
-function App.ServerAPI.GetApp(Player: Player, AppServer: string, AppID: number): Types.Response
+function App.ServerAPI.GetApp(AppServer: string, AppID: number): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
 		return { true, Data }
 	end, function(...)
@@ -332,7 +335,6 @@ function App.ServerAPI.GetApp(Player: Player, AppServer: string, AppID: number):
 end
 
 function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Types.Response
-	print(ServerURL, AppID)
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
 		local RealID = Content["InstallID"]
 		if RealID == 0 then
@@ -342,7 +344,7 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Type
 		local Result: Types.Response = App.Install(RealID, ServerURL, Content["AppName"])
 
 		if Result[1] then
-			return HTTP.PostRoute(ServerURL, `/api/install/{AppID}`, {}, function(): Types.Response
+			return HTTP.PostRoute(ServerURL, `/api/asset/{AppID}/install`, {}, function(): Types.Response
 				return { true, `{Utils.t(nil, "generic.Done")}!` }
 			end, function(): Types.Response
 				return { false, Utils.t(nil, "generic.TryAgainLater") }
@@ -354,6 +356,22 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Type
 	end, function(c)
 		return { false, string.format(Utils.t(nil, "apps.pulled.Bad"), c) }
 	end)
+end
+
+function App.ServerAPI.Vote(ServerURL: string, AppID: string, Vote: number): Types.Response
+	return game:GetService("HttpService"):RequestAsync({
+		Url = `{ServerURL}/api/asset/{AppID}/vote`,
+		Method = "PUT",
+		
+		Body = game:GetService("HttpService"):JSONEncode({
+			vote = Vote,
+			is_favorite = Vote == 2
+		}),
+		
+		Headers = {
+			["Content-Type"] = "application/json"
+		}
+	})
 end
 
 return App

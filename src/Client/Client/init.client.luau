@@ -5,7 +5,6 @@ local SharedLibs = script.Libraries
 local Assets = script.Assets
 local Modules = script.Modules
 
-print("Importing modules.")
 local Var = require(Modules.Variables)
 
 local Admins = require(Modules.Admins)
@@ -16,10 +15,12 @@ local Widgets = require(Modules.Widgets)
 
 local t = Utilities.Translate
 
-print("Done, starting initialization of client logic")
 Frontend.Close(true)
+task.spawn(Utilities.Heartbeat)
 
 Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
+	if IsGameProc then return end
+	
 	if KeyCode.KeyCode == Enum.KeyCode.F2 then Frontend.Open() end
 end)
 
@@ -62,7 +63,7 @@ Apps.AddAppDrawerButton({
 			Frame = Var.MainFrame.Configuration.Settings
 		},
 		{
-			Name = Utilities.ToSentenceCase(t("Header.AppDrawer.HeaderLabel")),
+			Name = Utilities.ToSentenceCase( t("Header.AppDrawer.HeaderLabel") ),
 			Icon = Utilities.Icon "grid",
 			Click = Apps.LoadList,
 			Frame = Var.MainFrame.Configuration.Marketplace
@@ -75,6 +76,12 @@ Apps.AddAppDrawerButton({
 		}
 	}
 })
+
+--// Marketplace initializations
+xpcall(Apps.Init, function(e)
+	Utilities.Logging.Print("[x] Failed to initialize the marketplace, this is likely due to insufficient permissions!")
+	Utilities.Logging.Print(e)
+end)
 
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
 	Widgets.Edit(Var.MainFrame.Home.Widget1)

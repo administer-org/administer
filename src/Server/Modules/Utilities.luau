@@ -28,27 +28,27 @@ end
 Utils.Logging = {
 	--Prints out a basic message.
 	Print = function(...)
-		print(`[{Config.Name}] [log]`, ...)
+		--print(`[{Config.Name}] [log]`, ...)
 	end,
 
 	--Creates a warning, with a traceback.
 	Warn = function(...)
-		warn(`[{Config.Name}] [warn]`, debug.traceback(...))
+		--warn(`[{Config.Name}] [warn]`, debug.traceback(...))
 	end,
 
 	--Warns without a debugging traceback both for the console and for admins.
 	SWarn = function(...)
-		warn(`[{Config.Name}] [warn]`, ...)
+		--warn(`[{Config.Name}] [warn]`, ...)
 	end,
 
 	--Throws an error.
 	Error = function(...)
-		error(debug.traceback(...))
+		--error(debug.traceback(...))
 	end,
 
 	Debug = function(...)
 		--// TODO
-		print(debug.traceback(...))
+		--print(debug.traceback(...))
 	end,
 }
 
@@ -249,7 +249,7 @@ function Utils.NewRemote(
 	RemoteType: "RemoteEvent" | "RemoteFunction",
 	RemoteName: string,
 	AuthRequired: boolean,
-	Callback
+	Callback: (...any) -> (...any)
 ): ()
 	if not table.find({ "RemoteFunction", "RemoteEvent" }, RemoteType) then return false, "Invalid remote type!" end
 
@@ -271,11 +271,11 @@ function Utils.NewRemote(
 		(Rem :: RemoteFunction).OnServerInvoke = function(Player: Player, ...)
 			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] then return false end
 
-			Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`)
+			if RemoteName ~= "Ping" then Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`) end
 
 			local t, cbk = tick(), Callback(Player, ...)
 
-			Utils.Logging.Print(`--> {Utils.t(nil, "generic.Done")} ({string.sub(tostring(tick() - t), 1, 9)}s)`)
+			if RemoteName ~= "Ping" then Utils.Logging.Print(`--> {Utils.t(nil, "generic.Done")} ({string.sub(tostring((tick() - t) * 1000), 1, 6)}ms)`) end
 
 			return cbk
 		end
@@ -375,6 +375,12 @@ function Utils.GetGameMedia()
 	return Default
 end
 
+function Utils.GetGameIcon()
+	return `rbxassetid://{Var.Services.HttpService:JSONDecode(
+		Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v1/games/{game.GameId}/icon`)
+	)["imageId"] or Utils.Icon("book")}`
+end
+
 function Utils.GetProminentColor(UserID)
 	local s, Content = pcall(function()
 		local Tries = 0
@@ -432,7 +438,7 @@ function Utils.t(Player: Player | nil, Key: string): string
 			Var.CachedLocales[Player.UserId] or Var.DataStores.Settings:GetAsync(Player.UserId .. "Locale")
 		) or "en"
 		
-		print(LocaleResult)
+		Utils.Logging.Print(`Locale: {LocaleResult}`)
 
 		return (require(Locales:FindFirstChild(LocaleResult)) :: any)[Key] or Key
 	end

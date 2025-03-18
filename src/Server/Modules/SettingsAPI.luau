@@ -1,3 +1,5 @@
+-- dogo8me2 2025
+
 local SettingsAPI = {}
 
 local Types = require(script.Parent.Parent.Core.Types)
@@ -44,12 +46,13 @@ local function categoryFromString(settingName: string, settingsGroup: SettingsGr
 	end
 end
 
-function SettingsAPI.new(setting, dataStoreKey: string)
+function SettingsAPI.new(setting)
 	local APIController = {}
-	local Setting = {}
+	local dataStoreKey = setting["_SettingsMeta"].Name
+	setting["_SettingsMeta"] = nil
 	local changedSignal = Signal.new()
 	local settingsGroup
-	if #Setting == 0 then settingsGroup = loadDataStore("Presets") else settingsGroup = setting end
+	if next(setting) == nil then settingsGroup = loadDataStore("Presets") else settingsGroup = setting end
 
 	function APIController.Changed(names: {settingName: string}, callback) -- fires when either setting changes
 		for i, name in names do
@@ -84,7 +87,7 @@ function SettingsAPI.new(setting, dataStoreKey: string)
 		end
 	end
 
-	function APIController.GetCategory(name: string): {Setting}
+	function APIController.GetCategory(name: string)
 		local retrievedCategory: SettingsGroup = settingsGroup[name]
 		return retrievedCategory
 	end

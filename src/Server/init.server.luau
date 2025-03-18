@@ -9,7 +9,6 @@
 
 --// WARNING: Use of Administer's codebase for AI training is STRICTLY PROHIBITED and you will face consequences if you do it.
 --// Do NOT use this script or any in this model to train your AI or else.
--- stylua: ignore start
 
 local Core           = script.Core
 local Modules        = script.Modules
@@ -25,8 +24,6 @@ local SettingsAPI    = require(Modules.SettingsAPI)
 local Configuration  = require(Core.Configuration)
 local Types          = require(Core.Types)
 local Var            = require(Core.Variables)
-
--- stylua: ignore end
 
 Utils.Logging.Print(`[✓] Modules OK in {os.clock() - Var.InitClock["RealInit"]}s`)
 
@@ -56,15 +53,12 @@ xpcall(function()
 	if not Settings then
 		Settings = SettingsAPI.new(Configuration.Settings)
 		--Settings:Load()
-		print(Configuration.Settings)
-		
-		print(Settings.GetCategory("Interface"))
 	end
 	
 end, function(e)
 	Utils.Logging.Warn(e)
-	Utils.Logging.Error(
-		`[X] Cannot connect to the DataStoreService. Please ensure Studio APIs are enabled and try again.`
+	Utils.Logging.Warn(
+		`[X] Cannot connect to the DataStoreService. Please ensure Studio APIs are enabled and try again.\n\nIf you need help please reach refer to the Getting Started guide.`
 	)
 end)
 
@@ -79,61 +73,72 @@ Var.Services.Players.PlayerAdded:Connect(AdminRunner.PlayerAdded)
 Utils.Logging.Print("[-] Mounting frontend API..")
 Var.InitClock.TempInit = os.clock()
 
-local function NewRemote(Name: string, AuthRequired: boolean, Cbk: (Player, ...any) -> any)
-	return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(Player: Player, ...)
-		return Cbk(Player, ...)
-	end)
+local function NewRemote(
+	Name: string, 
+	AuthRequired: boolean, 
+	PlayerVar: boolean, 
+	Cbk: (Player, ...any) -> any
+): any
+	if PlayerVar then
+		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(Player: Player, ...)
+			return Cbk(Player, ...)
+		end)
+	else
+		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(_, ...)
+			return Cbk(...)
+		end)
+	end
 end
 
-NewRemote("Ping", false, function(Player)
+NewRemote("Ping", false, false, function()
 	return "PONG"
 end)
 
 --// Translation routes
-NewRemote("GetTranslationModule", true, function(Player, Locale)
+NewRemote("GetTranslationModule", true, true, function(Player, Locale)
 	return require(script.Core.Locales[Locale]) :: any
 end)
 
-NewRemote("SendClientLocale", true, function(Player, LocaleCode): Types.Response
+NewRemote("SendClientLocale", true, true, function(Player, LocaleCode): Types.Response
 	Var.CachedLocales[Player.UserId] = LocaleCode
 
 	return { true, "OK" }
 end)
 
-NewRemote("DirectTranslate", false, function(Player, Key)
+NewRemote("DirectTranslate", false, true, function(Player, Key)
 	return Utils.t(Player, Key)
 end)
 
 --// Homepage
-NewRemote("UpdateHomePage", true, FrontendAPI.UpdateHomePage)
+NewRemote("UpdateHomePage", true, true, FrontendAPI.UpdateHomePage)
 
 --// Utilities
-NewRemote("CheckForUpdates", true, function(Player)
+NewRemote("CheckForUpdates", true, true, function(Player)
 	return FrontendAPI.VersionCheck(Player)
 end)
+NewRemote("GetGameArt", false, false, Utils.GetGameIcon)
 
-NewRemote("GetProminentColorFromUserID", false, function(Player)
+NewRemote("GetProminentColorFromUserID", false, true, function(Player)
 	return Utils.GetProminentColor(Player.UserId)
 end)
 
-NewRemote("GetIconPack", false, function(Player)
+NewRemote("GetIconPack", false, false, function()
 	return require(script.Core.Icons) :: any
 end)
 
 --// Apps
-NewRemote("GetAppList", true, function(Player, QueryType)
+NewRemote("GetAppList", true, false, function(QueryType)
 	return AppsModule.ServerAPI.GetList(nil, QueryType)
 end)
 
-NewRemote("GetAppInfo", true, AppsModule.ServerAPI.GetApp)
-NewRemote("InstallApp", true, function(_, ...)
-	return AppsModule.ServerAPI.InstallFromServer(...)
-end)
+NewRemote("GetAppInfo", true, false, AppsModule.ServerAPI.GetApp)
+NewRemote("GetInstalledApps", true, false, AppsModule.GetAll)
+NewRemote("InstallApp", true, false, AppsModule.ServerAPI.InstallFromServer)
+NewRemote("Vote", true, false, AppsModule.ServerAPI.Vote)
 
 --// Admin routes
 
 Utils.Logging.Print(`[✓] OK in {os.clock() - Var.InitClock["TempInit"]}s`)
-
 Utils.Logging.Print(`[-] Running startup jobs!`)
 
 HttpRunner.PostRoute(Var.DefaultAppServer, "/api/report-version", {
@@ -142,5 +147,6 @@ HttpRunner.PostRoute(Var.DefaultAppServer, "/api/report-version", {
 }, function(...)
 	return { ... }
 end, function(...)
+	Utils.Logging.Warn(...)
 	return { ... }
 end)
