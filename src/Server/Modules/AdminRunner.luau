@@ -124,22 +124,24 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 
 	xpcall(function()
 		local ShouldStep = false
-		local _OldRankData = nil --// TODO: what did this do?
-		local NewRank = Var.DefaultRank
+		local OldRankData = nil
+		local NewRank = table.clone(Var.DefaultRank)
 		local Info = Var.DataStores.AdminsDS:GetAsync("CurrentRanks") or Var.DefaultRankData
 
 		if not Data.RankID or Data.RankID == 0 then
-			Data.RankID = Info.Count
+			Data.RankID = Info.Count + 1
 			ShouldStep = true
 		end
 
-		if Data.IsEdit then _OldRankData = Var.DataStores.AdminsDS:GetAsync(`_Rank{Data.RankID}`) end
+		if Data.IsEdit then OldRankData = Var.DataStores.AdminsDS:GetAsync(`_Rank{Data.RankID}`) end
 
-		NewRank.RankID = Data.RankID :: number
 		NewRank.Name = Data.Name
-		NewRank.Protected = Data.Protected
+		NewRank.Color = Data.Color
 		NewRank.Modified = os.time()
+		NewRank.Protected = Data.Protected
 		NewRank.CreatorID = Data.ActingUser
+		NewRank.RankID = Data.RankID :: number
+		NewRank.CreationReason = Data.CreationReason
 
 		NewRank.Members = Data.Members
 		NewRank.Apps = Data.AllowedApps
@@ -147,10 +149,10 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 		table.insert(NewRank.Modifications, {
 			Reason = Util.t(nil, "admin.rank.created"),
 			ActingAdmin = Data.ActingUser,
-			Actions = { "created this rank" },
+			Actions = { "created this rank" }
 		})
 
-		Var.DataStores.AdminsDS:SetAsync(`_Rank{Data.RankID}`, NewRank)
+		Var.DataStores.AdminsDS:SetAsync(Data.Name, NewRank)
 
 		for i, v in Data.Members do
 			if v.MemberType == "User" then
@@ -159,22 +161,22 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 				Info.AdminIDs[v.ID] = {
 					UserID = v.ID,
 					AdminRankID = Data.RankID,
-					AdminRankName = Data.Name,
+					AdminRankName = Data.Name
 				}
 			else
-				Info.GroupAdminIDs[`{v.ID}_{Var.Services.HttpService:GenerateGUID(false)}`] =
-					{ --// Identify groups differently because we may have the same group multiple times
-						GroupID = v.ID,
-						RequireRank = v.GroupRank ~= 0,
-						RankNumber = v.GroupRank,
-						AdminRankID = Data.RankID,
-						AdminRankName = Data.Name,
-					}
+				--// Identify groups differently because we may have the same group multiple times
+				Info.GroupAdminIDs[`{v.ID}_{Var.Services.HttpService:GenerateGUID(false)}`] = {
+					GroupID = v.ID,
+					RequireRank = v.GroupRank ~= 0,
+					RankNumber = v.GroupRank,
+					AdminRankID = Data.RankID,
+					AdminRankName = Data.Name
+				}
 			end
 		end
 
 		if ShouldStep then
-			Info.Count = (Data.RankID :: number) + 1
+			Info.Count = Data.RankID + 1
 			Info.Names = Info.Names or {}
 			table.insert(Info.Names, Data.Name)
 		end
@@ -186,7 +188,7 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 			AdminIDs = Info.AdminIDs,
 		})
 	end, function(E)
-		Util.Logging.Warn(`Failed to create a new admin rank! {E}`)
+		Util.Logging.SWarn(`Failed to create a new admin rank!`, E)
 		return { false, E }
 	end)
 
@@ -208,18 +210,20 @@ function AR.Ranks.GetAll()
 	local Current: Types.CurrentRanks = Var.DataStores.AdminsDS:GetAsync("CurrentRanks")
 	local Ranks = {}
 	local Polls = 0
+	
+	Current.Count = Current.Count - 1
 
 	--// Load in parallel
-	for i = 1, tonumber(Current.Count) :: number do
+	for i, RankName in Current.Names do
 		task.spawn(function()
-			Ranks[i] = Var.DataStores.AdminsDS:GetAsync("_Rank" .. i)
+			Ranks[i] = Var.DataStores.AdminsDS:GetAsync(RankName)
 		end)
 	end
 
 	repeat
 		Polls += 1
 		task.wait(0.05)
-		Util.Logging.Debug("RANK CHECK", #Ranks / Current["Count"], Ranks, Current, Polls)
+		Util.Logging.Print("RANK CHECK", #Ranks / Current["Count"], Ranks, Current, Polls)
 	until #Ranks == Current.Count or Polls == 7
 
 	if Polls == 7 then

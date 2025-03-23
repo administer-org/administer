@@ -11,13 +11,8 @@ local Connections: { RBXScriptConnection } = {}
 
 local RanksFrame = Var.MainFrame.Configuration.Admins.Container.Ranks.Content
 
---// TODO: OPTIMIZE THIS
 function Admins.Load(): ()
 	for _, Item in RanksFrame:GetChildren() do
-		if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
-	end
-
-	for _, Item in Var.MainFrame.Configuration.Admins.Container.Admins.Content:GetChildren() do
 		if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
 	end
 
@@ -27,232 +22,108 @@ function Admins.Load(): ()
 
 	Connections = {}
 
-	local Shimmer1 = Libs.Shime.new(Var.MainFrame.Configuration.Admins.Container.Ranks)
-	local Shimmer2 = Libs.Shime.new(Var.MainFrame.Configuration.Admins.Container.Admins)
+	local Shimmer1 = require(Libs.Shime).new(Var.MainFrame.Configuration.Admins.Container.Ranks)
 
 	Shimmer1:Play()
-	Shimmer2:Play()
 
 	task.defer(function()
-		local List = Var.Remotes.GetRanks:InvokeServer("LegacyAdmins")
+		local List = Var.Remotes.GetRanks:InvokeServer()
 
-		for i, User in List do
-			if User["MemberType"] == "User" then
-				local AdminPageTemplate = RanksFrame.Parent.Parent.Admins.Content.Template:Clone()
+		if typeof(List) == "string" then
+			Utilities.Logging.Warn(`Failed: {List}`)
 
-				local Suc, Err = pcall(function()
-					AdminPageTemplate.PFP.Image = tostring(
-						Var.Services.Players:GetUserThumbnailAsync(
-							tonumber(User["ID"]),
-							Enum.ThumbnailType.HeadShot,
-							Enum.ThumbnailSize.Size180x180
-						)
-					)
-					AdminPageTemplate.Info.Text = `AdminID Override`
+			return "Something went wrong"
+		else
+			for i, v in List do
+				print(v)
+				local Template = RanksFrame.Template:Clone()
 
-					AdminPageTemplate.Metadata.Text =
-						`This user is in the override module, as such we don't have any information.`
-					AdminPageTemplate.PlayerName.Text = `@{Var.Services.Players:GetNameFromUserIdAsync(User["ID"])}`
+				Template.Name = v["Name"]
+				Template.RankName.Text = v["Name"]
+				Template.Info.Text =
+					`{v.RankID} • {v.Apps.SuperAdmin and "Full Access" or #v.Apps .. " apps"}{v.Protected and " • Protected" or ""} • {v.CreationReason} • Created {Utilities.FormatRelativeTime(v.Modified)}`
 
-					AdminPageTemplate.Visible = true
-					AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-					AdminPageTemplate.Name = User["ID"]
-				end)
+				if #v["Apps"] > 6 then
+					for j = 1, 5 do
+						if type(v.Apps[j]) == "boolean" then continue end
+						local Card = Template.Pages.Frame:Clone()
 
-				if not Suc then
-					print(Err)
-					AdminPageTemplate.PFP.Image = ""
-					AdminPageTemplate.Metadata.Text = `AdminID Override`
-
-					AdminPageTemplate.Info.Text =
-						`This user is in the override module, as such we don't have any information.`
-					AdminPageTemplate.PlayerName.Text = `(user not found) all ranks`
-
-					AdminPageTemplate.Visible = true
-					AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-				end
-			else
-				local AdminPageTemplate = RanksFrame.Parent.Parent.Admins.Content.Template:Clone()
-
-				local _, GroupInfo = pcall(function()
-					return game:GetService("GroupService"):GetGroupInfoAsync(User["ID"])
-				end)
-
-				local Suc, Err = pcall(function()
-					AdminPageTemplate.PFP.Image = GroupInfo["EmblemUrl"]
-					AdminPageTemplate.Metadata.Text = `AdminID Override`
-
-					AdminPageTemplate.Info.Text =
-						`This user is in the override module, as such we don't have any information.`
-					AdminPageTemplate.PlayerName.Text = `{GroupInfo["Name"]} (all ranks)`
-
-					AdminPageTemplate.Visible = true
-					AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-					AdminPageTemplate.Name = User["ID"]
-				end)
-
-				if not Suc then
-					print(Err)
-					AdminPageTemplate.PFP.Image = ""
-					AdminPageTemplate.Info.Text = `AdminID Override`
-
-					AdminPageTemplate.Metadata.Text =
-						`This user is in the override module, as such we don't have any information.`
-					AdminPageTemplate.PlayerName.Text = `(group not found) all ranks`
-
-					AdminPageTemplate.Visible = true
-					AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-				end
-			end
-		end
-	end)
-
-	local List = Var.Remotes.GetRanks:InvokeServer()
-
-	if typeof(List) == "string" then
-		warn(debug.traceback(`Failed: {List}`))
-
-		return "Something went wrong"
-	else
-		for i, v in List do
-			local Template = RanksFrame.Template:Clone()
-
-			Template.Name = v["RankName"]
-			Template.RankName.Text = v["RankName"]
-			Template.Info.Text =
-				`Rank {v["RankID"]} • {v["PagesCode"] == "/" and #v["AllowedPages"] .. " pages" or "Full access"} • {#v["Members"]} member{#v["Members"] == 1 and "" or "s"} {v["Protected"] and "• Protected" or ""} • {v["Reason"]}`
-
-			if #v["AllowedPages"] == 6 then --// im so confused
-				for k, _ in v["AllowedPages"] do
-					local App = Template.Pages.Frame:Clone()
-
-					App.Visible = true
-					App.AppName.Text = v["AllowedPages"][k]["DisplayName"]
-					App.ImageLabel.Image = v["AllowedPages"][k]["Icon"]
-					App.Parent = Template.Pages
-				end
-			elseif #v["AllowedPages"] > 6 then
-				for j = 1, 5 do
-					local App = Template.Pages.Frame:Clone()
-
-					App.Visible = true
-					App.AppName.Text = v["AllowedPages"][j]["DisplayName"]
-					App.ImageLabel.Image = v["AllowedPages"][j]["Icon"]
-					App.Parent = Template.Pages
-				end
-
-				local App = Template.Pages.Frame:Clone()
-				App.Visible = true
-				App.AppName.Text = `{#v["AllowedPages"] - 5} others...`
-				App.Parent = Template.Pages
-			else
-				for k, _ in v["AllowedPages"] do
-					local App = Template.Pages.Frame:Clone()
-
-					App.Visible = true
-					App.AppName.Text = v["AllowedPages"][k]["DisplayName"]
-					App.ImageLabel.Image = v["AllowedPages"][k]["Icon"]
-					App.Parent = Template.Pages
-				end
-			end
-
-			Template.Parent = RanksFrame
-			Template.Visible = true
-
-			for _, User in v["Members"] do
-				if not tonumber(User["ID"]) then
-					warn(`Bad admin ID? ({User["ID"]} was not of type number)`)
-					continue
-				end
-
-				if User["MemberType"] == "User" then
-					local AdminPageTemplate = RanksFrame.Parent.Parent.Admins.Content.Template:Clone()
-
-					local Suc, Err = pcall(function()
-						AdminPageTemplate.PFP.Image = tostring(
-							game.Var.Services.Players:GetUserThumbnailAsync(
-								tonumber(User["ID"]),
-								Enum.ThumbnailType.HeadShot,
-								Enum.ThumbnailSize.Size180x180
-							)
-						)
-						AdminPageTemplate.Info.Text = `{v["RankName"]} (Rank {i})`
-						--// "Created by" replacement to prevent any name mistakes ("Created by AddedUsername" not "Created by CreatedUsermame")
-						AdminPageTemplate.Metadata.Text =
-							`{string.gsub(v["Reason"], "Created by", "Added by")} <b>{Utilities.FormatRelativeTime(
-								v["ModifiedUnix"]
-							)}</b>`
-						AdminPageTemplate.PlayerName.Text = `@{Var.Services.Players:GetNameFromUserIdAsync(User["ID"])}`
-
-						AdminPageTemplate.Visible = true
-						AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-						AdminPageTemplate.Name = User["ID"]
-					end)
-
-					if not Suc then
-						print(Err)
-						AdminPageTemplate.PFP.Image = ""
-						AdminPageTemplate.Info.Text = `{v["RankName"]} (Rank {i})`
-						AdminPageTemplate.Metadata.Text =
-							`{v["Reason"]} <b>{Utilities.FormatRelativeTime(v["ModifiedUnix"])}</b>`
-						AdminPageTemplate.PlayerName.Text = `Deleted ({User["ID"]})`
-
-						AdminPageTemplate.Visible = true
-						AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-						AdminPageTemplate.Name = User["ID"]
+						Card.Visible = true
+						Card.AppName.Text = v.Apps[j]["DisplayName"]
+						Card.ImageLabel.Image = v.Apps[j]["Icon"]
+						Card.Parent = Template.Pages
 					end
+
+					local Card = Template.Pages.Frame:Clone()
+					Card.Visible = true
+					Card.AppName.Text = `{#v.Apps - 5} others...`
+					Card.Parent = Template.Pages
 				else
-					local AdminPageTemplate = RanksFrame.Parent.Parent.Admins.Content.Template:Clone()
+					for k, App in v["Apps"] do
+						if type(App) == "boolean" then continue end
+						local Card = Template.Pages.Frame:Clone()
 
-					local _, GroupInfo = pcall(function()
-						return game:GetService("GroupService"):GetGroupInfoAsync(User["ID"])
-					end)
-
-					local Suc, Err = pcall(function()
-						AdminPageTemplate.PFP.Image = GroupInfo["EmblemUrl"]
-						AdminPageTemplate.Info.Text = `{v["RankName"]} (Rank {i})`
-						--// "Created by" replacement to prevent any name mistakes ("Created by AddedUsername" not "Created by CreatedUsermame")
-						AdminPageTemplate.Metadata.Text =
-							`{string.gsub(v["Reason"], "Created by", "Added by")} <b>{Utilities.FormatRelativeTime(
-								v["ModifiedUnix"]
-							)}</b>`
-						AdminPageTemplate.PlayerName.Text =
-							`{GroupInfo["Name"]} ({(User["GroupRank"] or 0) == 0 and "all ranks" or User["GroupRank"]})`
-
-						AdminPageTemplate.Visible = true
-						AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-						AdminPageTemplate.Name = User["ID"]
-					end)
-
-					if not Suc then
-						print(Err)
-						AdminPageTemplate.PFP.Image = ""
-						AdminPageTemplate.Info.Text = `{v["RankName"]} (Rank {i})`
-						AdminPageTemplate.Metadata.Text =
-							`{v["Reason"]} <b>{Utilities.FormatRelativeTime(v["ModifiedUnix"])}</b>`
-						AdminPageTemplate.PlayerName.Text = `Deleted ({User["ID"]})`
-
-						AdminPageTemplate.Visible = true
-						AdminPageTemplate.Parent = RanksFrame.Parent.Parent.Admins.Content
-						AdminPageTemplate.Name = User["ID"]
+						Card.Visible = true
+						Card.AppName.Text = App.DisplayName
+						Card.ImageLabel.Image = App.Icon
+						Card.Parent = Template.Pages
 					end
 				end
+
+				Template.ColorBG.BackgroundColor3 = Color3.fromHex(`#{v.Color}`)
+
+				Template.Parent = RanksFrame
+				Template.Visible = true
+
+				local UserNames = {}
+
+				for i = 1, 3 do
+					local User = v.Members[i]
+
+					if User == nil then break end
+
+					if User.MemberType == "User" then
+						Template.ProfilePictures[i].Visible = true
+						Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
+							User.ID,
+							Enum.ThumbnailType.HeadShot,
+							Enum.ThumbnailSize.Size100x100
+						)
+
+						table.insert(UserNames, Var.Services.Players:GetNameFromUserIdAsync(User.ID))
+					else
+						local _, GroupInfo = pcall(function()
+							return game:GetService("GroupService"):GetGroupInfoAsync(User.ID)
+						end)
+
+						Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
+						Template.ProfilePictues[i].Visible = true
+
+						table.insert(UserNames, GroupInfo.Name)
+					end
+				end
+
+				Template.MembersText.Text = (
+					#UserNames == 3 and `<b>{UserNames[1]}</b>, <b>{UserNames[2]}</b>, <b>{UserNames[3]}</b>, and <b>{#v.Members - 3}</b> are members`
+						or #UserNames == 2 and `<b>{UserNames[1]}</b> and <b>{UserNames[2]}</b> are members`
+						or `<b>{UserNames[1]}</b> is a member`
+				)
 			end
 		end
-	end
 
-	Shimmer1:Pause()
-	Shimmer2:Pause()
-	Shimmer1:GetFrame():Destroy()
-	Shimmer2:GetFrame():Destroy()
+		Shimmer1:Pause()
+		Shimmer1:GetFrame():Destroy()
+	end)
 end
 
 function Admins.RunCreatorApp()
 	--// TODO
 	local TweenService = game:GetService("TweenService")
+
 	local Page = 1
 	local CanGoBack = true
 	local Env = require(script.Parent.UI.AdminHelperEnv)
+	local Frames = Var.MainFrame.Configuration.Admins.NewAdmin
 
 	local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 		if type(Spin) == "number" then PageNumber = Spin end
@@ -289,12 +160,12 @@ function Admins.RunCreatorApp()
 
 		Tweem:Play()
 		TweenService:Create(
-			script.Parent.SideDecor.ImageLabel,
+			Frames.SideDecor.ImageLabel,
 			TweenInfo.new(TTC, Enum.EasingStyle.Cubic),
 			{ Position = UDim2.new(0, 0, 0.5, 0), ImageTransparency = 1 }
 		):Play()
 		TweenService:Create(
-			script.Parent.SideDecor.AdmSpinner,
+			Frames.SideDecor.AdmSpinner,
 			TweenInfo.new(TTC, Enum.EasingStyle.Cubic),
 			{ Position = UDim2.new(0, 0, 0.5, 0), GroupTransparency = 1 }
 		):Play()
@@ -315,12 +186,12 @@ function Admins.RunCreatorApp()
 		end
 
 		Page2.Position = UDim2.new(0.3, 0, 0, 0)
-		script.Parent.SideDecor.ImageLabel.Position = UDim2.new(0.8, 0, 0.5, 0)
-		script.Parent.SideDecor.AdmSpinner.Position = UDim2.new(0.8, 0, 0.5, 0)
+		Frames.SideDecor.ImageLabel.Position = UDim2.new(0.8, 0, 0.5, 0)
+		Frames.SideDecor.AdmSpinner.Position = UDim2.new(0.8, 0, 0.5, 0)
 
-		script.Parent.SideDecor.AdmSpinner.Visible = Spin
-		script.Parent.SideDecor.ImageLabel.Image = NewIcon
-		script.Parent.SideDecor.ImageLabel.Visible = not Spin
+		Frames.SideDecor.AdmSpinner.Visible = Spin
+		Frames.SideDecor.ImageLabel.Image = NewIcon
+		Frames.SideDecor.ImageLabel.Visible = not Spin
 
 		Page2.Visible = true
 		Page1.Visible = false
@@ -330,10 +201,10 @@ function Admins.RunCreatorApp()
 				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					ImageTransparency = 0,
 				}):Play()
-			--elseif descendant:IsA("GuiObject") then
-			--TweenService:Create(descendant, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			--	Transparency = 0
-			--}):Play()
+				--elseif descendant:IsA("GuiObject") then
+				--TweenService:Create(descendant, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				--	Transparency = 0
+				--}):Play()
 			elseif descendant:IsA("TextLabel") then
 				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					TextTransparency = 0,
@@ -367,19 +238,19 @@ function Admins.RunCreatorApp()
 			{ Position = UDim2.new(0, 0, 0, 0) }
 		)
 		TweenService:Create(
-			script.Parent.SideDecor.ImageLabel,
+			Frames.SideDecor.ImageLabel,
 			TweenInfo.new(TTC, Enum.EasingStyle.Cubic),
 			{ Position = UDim2.new(0.5, 0, 0.5, 0), ImageTransparency = 0 }
 		):Play()
 		TweenService:Create(
-			script.Parent.SideDecor.AdmSpinner,
+			Frames.SideDecor.AdmSpinner,
 			TweenInfo.new(TTC, Enum.EasingStyle.Cubic),
 			{ Position = UDim2.new(0.5, 0, 0.5, 0), GroupTransparency = 0 }
 		):Play()
 
 		ET:Play()
 
-		local Dots = script.Parent.BottomData.Controls.Dots
+		local Dots = Frames.BottomData.Controls.Dots
 
 		for i, Dot in Dots:GetChildren() do
 			if not Dot:IsA("Frame") then continue end
@@ -387,22 +258,22 @@ function Admins.RunCreatorApp()
 		end
 
 		Dots[`Dot{PageNumber}`].UIStroke.Thickness = 2
-		script.Parent.BottomData.StepLabel.Text = `Step {Page}/5`
+		Dots.AProgress.Text = `Step {Page}/5`
 
 		ET.Completed:Wait() --// stop the animation from being too quick
 	end
 
-	script.Parent.BottomData.Controls.ALast.MouseButton1Click:Connect(function()
+
+	--// buttons
+	local ConnectionsTable
+	local FinalData = {}
+
+	Frames.BottomData.Controls.ALast.MouseButton1Click:Connect(function()
 		if not CanGoBack then return end
 
 		Page -= 1
-		SwapPages(script.Parent[`Page{Page + 1}`], script.Parent[`Page{Page}`], "rbxassetid://14147040290", false, Page)
+		SwapPages(Frames[`Page{Page + 1}`], Frames[`Page{Page}`], "rbxassetid://14147040290", false, Page)
 	end)
-
-	--// buttons
-	local Frames = script.Parent
-	local ConnectionsTable
-	local FinalData = {}
 
 	Frames.Page1.NextPage.MouseButton1Click:Connect(function()
 		-- Verify the filtering service is online
@@ -411,16 +282,16 @@ function Admins.RunCreatorApp()
 		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
 
 		if Env.EditModeIsProtected then
-			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
-
 			Frames.Page5.Header.Text = "Access Denied"
 			Frames.Page5.Body.Text =
 				"Sorry, but this rank is protected and may not be edited. Please contact whoever installed Administer."
+
+			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
 			return
 		end
 
 		local Success, FilterResult = pcall(function()
-			return game.ReplicatedStorage.AdministerRemotes.FilterString:InvokeServer("test string")
+			return Var.Remotes.FilterString:InvokeServer("test string")
 		end)
 
 		if Success and FilterResult[1] then
@@ -428,28 +299,37 @@ function Admins.RunCreatorApp()
 
 			ConnectionsTable = Frames.Page2.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
 				Frames.Page2.PreviewText.Text =
-					`Preview: {game.ReplicatedStorage.AdministerRemotes.FilterString:InvokeServer(
+					`Preview: {Var.Remotes.FilterString:InvokeServer(
 						Frames.Page2.TextInput.Text
 					)[2]}`
 			end)
 		else
-			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
-
 			Frames.Page5.Header.Text = "Oops! That's not meant to happen."
 			if FilterResult[2] then
 				Frames.Page5.Body.Text = "Failed to connect to Roblox's filtering service. This likely isn't an issue with your game, try again later.\n\n"
-						.. FilterResult[2]
+					.. FilterResult[2]
 					or "The server did not send an error."
 			else
 				Frames.Page5.Body.Text = "Failed to call the remote to filter. Did you install Administer wrong?\n\n"
-						.. FilterResult
+					.. FilterResult
 					or "The server did not send an error."
 			end
+
+			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
 		end
 	end)
 
 	Frames.Page2.NextPage.MouseButton1Click:Connect(function()
 		SwapPages(Frames.Page2, Frames.Loading, "rbxassetid://11102397100", true, 2)
+
+		local ExistingRank = Var.Remotes.GetRank:InvokeServer(Frames.Page2.TextInput.Text)
+
+		if ExistingRank ~= nil and not Env.EditMode then
+			Frames.Page5.Header.Text = "Oops! That's not meant to happen."
+			Frames.Page5.Body.Text = `A rank already has the name {Frames.Page2.TextInput.Text}. Please re-open the creator and choose another. If you are looking to edit this rank instead, click the gear icon.`
+
+			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
+		end
 
 		ConnectionsTable:Disconnect()
 
@@ -457,9 +337,10 @@ function Admins.RunCreatorApp()
 			if not v:GetAttribute("IsTemplate") and v:IsA("Frame") then v:Destroy() end
 		end
 
+		local Checking = false
+		local Thread
 		local function NewGroupCard(PresetID: number?, PresetRank: number?)
 			local Clone = Frames.Page3.Members.Members.GroupTemplate:Clone()
-			local Checking = false
 
 			Clone.Parent = Frames.Page3.Members.Members
 			Clone.Visible = true
@@ -484,13 +365,12 @@ function Admins.RunCreatorApp()
 			end
 
 			local Thread
-			ConnectionsTable["Check" .. math.random(1, 500)] = Clone.TextInput.FocusLost:Connect(function()
+			ConnectionsTable["Evemt" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
 				if Checking then
 					task.cancel(Thread) --// too quick, stop the old one...
 
 					Thread = task.spawn(CheckTask)
 				else
-					Checking = true
 					Thread = task.spawn(CheckTask)
 				end
 			end)
@@ -500,8 +380,6 @@ function Admins.RunCreatorApp()
 
 			Clone.TextInput.Text = PresetID or ""
 			Clone.GroupRankInput.Text = PresetRank or ""
-
-			Thread = task.spawn(CheckTask)
 		end
 
 		local function NewUserCard(PresetID: number?)
@@ -514,10 +392,11 @@ function Admins.RunCreatorApp()
 
 			local function CheckTask()
 				local Success, Info = pcall(function()
+					print("m")
 					return {
-						game.Players:GetNameFromUserIdAsync(Clone.TextInput.Text),
+						game.Players:GetNameFromUserIdAsync(tonumber(Clone.TextInput.Text)),
 						game.Players:GetUserThumbnailAsync(
-							Clone.TextInput.Text,
+							tonumber(Clone.TextInput.Text),
 							Enum.ThumbnailType.HeadShot,
 							Enum.ThumbnailSize.Size100x100
 						),
@@ -528,20 +407,28 @@ function Admins.RunCreatorApp()
 					Clone._Name.Text = `{Info[1]}`
 					Clone.Image.Image = Info[2]
 				else
+					print(Info)
 					Clone._Name.Text = `Not found`
 					Clone.Image.Image = "rbxassetid://15105863258"
 				end
 			end
 
-			ConnectionsTable["Check" .. math.random(1, 500)] = Clone.TextInput.FocusLost:Connect(function()
-				CheckTask()
+			ConnectionsTable["Evemt" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
+				print("hi", Checking, Thread)
+				if Checking then
+					task.cancel(Thread) --// too quick, stop the old one...
+
+					Thread = task.spawn(CheckTask)
+				else
+					Thread = task.spawn(CheckTask)
+				end
 			end)
+
 			ConnectionsTable["Close" .. math.random(1, 500)] = Clone.Delete.MouseButton1Click:Connect(function()
 				Clone:Destroy()
 			end)
 
 			Clone.TextInput.Text = PresetID or ""
-			CheckTask()
 		end
 
 		ConnectionsTable = {
@@ -551,7 +438,7 @@ function Admins.RunCreatorApp()
 
 			Frames.Page3.AddPane.AddUser.Click.MouseButton1Click:Connect(function()
 				NewUserCard()
-			end),
+			end)
 		}
 
 		for i, User in Env.EditModeMembers :: { { MemberType: string, ID: number, GroupRank: number? } } do
@@ -563,8 +450,6 @@ function Admins.RunCreatorApp()
 		end
 
 		SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
-
-		print(Env)
 	end)
 
 	Frames.Page3.NextPage.MouseButton1Click:Connect(function()
@@ -590,6 +475,7 @@ function Admins.RunCreatorApp()
 			Template.Status.Text = "Enabled"
 			Template.Visible = true
 
+			Template:SetAttribute("Showing", true)
 			Template:SetAttribute("TechName", TechName)
 
 			ConnectionsTable[AppName] = Template.Toggle.MouseButton1Click:Connect(function()
@@ -605,9 +491,17 @@ function Admins.RunCreatorApp()
 			end)
 		end
 
-		for i, v in script.Parent.Parent.Parent.Parent.Apps.MainFrame:GetChildren() do
-			if not table.find({ "AHome", "Template", "UIGridLayout" }, v.Name) then
-				NewAppCard(v.Title.Text, v.Icon.Image, v.Name, v.Desc.Text)
+		for i, v: Instance in Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() do
+			if not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout" }, v.Name) then
+				if v:GetAttribute("ThreadType") == "multi" then
+					for _, App in v.SubCollection:GetChildren() do
+						if App.Name == "Object" or App.Name == "UIListLayout" then continue end
+
+						NewAppCard(`{v.Title.Text} - {App.Title.Text}`, App.Icon.Image, App.Name, "This is a subapp and it does not have a description.")
+					end
+				else
+					NewAppCard(v.Title.Text, v.Icon.Image, v.Name, v.Desc.Text)
+				end
 			end
 		end
 
@@ -663,25 +557,30 @@ function Admins.RunCreatorApp()
 		end
 
 		FinalData = {
-			["Name"] = game.ReplicatedStorage.AdministerRemotes.FilterString:InvokeServer(Frames.Page2.TextInput.Text)[2],
-			["Protected"] = false, -- may be configurable soon
-			["Members"] = Members,
-			["PagesCode"] = "/",
-			["AllowedPages"] = AllowedPages,
+			Name = Var.Remotes.FilterString:InvokeServer(Frames.Page2.TextInput.Text)[2],
+			Protected = false, -- may be configurable soon
+			Members = Members,
 
-			["IsEditing"] = Env.EditMode,
-			["EditingRankID"] = Env.EditModeRank,
+			AllowedApps = AllowedPages,
+
+			ActingUser = game.Players.LocalPlayer.UserId,
+			Color = Frames.Page2.ColorInput.Text,
+
+			IsEditing = Env.EditMode,
+			EditingRankID = Env.EditModeRank,
+
+			CreationReason = "Created in the rank editor"
 		}
 
-		local Result = game.ReplicatedStorage.AdministerRemotes.NewRank:InvokeServer(FinalData)
-		if Result["Success"] then
+		local Result = Var.Remotes.NewRank:InvokeServer(FinalData)
+		if Result[1] then
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
 		else
 			print(Result)
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
 			Frames.Page5.Header.Text = require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError
 			Frames.Page5.Body.Text =
-				string.format(require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError, Result["Message"])
+				string.format(require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError, Result[2])
 		end
 	end)
 

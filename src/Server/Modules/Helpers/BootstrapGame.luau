@@ -2,8 +2,9 @@
 --// pyxfluff 2024 - 2025
 
 --// This file exists to stop circular imports
-
 local Root = script:FindFirstAncestor("Loader")
+
+--// Modules
 local Admins = require(Root.Modules.AdminRunner)
 local Apps = require(Root.Modules.Apps)
 local Utils = require(Root.Modules.Utilities)
@@ -31,6 +32,8 @@ return function(): ()
 
 		CreationReason = "Added by System for first-time setup.",
 		ActingUser = 1,
+		
+		Color = "23ff74"
 	})
 
 	Apps.ServerAPI.New(Var.DefaultAppServer, -1)
@@ -40,7 +43,5 @@ return function(): ()
 	)
 
 	Utils.Logging.Print("[✓] Welcome to Administer!")
-	Utils.Logging.Print([[[!] Is Administer making too many print messages?
-Turn off the `misc.Verbose` setting to silence prints!
-]])
+	Utils.Logging.SWarn("[!] Is Administer making too many print messages? Turn off the `misc.Verbose` setting to silence prints!")
 end

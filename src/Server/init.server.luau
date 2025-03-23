@@ -25,18 +25,18 @@ local Configuration  = require(Core.Configuration)
 local Types          = require(Core.Types)
 local Var            = require(Core.Variables)
 
-Utils.Logging.Print(`[✓] Modules OK in {os.clock() - Var.InitClock["RealInit"]}s`)
+Utils.Logging.Print(`[✓] Modules OK in {Utils.RoundMS(os.clock() - Var.InitClock["RealInit"])}ms`)
 
 Var.InitClock.TempInit = os.clock()
 Var.Init()
 
-Utils.Logging.Print(`[✓] Init() OK in {os.clock() - Var.InitClock["TempInit"]}s`)
+Utils.Logging.Print(`[✓] Init() OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
 Var.InitClock.TempInit = os.clock()
 xpcall(function()
 	Var.IsFirstBoot = (Var.IsFirstBoot or Var.DataStores.Settings:GetAsync("HasInit") == nil and true or false)
 	
-	Utils.Logging.Print(`[✓] DataStoreService connection established in {os.clock() - Var.InitClock["TempInit"]}s`)
+	Utils.Logging.Print(`[✓] DataStoreService connection established in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 	
 	local Settings
 	if Var.IsFirstBoot then
@@ -65,7 +65,7 @@ end)
 Var.InitClock.TempInit = os.clock()
 AppsModule.Initialize()
 
-Utils.Logging.Print(`[✓] OK in {os.clock() - Var.InitClock["TempInit"]}s`)
+Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
 AdminRunner.Scan(false)
 Var.Services.Players.PlayerAdded:Connect(AdminRunner.PlayerAdded)
@@ -117,6 +117,7 @@ NewRemote("CheckForUpdates", true, true, function(Player)
 	return FrontendAPI.VersionCheck(Player)
 end)
 NewRemote("GetGameArt", false, false, Utils.GetGameIcon)
+NewRemote("FilterString", true, true, Utils.GetFilteredString)
 
 NewRemote("GetProminentColorFromUserID", false, true, function(Player)
 	return Utils.GetProminentColor(Player.UserId)
@@ -135,10 +136,16 @@ NewRemote("GetAppInfo", true, false, AppsModule.ServerAPI.GetApp)
 NewRemote("GetInstalledApps", true, false, AppsModule.GetAll)
 NewRemote("InstallApp", true, false, AppsModule.ServerAPI.InstallFromServer)
 NewRemote("Vote", true, false, AppsModule.ServerAPI.Vote)
+NewRemote("ManageApp", true, false, AppsModule.Uninstall)
 
 --// Admin routes
+NewRemote("GetRanks", true, false, AdminRunner.Ranks.GetAll)
+NewRemote("NewRank", true, false, AdminRunner.Ranks.New)
+NewRemote("GetRank", true, false, function(Rankname)
+	return Var.DataStores.AdminsDS:GetAsync(Rankname)
+end)
 
-Utils.Logging.Print(`[✓] OK in {os.clock() - Var.InitClock["TempInit"]}s`)
+Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
 Utils.Logging.Print(`[-] Running startup jobs!`)
 
 HttpRunner.PostRoute(Var.DefaultAppServer, "/api/report-version", {

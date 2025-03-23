@@ -12,11 +12,11 @@ local Config = require(script.Parent.Configuration)
 --// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
 Variables.Config                     = require(script.Parent.Configuration) --// Config file location
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin            = true --// Free superadmin for all players. Not recommended for anything other than debugging.
+Variables.EnableFreeAdmin            = false --// Free superadmin for all players. Not recommended for anything other than debugging.
 
-Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
---Variables.DefaultAppServer           = "https://adm_unstable.notpyx.me" --// Must be an AOS app server instance.
-Variables.ProxyURL                   = "https://rblx.notpyx.me" --// Roblox proxy URL following format {{ domain }}/SUBDOMAIN/path
+--Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
+Variables.DefaultAppServer           = "https://aos-canary.admsoftware.org" --// Must be an AOS app server instance.
+Variables.ProxyURL                   = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format {{ domain }}/SUBDOMAIN/path
 Variables.Locales                    = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit            = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
 Variables.WaitForBootstrap           = false --// Whether or not we will wait for apps to load before sending out panels.
@@ -74,8 +74,6 @@ Variables.ModuleSensitivity = {
     Debugging    = 1
 }
 
--- stylua: ignore end
-
 Variables.Admins = {
 	InGame = {},
 
@@ -90,22 +88,22 @@ Variables.InitClock = {
 }
 
 Variables.DefaultRank = {
-	["RankID"] = 0,
-	["Name"] = (require(Variables.Locales[Config.Settings.Interface.Language.Value.Default]) :: any)["admin.RankDefault"],
-	["Protected"] = false,
+	RankID = 0,
+	Name = require(Variables.Locales[Config.Settings.Interface.Language.Value.Default])["admin.RankDefault"],
+	Protected = false,
 
-	["Members"] = {},
-	["Apps"] = {},
+	Members = {},
+	Apps = {},
 
-	["Modified"] = os.time(),
-	["Modifications"] = {},
+	Modified = os.time(),
+	Modifications = {},
 
-	["CreatorID"] = 0,
-	["AdmRankVersion"] = 2
+	CreatorID = 0,
+	AdmRankVersion = 3
 }
 
 Variables.DefaultRankData = {
-	Count = 1,
+	Count = 0,
 	Names = {},
 	GroupAdminIDs = {},
 	AdminIDs = {}
@@ -145,7 +143,7 @@ Variables.Branches = {
 }
 
 Variables.Panel = {
-	Path = Root.Resources.AdministerMainPanel
+	Path = Root.Resources:FindFirstChild("AdministerMainPanel") ~= nil and Root.Resources:FindFirstChild("AdministerMainPanel") or game.StarterGui:FindFirstChild("AdministerMainPanel") 
 }
 
 Variables.CachedLocales = {}

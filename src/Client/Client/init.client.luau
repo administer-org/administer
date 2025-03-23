@@ -7,21 +7,36 @@ local Modules = script.Modules
 
 local Var = require(Modules.Variables)
 
-local Admins = require(Modules.Admins)
-local Apps = require(Modules.Apps)
-local Frontend = require(Modules.Frontend)
+local Admins    = require(Modules.Admins)
+local Apps      = require(Modules.Apps)
+local Frontend  = require(Modules.Frontend)
 local Utilities = require(Modules.Utilities)
-local Widgets = require(Modules.Widgets)
+local Widgets   = require(Modules.Widgets)
 
 local t = Utilities.Translate
 
 Frontend.Close(true)
 task.spawn(Utilities.Heartbeat)
 
+local Debounce = false
+
 Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 	if IsGameProc then return end
 	
-	if KeyCode.KeyCode == Enum.KeyCode.F2 then Frontend.Open() end
+	if KeyCode.KeyCode == Enum.KeyCode.F2 then
+		if Debounce then return end
+		Debounce = true
+		
+		if Var.IsOpen then
+			Var.IsOpen = false
+			Frontend.Close(false, true)
+		else
+			Var.IsOpen = true
+			Frontend.Open(true)
+		end
+		
+		Debounce = false
+	end
 end)
 
 if not pcall(function()
@@ -32,7 +47,6 @@ if not pcall(function()
 end
 
 Widgets.Initialize()
-
 Apps.AddAppDrawerButton({
 	AppName = t("Apps.MainFrame.Home.Title"),
 	Description = t("Apps.MainFrame.Template.Desc"),
@@ -65,7 +79,7 @@ Apps.AddAppDrawerButton({
 		{
 			Name = Utilities.ToSentenceCase( t("Header.AppDrawer.HeaderLabel") ),
 			Icon = Utilities.Icon "grid",
-			Click = Apps.LoadList,
+			Click = Apps.LoadAppList,
 			Frame = Var.MainFrame.Configuration.Marketplace
 		},
 		{
@@ -77,12 +91,8 @@ Apps.AddAppDrawerButton({
 	}
 })
 
---// Marketplace initializations
-xpcall(Apps.Init, function(e)
-	Utilities.Logging.Print("[x] Failed to initialize the marketplace, this is likely due to insufficient permissions!")
-	Utilities.Logging.Print(e)
-end)
 
+--// Homepage, app drawer, header connections
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
 	Widgets.Edit(Var.MainFrame.Home.Widget1)
 end)
@@ -94,6 +104,10 @@ end)
 Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
 Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
 Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
+Var.MainFrame.Header.Close.MouseButton1Click:Connect(function()
+	Var.IsOpen = false
+	Frontend.Close(false, false)
+end)
 
 Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
 	t("Welcome.Initial.HeaderLabel") :: string,
@@ -113,7 +127,29 @@ task.defer(function()
 	Var.MainFrame.Home.Gradient2.ImageLabel.ImageColor3 = Color3.fromRGB(PromColor[1], PromColor[2], PromColor[3])
 end)
 
---// Button hooks
+--// Marketplace
+xpcall(Apps.Init, function(e)
+	Utilities.Logging.Print("[x] Failed to initialize the marketplace, this is likely due to insufficient permissions!")
+	Utilities.Logging.Print(e)
+end)
+
+
+xpcall(function()
+	Admins.RunCreatorApp()
+	Admins.Load()
+	
+	Var.MainFrame.Configuration.Admins.Header.NewRank.Activator.MouseButton1Click:Connect(function()
+		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
+	end)
+	
+	Var.MainFrame.Configuration.Admins.NewAdmin.Page5.NextPage.MouseButton1Click:Connect(function()
+		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
+		
+		Admins.Load()
+	end)
+end, function(e)
+	warn(e)
+end)
 
 --[[
 if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled then
@@ -136,75 +172,8 @@ else
 	script.Parent:WaitForChild("MobileOpen", 10):Destroy()
 end
 
---// Verify installation
-local Success, Error = pcall(function(...)
-	Var.Remotes.Ping:InvokeServer()
-end)
-
-if not Success then
-	Error(`Failed to establish communication with the server, refer to {Error}`)
-	NewNotification(
-		"Administer",
-		"rbxassetid://18512489355",
-		"Administer server ping failed, it seems your client may be incorrectly installed or the server si not executing properly. Please reinstall from source.",
-		"Startup failed",
-		99999,
-		{}
-	)
-	Var.MainFrame.Visible = false
-
-	return
-end
-
---// TODO (FloofyPlasma): Give this whole thing a rewrite for type checking...
-
-if InitErrored then
-	task.defer(function()
-		Error("Failed to boot client, missing required dependency (neon), please reinstall or roll back any changes!")
-		NewNotification(
-			"Administer",
-			"rbxassetid://11601882008",
-			"Startup aborted, please make sure Administer is correctly installed. (failed dependency: neon)",
-			"Boot failure",
-			15
-		)
-	end)
-
-	return
-end
 
 task.defer(Utilities.StartSettingsCheck)
-
-local MenuDebounce = false
-
-Var.Services.UserInputService.InputBegan:Connect(function(Input: InputObject, GameProcessedEvent: boolean)
-	if IsPlaying or GameProcessedEvent then return end
-	if Input.KeyCode ~= Enum.KeyCode[string.upper(Utilities.GetSetting("PanelKeybind") :: string)] then return end
-
-	local Down = Var.Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
-
-	if Utilities.GetSetting("RequireShift") and Down then
-		if not MenuDebounce then
-			Open()
-			MenuDebounce = true
-		else
-			Close(false)
-			MenuDebounce = false
-		end
-	elseif not Down and not Utilities.GetSetting("RequireShift") then
-		if not MenuDebounce then
-			Open()
-			--// TODO (FloofyPlasma): Bad hack? Why was this here...
-			repeat
-				task.wait(0.1)
-			until Var.IsOpen
-			MenuDebounce = true
-		else
-			Close(false)
-			MenuDebounce = false
-		end
-	end
-end)
 
 if Var.Mobile then
 	script.Parent
@@ -233,66 +202,6 @@ local EnableWaiting = false
 
 if IsEIEnabled == nil then --// (false) or true was always true due to logic so it would ignore the setting
 	IsEIEnabled = true
-end
-
-for _, Item: CanvasGroup | Instance in Var.MainFrame.Apps.Var.MainFrame:GetChildren() do
-	--// TODO
-	if not Item:IsA("CanvasGroup") then continue end
-
-	local Click: Instance? = Item:FindFirstChild("Click")
-	local Icon: Instance? = Item:FindFirstChild("Icon")
-	local Reflection: Instance? = Item:FindFirstChild("Reflection")
-
-	if Click and Click:IsA("TextButton") then
-		Click.MouseButton1Click:Connect(function()
-			task.defer(CloseApps, tonumber(Utilities.GetSetting("AnimationSpeed")) :: number / 7 * 5.5)
-
-			local LinkId, PageName = Item:GetAttribute("LinkID"), nil
-
-			for _, Frame: Instance in Var.MainFrame:GetChildren() do
-				if Frame:GetAttribute("LinkID") == LinkId then
-					PageName = Frame.Name
-
-					break
-				end
-			end
-
-			if not LinkId then
-				Var.MainFrame[Var.LastPage].Visible = false
-				Var.LastPage = "NotFound"
-				Var.MainFrame.NotFound.Visible = true
-				return
-			end
-
-			Var.MainFrame[Var.LastPage].Visible = false
-			Var.MainFrame[PageName].Visible = true
-
-			Var.LastPage = PageName
-
-			Var.MainFrame.Header.Mark.AppLogo.Image = Icon and Icon:IsA("ImageLabel") and Icon.Image
-
-			local Title = Item:FindFirstChild("Title")
-
-			Var.MainFrame.Header.Mark.HeaderLabel.Text =
-				`<b>Administer</b> · {Title and Title:IsA("TextLabel") and Title.Text}`
-		end)
-
-		if not IsEIEnabled then continue end
-
-		local S, E = pcall(function()
-			if Reflection and Reflection:IsA("ImageLabel") and Icon and Icon:IsA("ImageLabel") then
-				Reflection.ImageContent = Content.fromObject(CreateReflection(Icon.Image))
-				Reflection.Visible = true
-
-				local IconBG = Item:FindFirstChild("IconBG")
-
-				if IconBG and IconBG:IsA("ImageLabel") then IconBG.Visible = false end
-			end
-		end)
-
-		print(S, E)
-		IsEIEnabled = S
-	end
 end
 
 if #Var.MainFrame.Apps.Var.MainFrame:GetChildren() >= 250 then
