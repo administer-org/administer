@@ -34,7 +34,7 @@ return {
 	["Configuration.Admins.NewAdmin.Page1.Body"] = "Mit dem Rang-Ersteller können Sie neue Admin-Ränge erstellen und die zulässigen Apps und Benutzer festlegen. Neuen Benutzern, die Sie hinzufügen, wird sofort Zugriff auf die Verwaltung gewährt, auch wenn sie bereits im Spiel sind. Sie können nur Apps hinzufügen, auf die Sie persönlich Zugriff haben. Nur Personen mit der Berechtigung können die Option aktivieren, alle Apps zuzulassen.",
 	["Configuration.Admins.NewAdmin.Page1.Header"] = "Willkommen beim Rang-Ersteller",
 	["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Fortfahren",
-	["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Wählen Sie den internen Namen des Ranges. Einige Apps zeigen dies möglicherweise öffentlich an, daher kann es gefiltert werden.",
+	["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Wählen Sie den internen Namen des Ranges. Einige Apps zeigen dies möglicherweise öffentlich an, daher kann er gefiltert werden.",
 	["Configuration.Admins.NewAdmin.Page2.LogoWordmark"] = "Name",
 	["Configuration.Admins.NewAdmin.Page2.PreviewText"] = "Vorschau: ",
 	["Configuration.Admins.NewAdmin.Page3.AddPane.AddGroup.LogoWordmark"] = "Gruppe",
