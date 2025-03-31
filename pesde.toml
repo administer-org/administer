@@ -1,7 +1,7 @@
 name = "administer/administer"
 version = "2.0.0"
 description = "Administer is a modular admin panel for Roblox."
-authors = ["FloofyPlasma", "pyxfluff"]
+authors = ["Administer Software <hello@admsoftware.org>", "pyxfluff <pesde@notpyx.me>"]
 repository = "https://github.com/administer-org/administer"
 license = "AGPL-3.0"
 
