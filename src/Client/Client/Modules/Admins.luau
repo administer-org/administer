@@ -35,7 +35,6 @@ function Admins.Load(): ()
 			return "Something went wrong"
 		else
 			for i, v in List do
-				print(v)
 				local Template = RanksFrame.Template:Clone()
 
 				Template.Name = v["Name"]
@@ -70,7 +69,12 @@ function Admins.Load(): ()
 					end
 				end
 
-				Template.ColorBG.BackgroundColor3 = Color3.fromHex(`#{v.Color}`)
+				xpcall(function()
+					Template.ColorBG.BackgroundColor3 = Color3.fromHex(`#{v.Color}`)
+				end, function()
+					--// Invalid hex code
+					Template.ColorBG.BackgroundColor3 = Color3.new(0.239, 0.643, 1)
+				end)
 
 				Template.Parent = RanksFrame
 				Template.Visible = true
@@ -81,7 +85,6 @@ function Admins.Load(): ()
 					local User = v.Members[i]
 
 					if User == nil then break end
-
 					if User.MemberType == "User" then
 						Template.ProfilePictures[i].Visible = true
 						Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
@@ -97,7 +100,9 @@ function Admins.Load(): ()
 						end)
 
 						Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
-						Template.ProfilePictues[i].Visible = true
+						Template.ProfilePictures[i].Visible = true
+
+						Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
 
 						table.insert(UserNames, GroupInfo.Name)
 					end
@@ -201,10 +206,6 @@ function Admins.RunCreatorApp()
 				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					ImageTransparency = 0,
 				}):Play()
-				--elseif descendant:IsA("GuiObject") then
-				--TweenService:Create(descendant, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-				--	Transparency = 0
-				--}):Play()
 			elseif descendant:IsA("TextLabel") then
 				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
 					TextTransparency = 0,
@@ -263,7 +264,6 @@ function Admins.RunCreatorApp()
 		ET.Completed:Wait() --// stop the animation from being too quick
 	end
 
-
 	--// buttons
 	local ConnectionsTable
 	local FinalData = {}
@@ -297,12 +297,18 @@ function Admins.RunCreatorApp()
 		if Success and FilterResult[1] then
 			SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://15084609272", false, 2)
 
-			ConnectionsTable = Frames.Page2.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
-				Frames.Page2.PreviewText.Text =
-					`Preview: {Var.Remotes.FilterString:InvokeServer(
-						Frames.Page2.TextInput.Text
-					)[2]}`
-			end)
+			ConnectionsTable = {
+				Frames.Page2.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
+					Frames.Page2.PreviewText.Text =
+						`Preview: {Var.Remotes.FilterString:InvokeServer(
+							Frames.Page2.TextInput.Text
+						)[2]}`
+				end),
+
+				Frames.Page2.ColorInput:GetPropertyChangedSignal("Text"):Connect(function()
+					Frames.Page2.ColorPreview.Text = `Rank Color (<font color="#{Frames.Page2.ColorInput.Text}">The quick brown fox jumps over the lazy dog</font>)`
+				end)
+			}
 		else
 			Frames.Page5.Header.Text = "Oops! That's not meant to happen."
 			if FilterResult[2] then
@@ -331,7 +337,9 @@ function Admins.RunCreatorApp()
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
 		end
 
-		ConnectionsTable:Disconnect()
+		for _, Connection in ConnectionsTable do
+			Connection:Disconnect()
+		end
 
 		for i, v in Frames.Page3.Members.Members:GetChildren() do
 			if not v:GetAttribute("IsTemplate") and v:IsA("Frame") then v:Destroy() end
@@ -392,7 +400,6 @@ function Admins.RunCreatorApp()
 
 			local function CheckTask()
 				local Success, Info = pcall(function()
-					print("m")
 					return {
 						game.Players:GetNameFromUserIdAsync(tonumber(Clone.TextInput.Text)),
 						game.Players:GetUserThumbnailAsync(
@@ -414,7 +421,6 @@ function Admins.RunCreatorApp()
 			end
 
 			ConnectionsTable["Evemt" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
-				print("hi", Checking, Thread)
 				if Checking then
 					task.cancel(Thread) --// too quick, stop the old one...
 

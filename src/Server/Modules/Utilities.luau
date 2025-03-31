@@ -6,19 +6,16 @@ local Utils = {
 	Time = {},
 }
 
--- stylua: ignore start
-
 --// Dependencies
 --// Do not add anything here you don't need, it will cause circular imports.
 local Root     = script:FindFirstAncestor("Loader")
-local Config = require(Root.Core.Configuration)
+local Config   = require(Root.Core.Configuration)
 local Var      = require(Root.Core.Variables)
 local Locales  = Root.Core.Locales
 local Types    = require(Root.Core.Types)
+local HTTP     = require(Root.Modules.HTTPRunner)
 
 local Settings = Config.Settings
-
--- stylua: ignore end
 
 --Retrieves a setting from the Administer settings index. Setting must be valid Setting syntax (read docs)
 Utils.GetSetting = function(Setting): Types.SettingResponse
@@ -28,27 +25,28 @@ end
 Utils.Logging = {
 	--Prints out a basic message.
 	Print = function(...)
-		--print(`[{Config.Name}] [log]`, ...)
+		if not Utils.GetSetting("Verbose") then return end
+		print(`[{Config.Name}] [log]`, ...)
 	end,
 
 	--Creates a warning, with a traceback.
 	Warn = function(...)
-		--warn(`[{Config.Name}] [warn]`, debug.traceback(...))
+		warn(`[{Config.Name}] [warn]`, debug.traceback(...))
 	end,
 
 	--Warns without a debugging traceback both for the console and for admins.
 	SWarn = function(...)
-		--warn(`[{Config.Name}] [warn]`, ...)
+		warn(`[{Config.Name}] [warn]`, ...)
 	end,
 
 	--Throws an error.
 	Error = function(...)
-		--error(debug.traceback(...))
+		error(debug.traceback(...))
 	end,
 
 	Debug = function(...)
 		--// TODO
-		--print(debug.traceback(...))
+		print(debug.traceback(...))
 	end,
 }
 
@@ -347,6 +345,10 @@ function Utils.GetShortNumer(Number)
 	)] or "")
 end
 
+function Utils.RoundMS(num)
+	return tostring(num * 1000):sub(1, 7)
+end
+
 function Utils.GetGameMedia()
 	local Default = "" --// add soon
 
@@ -446,6 +448,20 @@ end
 
 function Utils.Icon(IconID: string): string
 	return require(script.Parent.Parent.Core.Icons)[IconID]
+end
+
+function Utils.UpdateCallback(Services: { string })
+	local Data = {}
+	
+	for _, Service in Services do
+		if Service == "Administer" then
+			Data["Administer"] = HTTP.GetRoute(Var.DefaultAppServer, "/pub/versions", function(Data, Misc)
+				print(Data, Misc)
+			end, function(...)
+				warn(...)
+			end)
+		end	
+	end
 end
 
 return Utils

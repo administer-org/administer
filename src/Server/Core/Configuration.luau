@@ -12,34 +12,43 @@ Locales["Default"] = "en" --// Default locale here
 Locales["Value"] = "en"
 
 return {
-	Name = "Administer Rewrite",
+	Name = "Administer",
 
 	VersData = {
+		Service = { 
+			Name = "Administer",
+			Icon = `rbxassetid://{require(script.Parent.Icons).logos["administer-blue"]}`
+		},
+		
 		Major = 2,
 		Minor = 0,
 		Tweak = 0,
-		Extra = "Internal Testing",
-		String = "2.0.0-dev",
+		
+		Extra = "Release Candidate 1 (public beta)",
+		String = "2.0.0-rc1",
+		
 		NoExtraData = "2.0.0",
-		APIRevision = "2.0.0",
+		APIRevision = "2.0.0"
 	},
 
 	Admins = {
 		--// Hardcoded admins go here.
 		--// If you have no idea what a dictionary is then please just
 		--// use GUI-based rank configuration, you are going to make a syntax error.
+		
 		Groups = {
 			--// Change the ID in the table key here. Copy this entry to make more.
-			[0] = {
-				RankNumber = 255, --// Roblox group rank ID
-				AdminRankID = 1, --// Administer rank ID
+			[0] = { --// Group ID
+				RankNumber = 255, --// Group rank ID
+				AdminRankID = 1   --// Administer rank ID, leave 1 for administrator rights
 			},
 		},
+		
 		Players = {
-			[0] = {
-				AdminRankID = 1,
+			[0] = { --// User ID
+				AdminRankID = 1
 			},
-		},
+		}
 	},
 
 	--// Don't change these unless you have to, they will probably be overwritten
@@ -273,8 +282,9 @@ return {
 					"medium",
 					"large",
 					"extralarge",
+					
 					["Value"] = "regular",
-					["Default"] = "regular",
+					["Default"] = "regular"
 				},
 			},
 		},
@@ -282,5 +292,5 @@ return {
 
 	BetaOptIns = {},
 
-	Webhooks = {},
+	Webhooks = {}
 }

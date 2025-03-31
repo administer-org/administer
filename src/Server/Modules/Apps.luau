@@ -127,7 +127,7 @@ function App.LoadLocal(
 		TargetApp.Icon = RealApp[2].AppMeta.Icon
 		TargetApp.Name = RealApp[2].AppMeta.Name
 
-		Utils.Logging.Print(`[✓] App bootstrap OK in {string.sub(tostring(tick() - Ticks[Path]), 1, 6)}s`)
+		Utils.Logging.Print(`[✓] App bootstrap OK in {Utils.RoundMS(tick() - Ticks[Path])}ms`)
 		
 		App.RunningApps[RealApp[2].AppMeta.Name] = TargetApp
 	end, function(e)
@@ -181,6 +181,8 @@ function App.Initialize(): boolean
 			`[thread APPS] Failed to initialize some apps after the polling limit! Try looking for faulty apps or increasing the limit if you have a heavy app. {i / AppsCount}% of {AppsCount} cloud apps loaded in {TotalAttempts} tries/{tick() - Start}s.`
 		)
 	end
+	
+	Utils.Logging.Print(`Finished bootstrapping apps! ({Utils.RoundMS(tick() - Start)}ms)`)
 
 	Var.DidBootstrap = true
 
@@ -189,17 +191,29 @@ end
 
 function App.Uninstall(AppID: number): Types.Response
 	local Apps = Var.DataStores.AppDB:GetAsync("AppList")
+	local DidUninstall = false
+	
 	Utils.Logging.Warn(`Removing app {AppID}`)
 
 	for i, App in Apps do
-		if App["ID"] == AppID then
+		if App.ID == AppID then
 			Utils.Logging.Print("Successfully uninstalled", App)
 			Apps[i] = nil
+			DidUninstall = true
 		end
 	end
 
 	Var.DataStores.AppDB:SetAsync("AppList", Apps)
-	return { true, Utils.t(nil, "generic.Done") }
+	
+	if DidUninstall then
+		return { true, Utils.t(nil, "generic.Done") }
+	else
+		if AppID == nil then
+			return { false, Utils.t(nil, "Configuration.Apps.Content.Template.Local.HeaderLabel") }
+		else
+			return { false, Utils.t(nil, "generic.error.Generic")}
+		end
+	end
 end
 
 function App.GetAll(Source: string): Types.TableWildcard
@@ -287,19 +301,18 @@ function App.ServerAPI.GetList(
 				table.insert(FullList, v)
 			end
 
-			return {[Server.ServerURL] = FullList}
+			return { [Server.ServerURL] = FullList }
 		end, function(sc): {}
-			return {[Server.ServerURL] = {false, sc}}
+			return { [Server.ServerURL] = { false, sc } }
 		end)
 	end
-
-	print(Combined)
 
 	return Combined
 end
 
 function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 	Utils.Logging.Print("Installing app server...")
+	
 	HTTP.GetRoute(URL, "/pub/.administer", function(Data, Info)
 		if Data["server"] ~= "AdministerAppServer" then
 			Utils.Logging.Warn("This URL doesn't seem to be an Administer app server.")
@@ -311,7 +324,7 @@ function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 		table.insert(Var.AppServers, {
 			ServerURL = URL,
 			Time = os.time(),
-			Creator = ActingUser or 1,
+			Creator = ActingUser or 1
 		})
 
 		Var.DataStores.AppDB:SetAsync("AppServerList", Var.AppServers)
@@ -324,6 +337,69 @@ function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 	end)
 
 	return { false, Utils.t(nil, "generic.error.Generic") }
+end
+
+function App.ServerAPI.GetServerStatuses(): Types.Response
+	local Resps = {}
+	
+	for _, Server in Var.AppServers do
+		table.insert(Resps, HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(Data, Meta)
+			return {
+				URL           = Server.ServerURL,
+				Name          = Data.instance_name,
+				IsDev         = Data.is_dev,
+				Uptime        = Data.uptime,
+				Banner        = Data.banner,
+				AOSVers       = Data.api_version,
+				PingTime      = Meta.ProcessedMS,
+				InstalledBy   = Server.Creator,
+				ServerInstall = Server.Time 
+			}
+		end, function(Code, Data)
+			return {
+				URL           = Server.ServerURL,
+				Code          = Code,
+				Failed        = true,
+				PingTime      = Data.ProcessedMS,  
+				InstalledBy   = Server.Creator,
+				ServerInstall = Server.Time
+			}
+		end))
+	end
+	
+	return { true, Resps }
+end
+
+function App.ServerAPI.UninstallServer(ServerURL): Types.Response
+	local Done = false
+	Utils.Logging.SWarn(`Uninstalling app server {ServerURL}`)
+	
+	for i, Server in Var.AppServers do
+		if Server.ServerURL == ServerURL then
+			table.remove(Var.AppServers, i)
+			Done = true
+		end
+	end
+	
+	if Done then
+		Var.DataStores.AppDB:SetAsync("AppServerList", Var.AppServers)
+
+		return { true, "Done!" }
+	else
+		return { false, "This app server does not appear to be installed." }
+	end
+end
+
+
+function App.GetTotals()
+	local RunningApps = 0
+	
+	for _, App in App.RunningApps do
+		RunningApps += 1
+	end
+	
+	
+	return { Servers = #Var.AppServers, Apps = RunningApps }
 end
 
 function App.ServerAPI.GetApp(AppServer: string, AppID: number): Types.Response
@@ -346,12 +422,17 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Type
 		if Result[1] then
 			return HTTP.PostRoute(ServerURL, `/api/asset/{AppID}/install`, {}, function(): Types.Response
 				return { true, `{Utils.t(nil, "generic.Done")}!` }
-			end, function(): Types.Response
-				return { false, Utils.t(nil, "generic.TryAgainLater") }
+			end, function(SC): Types.Response
+				if SC == 400 then
+					--// AOS detected a duplicate, probably safe
+					return { true, `{Utils.t(nil, "generic.Done")}!` }	
+				end
+				
+				return { false, Utils.t(nil, "generic.error.TryAgainLater") }
 			end)
 		else
-			Utils.Logging.Warn("Server did not install with an OK status code, ignoring request to tell the server.")
-			return { false, Result[2] }
+			Utils.Logging.Warn("App did not install with an OK status code, ignoring request to tell AOS.")
+			return Result
 		end
 	end, function(c)
 		return { false, string.format(Utils.t(nil, "apps.pulled.Bad"), c) }

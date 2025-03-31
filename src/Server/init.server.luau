@@ -105,19 +105,52 @@ NewRemote("SendClientLocale", true, true, function(Player, LocaleCode): Types.Re
 	return { true, "OK" }
 end)
 
-NewRemote("DirectTranslate", false, true, function(Player, Key)
-	return Utils.t(Player, Key)
-end)
+NewRemote("DirectTranslate", false, true, Utils.t)
 
 --// Homepage
 NewRemote("UpdateHomePage", true, true, FrontendAPI.UpdateHomePage)
 
 --// Utilities
-NewRemote("CheckForUpdates", true, true, function(Player)
-	return FrontendAPI.VersionCheck(Player)
+NewRemote("GetVersions", true, true, function(Player, Services)
+	local Final = {}
+	
+	for _, Service in Services do
+		--// BIG TODO here
+		if Service == "administer" then
+			Final["administer"] = Configuration.VersData
+		end
+	end
+	
+	return Final
 end)
 NewRemote("GetGameArt", false, false, Utils.GetGameIcon)
 NewRemote("FilterString", true, true, Utils.GetFilteredString)
+NewRemote("GetPasses", false, false, function()
+	local Attempts, _Content = 0, ""
+
+	repeat
+		local Success, Error = pcall(function()
+			Attempts += 1
+			_Content = Var.Services.HttpService:GetAsync(
+				`https://rblx.notpyx.me/games/v1/games/1778091660/game-passes?sortOrder=Asc&limit=50`,
+				true
+			)
+		end)
+	until Success or Attempts > 5
+
+	return Var.Services.HttpService:JSONDecode(_Content)["data"]
+		or {
+			{
+				["price"] = "Failed to load.",
+				["id"] = 0,
+			},
+			{
+				["price"] = "The proxy may be offline or experiencing issues.",
+				["id"] = 0,
+			},
+		}
+end)
+NewRemote("CheckForUpdates", true, false, Utils.UpdateCallback)
 
 NewRemote("GetProminentColorFromUserID", false, true, function(Player)
 	return Utils.GetProminentColor(Player.UserId)
@@ -137,6 +170,9 @@ NewRemote("GetInstalledApps", true, false, AppsModule.GetAll)
 NewRemote("InstallApp", true, false, AppsModule.ServerAPI.InstallFromServer)
 NewRemote("Vote", true, false, AppsModule.ServerAPI.Vote)
 NewRemote("ManageApp", true, false, AppsModule.Uninstall)
+NewRemote("GetAppServers", true, false, AppsModule.ServerAPI.GetServerStatuses)
+NewRemote("RemoveAppServer", true, false, AppsModule.ServerAPI.UninstallServer)
+NewRemote("GetAppCounts", true, false, AppsModule.GetTotals)
 
 --// Admin routes
 NewRemote("GetRanks", true, false, AdminRunner.Ranks.GetAll)
@@ -154,6 +190,6 @@ HttpRunner.PostRoute(Var.DefaultAppServer, "/api/report-version", {
 }, function(...)
 	return { ... }
 end, function(...)
-	Utils.Logging.Warn(...)
+	Utils.Logging.SWarn(...)
 	return { ... }
 end)

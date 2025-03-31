@@ -21,7 +21,6 @@ function Utilities.GetSetting(Setting: string): any
 		)
 	end
 
-	--// TODO (FloofyPlasma): Find a better way to handle this...
 	for _, v in SettingModule do
 		local Success, Result = pcall(function()
 			if v["Name"] == Setting then
@@ -64,7 +63,6 @@ function Utilities.ShortNumber(Number: number): string
 	})[math.floor(math.log10(Number) / 3)] or "")
 end
 
---// TODO (FloofyPlasma): Optimize...
 function Utilities.FormatRelativeTime(Unix: number): string
 	local TimeDifference = os.time() - (Unix ~= nil and Unix or 0)
 
@@ -160,7 +158,7 @@ function Utilities.NewNotification(
 			Notification,
 			TweenInfo.new(OpenTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 			{
-				Position = UDim2.fromScale(-0.018, 0.858), --// TODO (FloofyPlasma): Make this a nicer number...
+				Position = UDim2.fromScale(-0.018, 0.858),
 			}
 		),
 		Var.Services.TweenService:Create(
@@ -234,7 +232,7 @@ end
 function Utilities.Translate(StringIdentifier: string): string | { string }
 	if Var.LocaleModule["_"] == "_init" then
 		Utilities.Logging.Print(`Getting locale {string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]}`)
-		
+
 		Var.LocaleModule = Var.Remotes.GetTranslationModule:InvokeServer(
 			string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
 		)
@@ -254,15 +252,56 @@ end
 Utilities.Icon = function(IconName)
 	if not Var.Icons then 
 		Utilities.Logging.Print(`Fetching icon pack...`)
-		
+
 		Var.Icons = Var.Remotes.GetIconPack:InvokeServer()
 	end
-	
+
 	return `rbxassetid://{Var.Icons[IconName]}`
 end
 
 function Utilities.ToSentenceCase(Sentence)
 	return Sentence:sub(1, 1):upper() .. Sentence:sub(2):lower()
+end
+
+function Utilities.Heartbeat(): ()
+	local Ticks = 0
+
+	while true do
+		local PingStart = tick()
+
+		Var.Remotes.Ping:InvokeServer()
+
+		table.insert(Var.Ping, (tick() - PingStart) * 1000)
+
+		Var.MainFrame.AppDrawer.AppHolder.Apps.ZZ_AdministerData.Version.Text = `{Var.Version.String} ({Var.Services.HttpService:JSONDecode(Var.MainFrame.Parent:GetAttribute("_CurrentBranch")).BranchName}); connected ({tostring((tick() - PingStart) * 1000):sub(1, 5)}ms)`
+
+		Ticks += 1
+		if Ticks == Var.PingTicksLog then
+			local sum = 0
+
+			for _, Num in Var.Ping do
+				sum += Num
+			end
+
+			Utilities.Logging.Print(`Heartbeat staistics: {sum / #Var.Ping}ms avg, {Var.Ping[#Var.Ping - 1]} currently`)
+			Ticks = 0
+		end
+
+		task.wait(Var.HeartbeatDuration)
+	end
+end
+
+function Utilities.ProcessDono(
+	Player: Player,
+	GamePassId: number, 
+	WasPurchased: boolean
+)
+	if WasPurchased and Var.Remotes.GetPasses:InvokeServer()[GamePassId] ~= nil then
+		Frontend.Close(false)
+
+		script.Parent.FullscreenMessage.LocalScript.Enabled = true
+		require(Var.AdministerRoot.Client.Libraries.ConfettiCreator)()
+	end
 end
 
 return Utilities

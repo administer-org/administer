@@ -1,6 +1,5 @@
 --// Administer 
 --// pyxfluff 2024 - 2025
--- stylua: ignore start
 
 local Variables = {}
 
@@ -31,10 +30,11 @@ Variables.Services = setmetatable({}, {
 --// The scheme is `app\widget-title`, anything will work here
 --// as long as it exists.
 Variables.BaseHomeInfo = {
-	["_version"] = 1,
-	["Widget1"] = "administer\\welcome",
-	["Widget2"] = "administer\\unselected",
-	["TextWidgets"] = {
+	_version = 1,
+	Widget1 = "administer\\welcome",
+	Widget2 = "administer\\unselected",
+	
+	TextWidgets = {
 		"administer\\version-label",
 		"administer\\server-uptime"
 	}
@@ -48,7 +48,7 @@ Variables.DataStores = {
 }
 
 Variables.Notification = {
-    Ding = "",
+    Ding  = "",
     Error = ""
 }
 
@@ -109,35 +109,40 @@ Variables.DefaultRankData = {
 	AdminIDs = {}
 }
 
-Variables.CurrentBranch = { Name = "" }
+Variables.CurrentBranch = {}
 Variables.Branches = {
 	Internal = {
 		ImageID = "rbxassetid://18841275783",
 		Name = "Administer Internal",
-		IsActive = true
+		BranchName = "canary",
+		IsActive = false
 	},
 
 	QualityAssurance = {
 		ImageID = "rbxassetid://76508533583525",
 		Name = "Administer QA Release",
+		BranchName = "qualassur",
 		IsActive = false
 	},
 
 	Fresh = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer (git)",
+		BranchName = "git",
 		IsActive = false
 	},
 
 	Beta = {
 		ImageID = "rbxassetid://18770010888",
 		Name = "Administer Public Beta",
-		IsActive = false
+		BranchName = "pub_beta",
+		IsActive = true
 	},
 
 	Production = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
+		BranchName = "live",
 		IsActive = false
 	}
 }

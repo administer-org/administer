@@ -16,26 +16,49 @@ local Widgets   = require(Modules.Widgets)
 local t = Utilities.Translate
 
 Frontend.Close(true)
+
+Var.Version = Var.Remotes.GetVersions:InvokeServer({"administer"})["administer"]
+Var.Remotes.CheckForUpdates:InvokeServer({ "Administer" })
+
 task.spawn(Utilities.Heartbeat)
 
 local Debounce = false
-
 Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 	if IsGameProc then return end
-	
+
 	if KeyCode.KeyCode == Enum.KeyCode.F2 then
 		if Debounce then return end
 		Debounce = true
-		
+
 		if Var.IsOpen then
-			Var.IsOpen = false
 			Frontend.Close(false, true)
 		else
-			Var.IsOpen = true
 			Frontend.Open(true)
 		end
-		
+
 		Debounce = false
+
+	elseif KeyCode.KeyCode == Enum.KeyCode.F4 then
+		if Var.IsPanelFullSize then
+			Var.IsPanelFullSize = false
+
+			Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(.843,0,.708,0) }):Play()
+			Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0, 20) }):Play()
+			Var.Services.TweenService:Create(Var.MainFrame.Header.Mark, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Position = UDim2.new(.328, 0, 0, 0) }):Play()
+		else
+			Var.IsPanelFullSize = true
+
+			Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(1,0,1,0) }):Play()
+			Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0,0) }):Play()
+			Var.Services.TweenService:Create(
+				Var.MainFrame.Header.Mark, 
+				TweenInfo.new(.75, Enum.EasingStyle.Quart), 
+				{ 
+					Position = UDim2.new(.328, Var.Services.GUIService.TopbarInset.Min.X, 0, 0), 
+					Size = UDim2.new(Var.MainFrame.Header.Mark.Size.X.Scale, 0, 0, Var.Services.GUIService.TopbarInset.Height)
+				}
+			):Play()
+		end
 	end
 end)
 
@@ -91,7 +114,6 @@ Apps.AddAppDrawerButton({
 	}
 })
 
-
 --// Homepage, app drawer, header connections
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
 	Widgets.Edit(Var.MainFrame.Home.Widget1)
@@ -104,10 +126,7 @@ end)
 Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
 Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
 Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
-Var.MainFrame.Header.Close.MouseButton1Click:Connect(function()
-	Var.IsOpen = false
-	Frontend.Close(false, false)
-end)
+Frontend.InitGestureBar()
 
 Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
 	t("Welcome.Initial.HeaderLabel") :: string,
@@ -116,6 +135,14 @@ Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.
 )}</stroke>`
 
 Var.MainFrame.Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
+	Var.Services.Players.LocalPlayer.UserId,
+	Enum.ThumbnailType.HeadShot,
+	Enum.ThumbnailSize.Size352x352
+) 
+
+Var.MainFrame.AppDrawer.PlayerData.DisplayName.Text = Var.Services.Players.LocalPlayer.DisplayName
+Var.MainFrame.AppDrawer.PlayerData.Rank.Text = `{Var.MainFrame.Parent:GetAttribute("_AdminRank")} · {#Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() - 4} apps`
+Var.MainFrame.AppDrawer.PlayerData.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
 	Var.Services.Players.LocalPlayer.UserId,
 	Enum.ThumbnailType.HeadShot,
 	Enum.ThumbnailSize.Size352x352
@@ -137,94 +164,72 @@ end)
 xpcall(function()
 	Admins.RunCreatorApp()
 	Admins.Load()
-	
+
 	Var.MainFrame.Configuration.Admins.Header.NewRank.Activator.MouseButton1Click:Connect(function()
 		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
 	end)
-	
+
 	Var.MainFrame.Configuration.Admins.NewAdmin.Page5.NextPage.MouseButton1Click:Connect(function()
 		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
-		
+
 		Admins.Load()
 	end)
 end, function(e)
 	warn(e)
 end)
 
---[[
 if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled then
-	Print("Making adjustments to UI (Mobile)")
+	Utilities.Logging.Print("Making adjustments to UI (Mobile)")
 	Var.Mobile = true
 
 	task.defer(function()
-		NewNotification(
+		Utilities.NewNotification(
 			"Administer",
 			"rbxassetid://12500517462",
-			"You've successfully opted in to the Administer Mobile Beta.",
+			"Mobile mode activated. Swipe inwards from the right edge of your screen to open Administer.",
 			"Mobile Beta",
 			25
 		)
 	end)
+
+	Var.MainFrame.Parent
+		:WaitForChild("MobileOpen", 10).Hit.TouchSwipe
+		:Connect(function(SwipeDirection: Enum.SwipeDirection)
+			if SwipeDirection == Enum.SwipeDirection.Left then
+				Frontend.Open(true)
+
+				Debounce = true
+			end
+		end)
 else
 	Var.Mobile = false
 
-	script.Parent.MobileOpen:Destroy()
-	script.Parent:WaitForChild("MobileOpen", 10):Destroy()
+	Var.MainFrame.Parent.MobileOpen:Destroy()
 end
-
-
-task.defer(Utilities.StartSettingsCheck)
-
-if Var.Mobile then
-	script.Parent
-		:WaitForChild("MobileOpen", 10).Hit.TouchSwipe
-		:Connect(function(SwipeDirection: Enum.SwipeDirection, numberOfTouches: number)
-			if SwipeDirection == Enum.SwipeDirection.Left then
-				Open()
-				--// TODO (FloofyPlasma): Bad hack? Why was this here...
-				repeat
-					task.wait(0.1)
-				until Var.IsOpen
-				MenuDebounce = true
-			end
-		end)
-end
-
-Var.MainFrame.Header.Minimize.MouseButton1Click:Connect(function()
-	Close(false)
-	MenuDebounce = false
-end)
-
-if not Success then Print("Version checking ignored as this admin does not have access to the Configuration page!") end
-
-local IsEIEnabled = Utilities.GetSetting("EnableEditableImages")
-local EnableWaiting = false
-
-if IsEIEnabled == nil then --// (false) or true was always true due to logic so it would ignore the setting
-	IsEIEnabled = true
-end
-
-if #Var.MainFrame.Apps.Var.MainFrame:GetChildren() >= 250 then
-	warn(
-		"Warning: Administer has detected over 250 apps installed. Although there is no hardcoded limit, you may experience poor performance on anything above this."
-	)
-end
-
-Var.MainFrame.Header.AppDrawer.MouseButton1Click:Connect(function()
-	OpenApps(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 0.8)
-end)
-
-Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Click.MouseButton1Click:Connect(GetApps)
-Var.MainFrame.Configuration.MenuBar.New.DAdmins.Click.MouseButton1Click:Connect(RefreshAdmins)
-Var.MainFrame.Configuration.Admins.NewAdmin.Page5.NextPage.MouseButton1Click:Connect(RefreshAdmins)
 
 local IsDonating = false
 local Passes = {}
 
 xpcall(function(...)
-	local _Content = Var.Remotes.GetPasses:InvokeServer()
+	local Info = Var.MainFrame.Configuration.InfoPage
 
-	for _, Pass in _Content do
+	Info.VersionDetails.Version.Text = Var.Version.NoExtraData .. " " .. Var.Version.Extra
+
+	local function NewVersCard(Data)
+		local Card = Info.UpdateCenter.ScrollingFrame.Card:Clone()
+
+		Card.Parent = Info.UpdateCenter.ScrollingFrame
+		Card.Name = Data.Service.Name
+
+		Card.ServiceName.Text = Data.Service.Name
+		Card.Logo.Image = Data.Service.Icon
+		Card.Data.Text = `{Data.IsUpToDate and "Up to date" or "Out of date"}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
+	end
+
+	NewVersCard(Var.Version)
+
+	--// We need to do this last because it's a possible failure point so we should load the actual content first
+	for _, Pass in Var.Remotes.GetPasses:InvokeServer() do
 		local Cloned = Var.MainFrame.Configuration.InfoPage.Donate.Buttons.Temp:Clone()
 
 		Cloned.Label.Text = `{Pass["price"]}`
@@ -235,175 +240,24 @@ xpcall(function(...)
 		Cloned.Visible = true
 		Cloned.Parent = Var.MainFrame.Configuration.InfoPage.Donate.Buttons
 
-		if
-			Var.Services.MarketplaceService:UserOwnsGamePassAsync(Var.Services.Players.LocalPlayer.UserId, Pass["id"])
-		then
-			Var.MainFrame.Configuration.InfoPage.Donate.Message.Text =
+		if Var.Services.MarketplaceService:UserOwnsGamePassAsync(Var.Services.Players.LocalPlayer.UserId, Pass["id"]) then
+			Var.MainFrame.Configuration.InfoPage.Donate.Version.Text =
 				`Thank you for your support, {Var.Services.Players.LocalPlayer.DisplayName}! Your donation helps ensure future Administer updates for years to come ^^`
 		end
 
 		table.insert(Passes, Pass["id"])
 	end
+
+	Var.Services.MarketplaceService.PromptGamePassPurchaseFinished:Connect(Utilities.ProcessDono)
 end, function(a0)
-	print("Failed to fetch donation passes, assuming this is a permissions issue!")
+	Utilities.Logging.Warn("Failed to fetch info page assets, assuming this is a permissions issue!", a0)
 end)
-
-Var.Services.MarketplaceService.PromptGamePassPurchaseFinished:Connect(
-	function(Player: Instance, GamePassId: number, WasPurchased: boolean)
-		if WasPurchased and table.find(Passes, GamePassId) then
-			Close(false)
-
-			script.Parent.FullscreenMessage.LocalScript.Enabled = true
-			require(SharedLibs.ConfettiCreator)()
-		end
-	end
-)
-
-local WidgetData = game:GetService("HttpService"):JSONDecode(script.Parent:GetAttribute("_HomeWidgets"))
-local Widgets = GetAvailableWidgets()["Large"]
-local ActiveWidgets = {}
-
-for _, UI in Var.MainFrame.Home:GetChildren() do
-	if not table.find({ "Widget1", "Widget2" }, UI.Name) then continue end
-
-	for _, Widget in Widgets do
-		if Widget["Identifier"] == WidgetData[UI.Name] then
-			xpcall(function()
-				UI.SideData.Banner.Text = Widget["Name"]
-				UI.SideData.BannerIcon.Image = Widget["Icon"]
-			end, function() end)
-			Widget["BaseUIFrame"].Parent = UI.Content
-			Widget["BaseUIFrame"].Visible = true
-			Widget["OnRender"](Var.Services.Players.LocalPlayer, UI.Content)
-
-			UI:SetAttribute("AppName", string.split(Widget["Identifier"], "\\")[1])
-			UI:SetAttribute("InitialWidgetName", string.split(Widget["Identifier"], "\\")[2])
-
-			table.insert(ActiveWidgets, Widget)
-		end
-	end
-end
-
-Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
-	EditHomepage(Var.MainFrame.Home.Widget1)
-end)
-Var.MainFrame.Home.Widget2.Edit.MouseButton1Click:Connect(function()
-	EditHomepage(Var.MainFrame.Home.Widget2)
-end)
-
-local InstalledApps = game:GetService("HttpService"):JSONDecode(script.Parent:GetAttribute("_InstalledApps"))
-
-pcall(function()
-	--// idk where else to put this so it's here too
-	local Configuration = Var.MainFrame.Configuration
-	local Apps = Configuration.Apps
-	local Admins = Configuration.Admins.Container
-
-	local Branch = game:GetService("HttpService"):JSONDecode(script.Parent:GetAttribute("_CurrentBranch"))
-	Configuration.InfoPage.VersionDetails.Logo.Image = Branch["ImageID"]
-	Configuration.InfoPage.VersionDetails.TextLogo.Text = Branch["Name"]
-
-	Admins.Ranks.Header.TextButton.MouseButton1Click:Connect(function()
-		AnimatePopupWithCanvasGroup(Admins.Parent.NewAdmin, Admins, UDim2.new(0.671, 0, 0.916, 0))
-	end)
-
-	Admins.Parent.NewAdmin.Page5.NextPage.MouseButton1Click:Connect(function()
-		ClosePopup(Admins.Parent.NewAdmin, Admins)
-	end)
-
-	Admins.Parent.NewAdmin.BottomData.Controls.Exit.MouseButton1Click:Connect(function()
-		ClosePopup(Admins.Parent.NewAdmin, Admins)
-	end)
-end)
-
-if Utilities.GetSetting("TopbarPlus") then --// thanks dogo
-	local container = SharedLibs.TopbarPlus
-	local Icon = require(container.Icon)
-
-	local appsTable = {}
-
-	local AdministerIcon = Icon.new():setLabel("Administer"):setImage(18224047110):setCaption("Open Administer")
-
-	local AppsIcon = Icon.new():setLabel("Apps"):setCaption("Open an app")
-
-	--local CommandBar = Icon.new()
-	--	:setLabel("Command bar")
-	--	:setImage(18224047110)
-	--	:setCaption("Run a command")
-
-	for i, child in Var.MainFrame.Apps.Var.MainFrame:GetChildren() do
-		if child:IsA("GuiObject") and child.Name ~= "Template" and child.Name ~= "Home" then
-			table.insert(
-				appsTable,
-				Icon.new()
-					:setLabel(child.Name)
-					:bindEvent("deselected", function()
-						Open()
-
-						local LinkID, PageName = child:GetAttribute("LinkID"), nil
-						for i, Frame in Var.MainFrame:GetChildren() do
-							if Frame:GetAttribute("LinkID") == LinkID then
-								PageName = Frame.Name
-								break
-							end
-						end
-
-						if LinkID == nil then
-							script.Parent.Main[Var.LastPage].Visible = false
-							Var.LastPage = "NotFound"
-							script.Parent.Main.NotFound.Visible = true
-							return
-						end
-
-						Var.MainFrame[Var.LastPage].Visible = false
-						Var.MainFrame[PageName].Visible = true
-
-						Var.LastPage = PageName
-						Var.MainFrame.Header.Mark.AppLogo.Image = child.Icon.Image
-						Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> • {PageName}`
-
-						AppsIcon:deselect()
-					end)
-					:setImage(child.Icon.Image)
-					:oneClick()
-			)
-		end
-	end
-
-	AppsIcon:setDropdown(appsTable)
-
-	--AppsIcon.selected:Connect(function()
-	--	Open()
-	--	OpenApps(0)
-	--	AppsIcon:deselect()
-	--	AdministerIcon:select()
-	--end)
-
-	AdministerIcon.deselected:Connect(function()
-		if IsPlaying then
-			AdministerIcon:select()
-			return
-		end
-
-		Close(false)
-	end)
-
-	AdministerIcon.selected:Connect(function()
-		if IsPlaying then
-			AdministerIcon:deselect()
-			return
-		end
-
-		Open()
-	end)
-end
 
 script.Assets.LocalScript.Enabled = Utilities.GetSetting("EnableClickEffects")
 
 if Utilities.GetSetting("ChatCommand") == true then
-	--// Register this for LCS users
 	Var.Services.Players.LocalPlayer.Chatted:Connect(function(m)
-		if m == "/adm" then Open() end
+		if m == "/adm" then Frontend.Open() end
 	end)
 
 	xpcall(function()
@@ -411,10 +265,9 @@ if Utilities.GetSetting("ChatCommand") == true then
 
 		Command.PrimaryAlias = "/adm"
 		Command.SecondaryAlias = "/administer"
-		Command.Triggered:Connect(Open)
+		Command.Triggered:Connect(Frontend.Open)
 		Command.Parent = game.TextChatService.TextChatCommands
 	end, function()
-		Print("TCS is disabled (or something else failed), ignoring custom command for TCS")
+		Utilities.Logging.Print("TCS is disabled (or something else failed), ignoring custom command for TCS")
 	end)
 end
-]]

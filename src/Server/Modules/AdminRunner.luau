@@ -223,11 +223,11 @@ function AR.Ranks.GetAll()
 	repeat
 		Polls += 1
 		task.wait(0.05)
-		Util.Logging.Print("RANK CHECK", #Ranks / Current["Count"], Ranks, Current, Polls)
-	until #Ranks == Current.Count or Polls == 7
+		Util.Logging.Print("Rank check progress:", #Ranks / #Current.Names, Ranks, Current, Polls)
+	until #Ranks == #Current.Names or Polls == 10
 
 	if Polls == 7 then
-		Util.Logging.Warn(`Only managed to load {#Ranks / Current.Count}% of ranks, possibly corrupt rank exists!`)
+		Util.Logging.Warn(`Only managed to load {#Ranks / #Current.Names}% of ranks, possibly corrupt rank exists!`)
 	end
 
 	return Ranks

@@ -34,7 +34,7 @@ function Frontend.Log(Text, LogLevel)
 	return { MainFrame = {} }
 end
 
-function Frontend.Open(): ()
+function Frontend.Open(WaitForCompletion): ()
 	if not Var.Panel then Var.Panel = Frontend.Render() end
 	--local AS = tonumber(Utilities.GetSetting("AnimationSpeed"))
 	local AS = 1
@@ -46,11 +46,11 @@ function Frontend.Open(): ()
 
 	Var.IsPanelAnimating = true
 	Var.MainFrame.Visible = true
-	if Utilities.GetSetting("UseAcrylic") then
-		--Libraries.Neon:BindFrame(Var.Panel.MainFrame, {
-		--		Transparency = 0.95,
-		--		BrickColor = BrickColor.new("Institutional white"),
-		--	})
+	if Var.UseAcrylic then
+		Libraries.Neon:BindFrame(Var.Panel.MainFrame, {
+			Transparency = 0.95,
+			BrickColor = BrickColor.new("Institutional white"),
+		})
 	end
 
 	if not Var.Mobile then
@@ -67,8 +67,6 @@ function Frontend.Open(): ()
 
 	PopupTween:Play()
 
-	print(Y)
-
 	Var.Services.TweenService
 		:Create(
 			Var.MainFrame,
@@ -82,10 +80,15 @@ function Frontend.Open(): ()
 	--Var.OpenSound:Play()
 	task.delay(AS, function()
 		Var.IsPanelAnimating = false
+		Var.IsOpen = true
 	end)
+
+	if WaitForCompletion then
+		task.wait(AS)
+	end
 end
 
-function Frontend.Close(Instant: boolean): ()
+function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	Var.IsPanelAnimating = true
 
 	xpcall(function(...)
@@ -133,7 +136,12 @@ function Frontend.Close(Instant: boolean): ()
 	task.delay(Duration, function()
 		Var.IsPanelAnimating = false
 		Var.MainFrame.Visible = false
+		Var.IsOpen = false
 	end)
+
+	if WaitForCompletion then
+		task.wait(Duration)
+	end
 end
 
 function Frontend.CheckForUpdates(Products: {}?): ()
@@ -172,15 +180,16 @@ function Frontend.Drawer.Open(): ()
 
 	local function Clear(MainPageStaysVisible: bool)
 		for _, Frame in Container:GetChildren() do
-			if Frame.Name == "Header" and not Frame:GetAttribute("AdmLinkSinglePage") then continue end
+			if Frame.Name == "Header" then continue end
 
 			if Frame:GetAttribute("AdmLinkSinglePage") then 
 				Frame.Visible = false
 
 				continue
 			end
+
 			for _, Frame in Frame:GetChildren() do
-				if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") then continue end
+				if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") or Frame:GetAttribute("AdmIgnoreVisibility") then continue end
 
 				Frame.Visible = false
 			end
@@ -512,34 +521,67 @@ function Frontend.Popup.Close(Popup: CanvasGroup, CanvasGroup: CanvasGroup): ()
 	Blocker:Destroy()
 end
 
+local MessageBox = Var.MainFrame.MessageBox
+local ButtonOneOriginalPos = MessageBox.Button1.Position
+local PopupButtons = {}
+
 function Frontend.Popup.new(
-	Header,
-	Text,
-	Options: { { Text: string, Icon: string, Callback: ((boolean?) -> ()) -> () } },
-	AppIcon,
-	Apps -- TODO
+	App: {
+		Name: string,
+		Icon: string
+	},
+
+	Icons: {
+		Primary: string,
+		SubIcon: string?
+	},
+
+	Header: string,
+	BodyText: string,
+	Options: { { Text: string, Icon: string, Callback: (() -> ()) -> () } }
 ): ()
+	for _, Signal in PopupButtons do
+		Signal:Disconnect()
+	end
+	
 	local function ClosePopup()
-		--// animation ... ...
-		Apps.MessageBox.Visible = false
+		--// animation ...
+		MessageBox.Visible = false
 	end
 
-	Apps.MessageBox.Visible = true
-	Apps.MessageBox.Header.Text = Header
-	Apps.MessageBox.Content.Text = Text
-	Apps.MessageBox.AppLogo.LogoImage.Image = AppIcon
+	MessageBox.Header.HeaderLabel.Text = `<b>{App.Name}</b>\n{Header}`
+	MessageBox.Header.AppIcon.Image = App.Icon
 
-	Apps.MessageBox.Button1.Label.Text = Options[1].Text
-	Apps.MessageBox.Button1.Icon.Image = Options[1].Icon
-	Apps.MessageBox.Button1.MouseButton1Click:Connect(function()
+	MessageBox.PrimaryText.Text = Header
+	MessageBox.SubText.Text = BodyText
+
+	MessageBox.AppLogo.LogoImage.Image = Icons.Primary
+	MessageBox.SubIcon.Image = Icons.SubIcon
+
+	MessageBox.Button1.Label.Text = Options[1].Text
+	MessageBox.Button1.Icon.Image = Options[1].Icon
+	PopupButtons[1] = MessageBox.Button1.MouseButton1Click:Connect(function()
 		Options[1].Callback(ClosePopup)
 	end)
 
-	Apps.MessageBox.Button2.Label.Text = Options[2].Text
-	Apps.MessageBox.Button2.Icon.Image = Options[2].Icon
-	Apps.MessageBox.Button2.MouseButton1Click:Connect(function()
-		Options[2].Callback(ClosePopup)
+	xpcall(function()
+		MessageBox.Button2.Label.Text = Options[2].Text
+		MessageBox.Button2.Icon.Image = Options[2].Icon
+		PopupButtons[2] = MessageBox.Button2.MouseButton1Click:Connect(function()
+			Options[2].Callback(ClosePopup)
+		end)
+		
+		MessageBox.Button2.Visible = true
+		MessageBox.Button1.AnchorPoint = Vector2.zero
+		MessageBox.Button1.Position = ButtonOneOriginalPos
+	end, function()
+		--// Allow for having only one button
+		MessageBox.Button2.Visible = false
+		MessageBox.Button1.AnchorPoint = Vector2.new(.5, 0)
+		MessageBox.Button1.Position = UDim2.fromScale(.5, MessageBox.Button1.Position.Y.Scale) 
 	end)
+
+	MessageBox.Visible = true
 end
 
 function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Button)
@@ -554,10 +596,16 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Butto
 
 	for _, Frame in Var.MainFrame:GetChildren() do
 		--// Use their descendants, not the parent
-		if Frame.Name == "Header" or Frame.Name == "AppDrawer" and not Frame:GetAttribute("AdmLinkSinglePage") then continue end
+		if Frame.Name == "Header" or Frame.Name == "AppDrawer" then continue end
+
+		if Frame:GetAttribute("AdmLinkSinglePage") then 
+			Frame.Visible = false
+
+			continue
+		end
 
 		for _, Frame in Frame:GetChildren() do
-			if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") then continue end
+			if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") or Frame:GetAttribute("AdmIgnoreVisibility") then continue end
 
 			Frame.Visible = false
 		end
@@ -572,6 +620,55 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Butto
 	Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer{Clicked ~= 0 and ` {AppConfig.AppName}` or ""}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
 	Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = AppConfig.Icon
 	Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and "rbxassetid://116599744136879" or AppConfig.SubIcons[Clicked].Icon
+end
+
+function Frontend.InitGestureBar()
+	local Connection
+
+	Var.MainFrame.Header.GestureBar.InputBegan:Connect(function(Input)
+		if Connection then
+			Connection:Disconnect()
+		end
+
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			local StartPos, StartSize = Input.Position, Var.MainFrame.Size
+
+			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
+				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
+					local Delta = -(MoveInput.Position - StartPos)
+					Var.MainFrame.Size = UDim2.new(StartSize.X.Scale, StartSize.X.Offset + -(Delta.X), StartSize.Y.Scale, StartSize.Y.Offset + Delta.Y)
+				end
+			end)
+
+		elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
+			local StartPos, StartPanelPos = Input.Position, Var.MainFrame.Position
+
+			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
+				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
+					local Delta = MoveInput.Position - StartPos
+					Var.MainFrame.Position = UDim2.new(StartPanelPos.X.Scale, StartPanelPos.X.Offset + Delta.X, StartPanelPos.Y.Scale, StartPanelPos.Y.Offset + Delta.Y)
+				end
+			end)
+		end
+
+		if Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and 
+			Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			Frontend.Close()
+		end
+	end)
+
+	Var.MainFrame.Header.GestureBar.InputEnded:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.MouseButton2 then
+			repeat 
+				task.wait()
+			until not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) 
+				and not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+
+			if Connection then
+				Connection:Disconnect()
+			end
+		end
+	end)
 end
 
 return Frontend

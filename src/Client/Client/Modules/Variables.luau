@@ -10,13 +10,16 @@ Variables.Remotes = game.ReplicatedStorage:WaitForChild("Administer", 10)
 Variables.MainFrame = Variables.AdministerRoot:WaitForChild("Main", 10)
 Variables.Mobile = false
 Variables.InitErrored = false
-Variables.IsOpen = true
+Variables.IsOpen = false
 Variables.IsPanelAnimating = false
-Variables.EnableEditableImages = true
+Variables.EnableEditableImages = false --// roblox sucks
 Variables.ActivePage = Variables.MainFrame.Home
 Variables.DoHeaderEffects = true
+Variables.HeartbeatDuration = 1
+Variables.PingTicksLog = 60
 
 Variables.CombinedButtonConfig = {}
+Variables.Ping = {}
 
 Variables.Panel = nil
 Variables.OpenSound = script.Parent --// TODO
@@ -29,10 +32,12 @@ Variables.Services = {
 	TweenService        = game:GetService("TweenService"),
 	UserInputService    = game:GetService("UserInputService"),
 	LocalizationService = game:GetService("LocalizationService"),
+	HttpService         = game:GetService("HttpService"),
+	GUIService          = game:GetService("GuiService")
 }
 
 Variables.Marketplace = {
-	ActivePage = "Featured",
+	ActivePage = "AAFeatured",
 	ActivePageType = "FEATURED"
 }
 

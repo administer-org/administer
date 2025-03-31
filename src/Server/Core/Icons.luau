@@ -11,7 +11,7 @@ return {
 	},
 
 	["logos"] = {
-		["administer-blue"] = "81687266374902",
+		["administer-blue"] = "116599744136879",
 		["administer-can"] = "18841275783",
 		["administer-beta"] = "18770010888",
 		["administer-wireframe"] = "83950641785996",
@@ -27,6 +27,7 @@ return {
 	["balloons"] = "15317929875",
 	["banner"] = "122796501087951",
 	["bars-downwards"] = "11696870273",
+	["book"] = "73106958963073",
 	["browser-thick"] = "13354022398",
 	["calendar"] = "15406945903",
 	["cart"] = "12736238457",
