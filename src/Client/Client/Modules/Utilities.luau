@@ -103,6 +103,7 @@ Utilities.Logging.Error = function(message: string)
 	error(`[Administer] [fault] {message}`)
 end
 
+--// This will be written in the notification overhaul (2.1.0 or 2.2.0)
 function Utilities.NewNotification(
 	AppTitle: string,
 	Icon: string,
@@ -117,7 +118,6 @@ function Utilities.NewNotification(
 	Options = Options or {}
 	OpenTime = OpenTime or 1.25
 
-	--// TODO (FloofyPlasma): There has got to be a better way of doing this...
 	local Placeholder = Instance.new("Frame")
 	Placeholder.BackgroundTransparency = 1
 	Placeholder.Size = UDim2.fromScale(1.036, 0.142)
@@ -131,7 +131,6 @@ function Utilities.NewNotification(
 	NotificationContent.Header.Title.Text = `<b>{AppTitle}</b> · {Heading}`
 	NotificationContent.Header.ImageL.Image = Icon
 
-	--// TODO (FloofyPlasma): Should this be strict typed?
 	if Options then
 		for _, Object in Options do
 			local NewButton = NotificationContent.Buttons.DismissButton:Clone()

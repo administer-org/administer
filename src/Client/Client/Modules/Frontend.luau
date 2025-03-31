@@ -481,7 +481,6 @@ function Frontend.Popup.Close(Popup: CanvasGroup, CanvasGroup: CanvasGroup): ()
 	local UICorner: UICorner? = Blocker and Blocker:FindFirstChildOfClass("UICorner")
 
 	if not Blocker then
-		--// FIXME (FloofyPlasma): An animation was spammed, just remake it?
 		Blocker = Instance.new("Frame") :: Frame
 		UICorner = Instance.new("UICorner") :: UICorner
 
