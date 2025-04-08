@@ -3,12 +3,6 @@ return {
 	["_locale_display"] = "Korean",
 	["_locale_display_localized"] = "한국어 (대한민국)",
 
-	["__TIMES__"] = {
-		"morning",
-		"afternoon",
-		"evening",
-	},
-
 	["Apps.MainFrame.Config.Desc"] = "Administer과 관리자들을 설정하고 새로운 앱을 설치합니다.",
 	["Apps.MainFrame.Config.Title"] = "설정",
 	["Apps.MainFrame.Home.Desc"] = "한눈에 봐야할 모든 것.",

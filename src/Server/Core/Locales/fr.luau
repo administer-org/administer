@@ -3,12 +3,6 @@ return {
 	["_locale_display"] = "French",
 	["_locale_display_localized"] = "French",
 
-	["__TIMES__"] = {
-		"morning",
-		"afternoon",
-		"evening",
-	},
-
 	["Apps.MainFrame.Config.Desc"] = "Configurez l'administration, les administrateurs et installez de nouvelles applications.",
 	["Apps.MainFrame.Config.Title"] = "Configuration",
 	["Apps.MainFrame.Home.Desc"] = "Tout ce que vous devez voir en un coup d'œil.",

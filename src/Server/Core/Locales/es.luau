@@ -2,13 +2,7 @@ return {
 	["_locale"] = "es_ES",
 	["_locale_display"] = "Spanish (Spain)",
 	["_locale_display_localized"] = "Español (españa)",
-
-	["__TIMES__"] = {
-		"morning",
-		"afternoon",
-		"evening",
-	},
-
+    
 	["Apps.MainFrame.Config.Desc"] = "Configurar Administer, administradores, y instalar nuevas aplicaciones.",
 	["Apps.MainFrame.Config.Title"] = "Configuración",
 	["Apps.MainFrame.Home.Desc"] = "Todo lo que hay que ver de un vistazo.",

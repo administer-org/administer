@@ -2,13 +2,7 @@ return {
 	["_locale"] = "en_US",
 	["_locale_display"] = "English (United States)",
 	["_locale_display_localized"] = "English (United States)",
-
-	["__TIMES__"] = {
-		"morning",
-		"afternoon",
-		"evening",
-	},
-
+    
 	["Apps.MainFrame.Config.Desc"] = "Configure Administer, admins, and install new apps.",
 	["Apps.MainFrame.Config.Title"] = "Configuration",
 	["Apps.MainFrame.Home.Desc"] = "Everything you need to see at a glance.",

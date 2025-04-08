@@ -3,12 +3,6 @@ return {
 	["_locale_display"] = "Nederlands (Nederland)",
 	["_locale_display_localized"] = "Nederlands (Nederland)",
 
-	["__TIMES__"] = {
-		"morning",
-		"afternoon",
-		"evening",
-	},
-
 	["Apps.MainFrame.Config.Desc"] = "Configureer Administer, beheerders en installeer nieuwe apps.",
 	["Apps.MainFrame.Config.Title"] = "Configuratie",
 	["Apps.MainFrame.Home.Desc"] = "Alles wat je in één oogopslag nodig hebt.",
