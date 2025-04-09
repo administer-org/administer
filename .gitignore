@@ -5,6 +5,7 @@ luau_packages
 pesde.lock
 sourcemap.json
 
-aftman.toml\
+aftman.toml
 
 src/tools/node_modules
+src/tools/bun.lock

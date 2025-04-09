@@ -15,7 +15,7 @@ async function compileLocales() {
             const content = await convertLuaFileToJson(await fs.readFile(path.join(localesDir, file), 'utf-8'));
 
             const langDir = path.join(outputDir, langCode);
-            const outputPath = path.join(langDir, `${langCode}.json`);
+            const outputPath = path.join(langDir, `index.json`);
 
             await fs.ensureDir(langDir);
             await fs.writeFile(outputPath, JSON.stringify(content, null, 2));
