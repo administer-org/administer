@@ -5,20 +5,21 @@ function luaToJson(lua: string): any {
         .replace(/^return\s*/, '')
         .trim()
         .replace(/--.*/g, '');
-
-    jsonString = jsonString.replace(/,(?=\s*[}\]])/g, '');
-
-    jsonString = jsonString.replace(/(['"])((?:\\.|(?!\1).)*?)\1/g, (match, quote, content) => {
+        
+    jsonString = jsonString
+        .replace(/,(?=\s*[}\]])/g, '')
+        .replace(/(['"])((?:\\.|(?!\1).)*?)\1/g, (match, quote, content) => {
         const escapedContent = content
             .replace(/\\/g, '\\\\')
             .replace(/"/g, '\\"');
         return `"${escapedContent}"`;
     });
 
-    jsonString = jsonString.replace(/([{,]\s*)([a-zA-Z_]\w*)\s*=/g, '$1"$2" =');
-    jsonString = jsonString.replace(/\s*=\s*/g, ': ');
-    jsonString = jsonString.replace(/\["([^"]+)"\]\s*:/g, '"$1":');
-    jsonString = jsonString.replace(/\['([^']+)']\s*:/g, '"$1":');
+    jsonString = jsonString
+        .replace(/([{,]\s*)([a-zA-Z_]\w*)\s*=/g, '$1"$2" =')
+        .replace(/\s*=\s*/g, ': ')
+        .replace(/\["([^"]+)"\]\s*:/g, '"$1":')
+        .replace(/\['([^']+)']\s*:/g, '"$1":');
 
     try {
         return JSON.parse(jsonString);
