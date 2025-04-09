@@ -1,6 +1,6 @@
 {
   "_locale": "zh_CN",
-  "_locale_display": "中文 (中国)",
+  "_locale_display": "Chinese",
   "_locale_display_localized": "中文 (中国)",
   "Apps.MainFrame.Config.Desc": "配置 Administer、管理员，以及安装新应用。",
   "Apps.MainFrame.Config.Title": "配置",
