@@ -151,6 +151,7 @@ NewRemote("GetPasses", false, false, function()
 		}
 end)
 NewRemote("CheckForUpdates", true, false, Utils.UpdateCallback)
+NewRemote("GetSystemClock", false, false, os.time)
 
 NewRemote("GetProminentColorFromUserID", false, true, function(Player)
 	return Utils.GetProminentColor(Player.UserId)

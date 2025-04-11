@@ -68,7 +68,8 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			Clone.Activator.MouseButton1Click:Connect(function()
 				Frontend.Drawer.Close()
 				Frontend.SwapApps(ButtonConfig, Index, Clone)
-				Icon.Click()
+
+				xpcall(Icon.Click, Utilities.Logging.Warn)
 			end)
 
 			Clone.Parent = Button.SubCollection
@@ -686,9 +687,9 @@ function Apps.Init()
 	--// hopefully the icon pack has loaded by now?
 	Sidebar.Parent.MainMarketplace.XLibrary.AdministerLogo.Image = `rbxassetid://{Var.Icons.logos["administer-blue"]}` 
 	Sidebar.Parent.MainMarketplace.XLibrary.GameArt.Image = Var.Remotes.GetGameArt:InvokeServer()
-	
+
 	local Counts = Var.Remotes.GetAppCounts:InvokeServer()
-	
+
 	Sidebar.Buttons.XLibrary.Resources.Content.Apps.Text = `{Counts.Apps} apps, {Counts.Servers} servers`
 
 	--Apps.InitSerarchbar()

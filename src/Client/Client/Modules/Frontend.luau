@@ -167,6 +167,8 @@ local ShouldAnimate = true
 
 function Frontend.Drawer.Open(): ()
 	if not Var.DoHeaderEffects then return end --// Stops clicking the button multiple times which results in broken UI
+	if Var.PopupOpen then return end --// stops UI from breaking itself
+	
 	Frontend.Drawer.HoverEnd()
 
 	local Apps = Var.MainFrame.AppDrawer
@@ -414,35 +416,40 @@ function Frontend.Drawer.HoverEnd()
 	}):Play()
 end
 
-function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, FinalSize: UDim2): ()
-	local Blocker = Instance.new("Frame")
-	local UICorner = Instance.new("UICorner")
+Frontend.Popup.OriginalStates = {}
 
-	UICorner.Parent = Blocker
+function Frontend.Popup.Open(): ()
+	local BGTweenInfo = TweenInfo.new(1 * .65, Enum.EasingStyle.Cubic)
 
-	Blocker.Size = UDim2.fromScale(1, 1)
-	Blocker.BackgroundColor3 = Color3.fromRGB(16, 17, 20)
-	Blocker.BackgroundTransparency = 1
-	Blocker.Name = "Blocker"
-	Blocker.Parent = CanvasGroup
+	Frontend.Popup.OriginalStates = {}
 
-	local BGTweenInfo =
-		TweenInfo.new(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 1.25, Enum.EasingStyle.Cubic)
-	local BlockerTween = Var.Services.TweenService:Create(Blocker, BGTweenInfo, { BackgroundTransparency = 0.45 })
-	local UICornerTween = Var.Services.TweenService:Create(UICorner, BGTweenInfo, { CornerRadius = UDim.new(0, 24) })
-	local MainGroupTween = Var.Services.TweenService:Create(
-		CanvasGroup,
-		BGTweenInfo,
-		{ Size = UDim2.fromScale(0.75, 0.75), Position = UDim2.fromScale(0.5, 0.5), GroupTransparency = 0.25 }
-	)
+	for _, descendant in Var.MainFrame:GetChildren() do
+		if descendant:IsA("Frame") or descendant:IsA("CanvasGroup") then
+			if descendant:GetAttribute("AdmDoNotMove") then continue end
+			
+			local original = {
+				Size = descendant.Size,
+				Position = descendant.Position,
+				Color = descendant.BackgroundColor3,
+				AnchorPoint = descendant.AnchorPoint
+			}
+			Frontend.Popup.OriginalStates[descendant] = original
 
-	BlockerTween:Play()
-	UICornerTween:Play()
-	MainGroupTween:Play()
-
-	local SizeStr: { string } = string.split(tostring(FinalSize), ",")
-	local X: number = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1]) :: number
-	local Y: number = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2]) :: number
+			Var.Services.TweenService:Create(descendant, BGTweenInfo, {
+				Size = UDim2.new(original.Size.X.Scale * 0.75, 0, original.Size.Y.Scale * 0.75, 0),
+				Position = UDim2.fromScale(0.5, 0.5),
+				AnchorPoint = Vector2.new(.5,.5),
+				BackgroundColor3 = original.Color:lerp(Color3.fromRGB(16, 17, 20), 0.6),
+			}):Play()
+		end
+	end
+	
+	local Popup = Var.MainFrame.MessageBox
+	
+	local PopupOriginalSize = Popup.Size
+	local SizeStr = string.split(tostring(Popup.Size), ",")
+	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
+	local Y = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2])
 
 	Popup.Size = UDim2.fromScale(X / 1.5, Y / 1.5)
 	Popup.Position = UDim2.fromScale(0.5, 1.25)
@@ -451,73 +458,51 @@ function Frontend.Popup.Open(Popup: CanvasGroup, CanvasGroup: CanvasGroup, Final
 
 	Utilities.Logging.Print("Calculated, proceeding")
 
-	local PopupTween = Var.Services.TweenService:Create(
-		Popup,
-		TweenInfo.new(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number, Enum.EasingStyle.Cubic),
-		{ Position = UDim2.fromScale(0.5, 0.5), GroupTransparency = 0 }
-	)
+	local PopupTween = Var.Services.TweenService:Create(Popup, TweenInfo.new(1, Enum.EasingStyle.Cubic), {
+		Position = UDim2.fromScale(0.5, 0.5),
+		GroupTransparency = 0
+	})
 
 	PopupTween:Play()
-	Utilities.Logging.Print("Played, waiting")
 	PopupTween.Completed:Wait()
 	Utilities.Logging.Print("All done apparently...")
 
-	Var.Services.TweenService
-		:Create(
-			Popup,
-			TweenInfo.new(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number, Enum.EasingStyle.Quart),
-			{ Size = FinalSize }
-		)
-		:Play()
+	Var.Services.TweenService:Create(Popup, TweenInfo.new(1 * 0.85, Enum.EasingStyle.Cubic), {
+		Size = PopupOriginalSize
+	}):Play()
+	Var.PopupOpen = true
 end
 
-function Frontend.Popup.Close(Popup: CanvasGroup, CanvasGroup: CanvasGroup): ()
-	--// TODO find a better way to do this
-	local SizeStr: { string } = string.split(tostring(Popup.Size), ",")
-	local X: number = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1]) :: number
-	local Y: number = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2]) :: number
+function Frontend.Popup.Close(): ()
+	local BGTweenInfo = TweenInfo.new(1 * .65, Enum.EasingStyle.Cubic)
 
-	local Blocker: Instance = CanvasGroup:FindFirstChild("Blocker") :: Instance
-	local UICorner: UICorner? = Blocker and Blocker:FindFirstChildOfClass("UICorner")
-
-	if not Blocker then
-		Blocker = Instance.new("Frame") :: Frame
-		UICorner = Instance.new("UICorner") :: UICorner
-
-		if not UICorner or not Blocker then return end
-
-		UICorner.CornerRadius = UDim.new(0, 24)
-		UICorner.Parent = Blocker
-
-		Blocker.Size = UDim2.fromScale(1, 1)
-		Blocker.BackgroundColor3 = Color3.fromRGB(16, 17, 20)
-		Blocker.BackgroundTransparency = 0.45
-		Blocker.Name = "Blocker"
-		Blocker.Parent = CanvasGroup
+	for descendant, original in Frontend.Popup.OriginalStates do
+		if descendant then
+			Var.Services.TweenService:Create(descendant, BGTweenInfo, {
+				Size = original.Size,
+				Position = original.Position,
+				BackgroundColor3 = original.Color,
+				AnchorPoint = original.AnchorPoint
+			}):Play()
+		end
 	end
 
-	local BGTweenInfo =
-		TweenInfo.new(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 1.25, Enum.EasingStyle.Cubic)
-	local BlockerTween = Var.Services.TweenService:Create(Blocker, BGTweenInfo, { BackgroundTransparency = 1 })
-	local UICornerTween = Var.Services.TweenService:Create(UICorner, BGTweenInfo, { CornerRadius = UDim.new(0, 0) })
-	local MainGroupTween = Var.Services.TweenService:Create(
-		CanvasGroup,
-		BGTweenInfo,
-		{ Size = UDim2.new(1, 0, 1, 0), Position = UDim2.new(0.5, 0, 0.5, 0), GroupTransparency = 0 }
-	)
-	local PopupTween = Var.Services.TweenService:Create(
-		Popup,
-		TweenInfo.new(tonumber(Utilities.GetSetting("AnimationSpeed")) :: number * 0.85, Enum.EasingStyle.Cubic),
-		{ Size = UDim2.new(X * 0.35, 0, Y * 0.35, 0), GroupTransparency = 1 }
-	)
+	local Box = Var.MainFrame.MessageBox
+	local PopupOriginalSize = Box.Size
+	local SizeStr = string.split(tostring(Box.Size), ",")
+	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
+	local Y = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2])
 
-	BlockerTween:Play()
-	UICornerTween:Play()
-	MainGroupTween:Play()
+	local PopupTween = Var.Services.TweenService:Create(Box, TweenInfo.new(1 * .85, Enum.EasingStyle.Cubic), {
+		Size = UDim2.new(X * 0.35, 0, Y * 0.35, 0),
+		GroupTransparency = 1
+	})
+
 	PopupTween:Play()
-
-	BlockerTween.Completed:Wait()
-	Blocker:Destroy()
+	PopupTween.Completed:Wait()
+	
+	Box.Size = PopupOriginalSize
+	Var.PopupOpen = false
 end
 
 local MessageBox = Var.MainFrame.MessageBox
@@ -527,6 +512,7 @@ local PopupButtons = {}
 function Frontend.Popup.new(
 	App: {
 		Name: string,
+		Subheader: string,
 		Icon: string
 	},
 
@@ -535,20 +521,39 @@ function Frontend.Popup.new(
 		SubIcon: string?
 	},
 
-	Header: string,
-	BodyText: string,
-	Options: { { Text: string, Icon: string, Callback: (() -> ()) -> () } }
+	Header:     string,
+	BodyText:   string,
+
+	Options: { 
+		{ 
+			Text: string, Icon: string, Callback: (Close: () -> (), TextInputChoices: { string? }) -> () 
+		}
+	},
+
+	TextInputs: { 
+		{ 
+			HeaderText: string 
+		}
+	}
+
 ): ()
+	if Options ~= nil and #Options > 2 then 
+		Utilities.Logging.Warn("Popups may not have more than two buttons.")
+		return {false, "FAILED"}
+	end
+
+	if TextInputs ~= nil and #TextInputs > 2 then 
+		Utilities.Logging.Warn("Popups may not have more than two text inputs.")
+		return {false, "FAILED"}
+	end
+
 	for _, Signal in PopupButtons do
 		Signal:Disconnect()
 	end
-	
-	local function ClosePopup()
-		--// animation ...
-		MessageBox.Visible = false
-	end
 
-	MessageBox.Header.HeaderLabel.Text = `<b>{App.Name}</b>\n{Header}`
+	local ClosePopup = Frontend.Popup.Close
+
+	MessageBox.Header.HeaderLabel.Text = `<b>{App.Name}</b>\n{App.Subheader ~= nil and App.Subheader or Header}`
 	MessageBox.Header.AppIcon.Image = App.Icon
 
 	MessageBox.PrimaryText.Text = Header
@@ -560,16 +565,16 @@ function Frontend.Popup.new(
 	MessageBox.Button1.Label.Text = Options[1].Text
 	MessageBox.Button1.Icon.Image = Options[1].Icon
 	PopupButtons[1] = MessageBox.Button1.MouseButton1Click:Connect(function()
-		Options[1].Callback(ClosePopup)
+		Options[1].Callback(ClosePopup, {})
 	end)
 
 	xpcall(function()
 		MessageBox.Button2.Label.Text = Options[2].Text
 		MessageBox.Button2.Icon.Image = Options[2].Icon
 		PopupButtons[2] = MessageBox.Button2.MouseButton1Click:Connect(function()
-			Options[2].Callback(ClosePopup)
+			Options[2].Callback(ClosePopup, {})
 		end)
-		
+
 		MessageBox.Button2.Visible = true
 		MessageBox.Button1.AnchorPoint = Vector2.zero
 		MessageBox.Button1.Position = ButtonOneOriginalPos
@@ -580,6 +585,7 @@ function Frontend.Popup.new(
 		MessageBox.Button1.Position = UDim2.fromScale(.5, MessageBox.Button1.Position.Y.Scale) 
 	end)
 
+	Frontend.Popup.Open()
 	MessageBox.Visible = true
 end
 
