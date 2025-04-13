@@ -54,10 +54,10 @@ Utils.Logging = {
 Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 	if (Utils.GetSetting("SandboxMode") and game:GetService("RunService"):IsStudio()) or Var.EnableFreeAdmin then
 		return {
-			["IsAdmin"] = true,
-			["Reason"] = Utils.t(Player, "admincheck.SUDO"),
-			["RankID"] = 1,
-			["RankName"] = Utils.t(Player, "admin.RankDefault"),
+			IsAdmin  = true,
+			Reason   = Utils.t(Player, "admincheck.SUDO"),
+			RankID   = 1,
+			RankName = Utils.t(Player, "admin.RankDefault")
 		}
 	end
 
@@ -65,19 +65,19 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 
 	if table.find({}, Player.UserId) ~= nil then
 		return {
-			["IsAdmin"] = true,
-			["Reason"] = Utils.t(Player, "admincheck.OVERRIDE"),
-			["RankID"] = 1,
-			["RankName"] = Utils.t(Player, "admin.RankDefault"),
+			IsAdmin = true,
+			Reason = Utils.t(Player, "admincheck.OVERRIDE"),
+			RankID = 1,
+			RankName = Utils.t(Player, "admin.RankDefault")
 		}
 	else
 		for GroupID, Data in require(Root.Core.Configuration).Admins.Groups do
 			if Player:GetRankInGroup(GroupID) == Data.RankNumber then
 				return {
-					["IsAdmin"] = true,
-					["Reason"] = Utils.t(Player, "admincheck.OVERRIDE"),
-					["RankID"] = Data.AdminRankID,
-					["RankName"] = "Admin",
+					IsAdmin = true,
+					Reason = Utils.t(Player, "admincheck.OVERRIDE"),
+					RankID = Data.AdminRankID,
+					RankName = "Admin"
 				}
 			end
 		end
@@ -86,22 +86,22 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 	local _, Result = xpcall(function(): Types.AdminCheck
 		if RanksIndex.AdminIDs[tostring(Player.UserId)] ~= nil then
 			return {
-				["IsAdmin"] = true,
-				["Reason"] = Utils.t(Player, "admincheck.RANKINDEX"),
-				["RankID"] = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankID,
-				["RankName"] = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName,
+				IsAdmin = true,
+				Reason = Utils.t(Player, "admincheck.RANKINDEX"),
+				RankID = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankID,
+				RankName = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName
 			}
 		else
 			return {
 				IsAdmin = false,
-				RankID = 0,
+				RankID = 0
 			}
 		end
 	end, function()
 		--// Safe to ignore an error
 		return {
 			IsAdmin = false,
-			RankID = 0,
+			RankID = 0
 		}
 	end)
 
@@ -119,26 +119,26 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 			if Player:GetRankInGroup(ID) ~= tonumber(Group["RankNumber"]) then continue end
 
 			return {
-				["IsAdmin"] = true,
-				["Reason"] = Utils.t(Player, "admincheck.GROUP"),
-				["RankID"] = Group["AdminRankID"],
-				["RankName"] = Group["AdminRankName"],
+				IsAdmin = true,
+				Reason = Utils.t(Player, "admincheck.GROUP"),
+				RankID = Group.AdminRankID,
+				RankName = Group.AdminRankName
 			}
 		else
 			return {
-				["IsAdmin"] = true,
-				["Reason"] = Utils.t(Player, "admincheck.GROUP"),
-				["RankID"] = Group["AdminRankID"],
-				["RankName"] = Group["AdminRankName"],
+				IsAdmin = true,
+				Reason = Utils.t(Player, "admincheck.GROUP"),
+				RankID = Group.AdminRankID,
+				RankName = Group.AdminRankName
 			}
 		end
 	end
 
 	return {
-		["IsAdmin"] = false,
-		["Reason"] = Utils.t(Player, "admincheck.nil"),
-		["RankID"] = 0,
-		["RankName"] = Utils.t(Player, "admin.NoRank"),
+		IsAdmin = false,
+		Reason = Utils.t(Player, "admincheck.nil"),
+		RankID = 0,
+		RankName = Utils.t(Player, "admin.NoRank")
 	}
 end
 
@@ -203,16 +203,16 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 			Notification.Parent,
 			TweenInfo.new(OpenTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 			{
-				Position = UDim2.new(-0.018, 0, 0.858, 0),
+				Position = UDim2.new(-0.018, 0, 0.858, 0)
 			}
 		),
 		Var.Services.TweenService:Create(
 			Notification,
 			TweenInfo.new(OpenTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 			{
-				GroupTransparency = 0,
+				GroupTransparency = 0
 			}
-		),
+		)
 	}
 
 	for i, v in pairs(Tweens) do
@@ -227,7 +227,7 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 		local NotifTween2 =
 			Var.Services.TweenService:Create(Notification, TweenInfo.new(OpenTime * 0.7, Enum.EasingStyle.Quad), {
 				Position = UDim2.new(1, 0, 0, 0),
-				GroupTransparency = 1,
+				GroupTransparency = 1
 			})
 
 		NotifTween2:Play()
@@ -247,7 +247,8 @@ function Utils.NewRemote(
 	RemoteType: "RemoteEvent" | "RemoteFunction",
 	RemoteName: string,
 	AuthRequired: boolean,
-	Callback: (...any) -> (...any)
+	Callback: (...any) -> (...any),
+	AppName: string | nil
 ): ()
 	if not table.find({ "RemoteFunction", "RemoteEvent" }, RemoteType) then return false, "Invalid remote type!" end
 
@@ -277,6 +278,15 @@ function Utils.NewRemote(
 
 			return cbk
 		end
+	end
+	
+	if AppName ~= nil then
+		local AppsFolder = Var.RemotesPath:FindFirstChild("Apps")
+		
+		local AppFolder = AppsFolder:FindFirstChild(AppName) or Instance.new("Folder", AppsFolder)
+		AppFolder.Name = AppName
+		
+		Rem.Parent = AppFolder
 	end
 end
 
@@ -330,7 +340,7 @@ function Utils.GetGameOwner(): { ID: number, MemberType: string }
 
 	return {
 		ID = Result,
-		MemberType = Type,
+		MemberType = Type
 	}
 end
 
