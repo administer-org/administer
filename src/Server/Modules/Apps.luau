@@ -82,6 +82,10 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 			Modules[Request.Name] = require(script.Parent:FindFirstChild(Request.Name)) :: {}
 		end
 	end
+	
+	local UIClone = Config.ClientFrame:Clone()
+	
+	UIClone.Parent = Var.Panel.Path.Main
 
 	Config.Bootstrap({}, Config.State, {
 		FinishTime = string.sub(tostring(tick() - Ticks[Misc.TechID]), 1, 5),
@@ -108,7 +112,7 @@ function App.LoadLocal(
 		RunContext = typeof(Path) == "Instance" and "LocalAppsFolder" or "AOSDownload", 
 		TechID = Path
 	}
-	local TargetApp, RealApp = {}, require(Path)(App.InvocationAPI, Extras) :: any
+	local TargetApp, RealApp = {}, require(Path)(App.InvocationAPI, Extras) :: { Success: boolean, RichConfig: Types.RichConfig }
 
 	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
@@ -152,7 +156,7 @@ function App.Initialize(): boolean
 		task.wait(3)
 	end
 
-	for i, App in script.Parent.Parent.LocalApps:GetChildren() do
+	for i, App in script.Parent.Parent.Parent.LocalApps:GetChildren() do
 		table.insert(Apps, {
 			ID = App,
 			InstallDate = 0,

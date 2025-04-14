@@ -464,7 +464,6 @@ function Frontend.Popup.Open(): ()
 	})
 
 	PopupTween:Play()
-	PopupTween.Completed:Wait()
 	Utilities.Logging.Print("All done apparently...")
 
 	Var.Services.TweenService:Create(Popup, TweenInfo.new(1 * 0.85, Enum.EasingStyle.Cubic), {
@@ -502,6 +501,7 @@ function Frontend.Popup.Close(): ()
 	PopupTween.Completed:Wait()
 	
 	Box.Size = PopupOriginalSize
+	Box.Visible = false
 	Var.PopupOpen = false
 end
 
@@ -546,6 +546,10 @@ function Frontend.Popup.new(
 		Utilities.Logging.Warn("Popups may not have more than two text inputs.")
 		return {false, "FAILED"}
 	end
+	
+	if Var.PopupOpen then
+		return {false, "Only one popup may be open at a time."}
+	end
 
 	for _, Signal in PopupButtons do
 		Signal:Disconnect()
@@ -565,14 +569,20 @@ function Frontend.Popup.new(
 	MessageBox.Button1.Label.Text = Options[1].Text
 	MessageBox.Button1.Icon.Image = Options[1].Icon
 	PopupButtons[1] = MessageBox.Button1.MouseButton1Click:Connect(function()
-		Options[1].Callback(ClosePopup, {})
+		Options[1].Callback(ClosePopup, {
+			MessageBox.TextInputs[1].Box.Text, 
+			MessageBox.TextInputs[2].Box.Text
+		})
 	end)
 
 	xpcall(function()
 		MessageBox.Button2.Label.Text = Options[2].Text
 		MessageBox.Button2.Icon.Image = Options[2].Icon
 		PopupButtons[2] = MessageBox.Button2.MouseButton1Click:Connect(function()
-			Options[2].Callback(ClosePopup, {})
+			Options[2].Callback(ClosePopup, {
+				MessageBox.TextInputs[1].Box.Text, 
+				MessageBox.TextInputs[2].Box.Text
+			})
 		end)
 
 		MessageBox.Button2.Visible = true
@@ -584,6 +594,21 @@ function Frontend.Popup.new(
 		MessageBox.Button1.AnchorPoint = Vector2.new(.5, 0)
 		MessageBox.Button1.Position = UDim2.fromScale(.5, MessageBox.Button1.Position.Y.Scale) 
 	end)
+	
+	if TextInputs == nil then
+		MessageBox.SubText.TextYAlignment = Enum.TextYAlignment.Center
+		
+		for _, Box in MessageBox.TextInputs:GetChildren() do
+			if Box:IsA("Frame") then Box.Visible = false end
+		end
+	else
+		MessageBox.SubText.TextYAlignment = Enum.TextYAlignment.Top
+		
+		for Num, Input in TextInputs do
+			MessageBox.TextInputs[Num].Visible = true
+			MessageBox.TextInputs[Num].Label.Text = Input.HeaderText
+		end
+	end
 
 	Frontend.Popup.Open()
 	MessageBox.Visible = true
@@ -597,7 +622,6 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Butto
 	else
 		NewFrame = AppConfig.SubIcons[Clicked].Frame
 	end
-
 
 	for _, Frame in Var.MainFrame:GetChildren() do
 		--// Use their descendants, not the parent

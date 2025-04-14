@@ -178,6 +178,9 @@ Variables.Init = function()
 	local RF = Instance.new("Folder", Variables.RemotesPath)
 	RF.Name = "Administer"
 	Variables.RemotesPath = RF
+	
+	local AppRemotes = Instance.new("Folder", Variables.RemotesPath)
+	AppRemotes.Name = "Apps"
 
 	for Branch, Object in Variables.Branches :: { Typing.AdmBranch } do
 		Object["BranchName"] = Branch

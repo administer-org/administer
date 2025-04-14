@@ -103,7 +103,6 @@ Utilities.Logging.Error = function(message: string)
 	error(`[Administer] [fault] {message}`)
 end
 
---// This will be written in the notification overhaul (2.1.0 or 2.2.0)
 function Utilities.NewNotification(
 	AppTitle: string,
 	Icon: string,

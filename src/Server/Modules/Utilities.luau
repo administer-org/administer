@@ -72,14 +72,22 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		}
 	else
 		for GroupID, Data in require(Root.Core.Configuration).Admins.Groups do
-			if Player:GetRankInGroup(GroupID) == Data.RankNumber then
-				return {
-					IsAdmin = true,
-					Reason = Utils.t(Player, "admincheck.OVERRIDE"),
-					RankID = Data.AdminRankID,
-					RankName = "Admin"
-				}
-			end
+			xpcall(function()
+				if Player:GetRankInGroup(GroupID) == Data.RankNumber then
+					return {
+						IsAdmin = true,
+						Reason = Utils.t(Player, "admincheck.OVERRIDE"),
+						RankID = Data.AdminRankID,
+						RankName = "Admin"
+					}
+				end
+			end, function(e)
+				if string.find(e, "of table") ~= nil then
+					--// can disregard
+				else
+					error(e)
+				end
+			end)
 		end
 	end
 
@@ -111,28 +119,36 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 	--	return true, "Data based on settings configured by an admin.", RanksData["RankId"], RanksData["RankName"]
 	--end
 
-	for ID, Group in RanksIndex.GroupAdminIDs do
-		ID = string.split(ID, "_")[1]
-		if not Player:IsInGroup(ID) then continue end
+	xpcall(function()
+		for ID, Group in RanksIndex.GroupAdminIDs do
+			ID = string.split(ID, "_")[1]
+			if not Player:IsInGroup(ID) then continue end
 
-		if Group["RequireRank"] then
-			if Player:GetRankInGroup(ID) ~= tonumber(Group["RankNumber"]) then continue end
+			if Group["RequireRank"] then
+				if Player:GetRankInGroup(ID) ~= tonumber(Group["RankNumber"]) then continue end
 
-			return {
-				IsAdmin = true,
-				Reason = Utils.t(Player, "admincheck.GROUP"),
-				RankID = Group.AdminRankID,
-				RankName = Group.AdminRankName
-			}
-		else
-			return {
-				IsAdmin = true,
-				Reason = Utils.t(Player, "admincheck.GROUP"),
-				RankID = Group.AdminRankID,
-				RankName = Group.AdminRankName
-			}
+				return {
+					IsAdmin = true,
+					Reason = Utils.t(Player, "admincheck.GROUP"),
+					RankID = Group.AdminRankID,
+					RankName = Group.AdminRankName
+				}
+			else
+				return {
+					IsAdmin = true,
+					Reason = Utils.t(Player, "admincheck.GROUP"),
+					RankID = Group.AdminRankID,
+					RankName = Group.AdminRankName
+				}
+			end
 		end
-	end
+	end, function(e)
+		if string.find(e, "of table") ~= nil then
+			--// can disregard
+		else
+			error(e)
+		end
+	end)
 
 	return {
 		IsAdmin = false,
@@ -279,13 +295,13 @@ function Utils.NewRemote(
 			return cbk
 		end
 	end
-	
+
 	if AppName ~= nil then
 		local AppsFolder = Var.RemotesPath:FindFirstChild("Apps")
-		
+
 		local AppFolder = AppsFolder:FindFirstChild(AppName) or Instance.new("Folder", AppsFolder)
 		AppFolder.Name = AppName
-		
+
 		Rem.Parent = AppFolder
 	end
 end
@@ -360,22 +376,24 @@ function Utils.RoundMS(num)
 end
 
 function Utils.GetGameMedia()
-	local Default = "" --// add soon
+	local Default = "rbxassetid://75024044611103"
 
 	local MediaData = Var.Services.HttpService:JSONDecode(
 		Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v2/games/{game.GameId}/media`)
 	)["data"]
 	if MediaData == {} then return Default end
 
-	local Tries = 1
+	local Tries = 0
 	local Selected = false
 	while not Selected do
 		local Next = MediaData[Tries]
 
-		if Next["videoHash"] ~= nil then
+		if Next == nil or Next.videoHash ~= nil then
+			if Tries >= 50 then return Default end
+
 			if Tries ~= #MediaData then
 				Tries += 1
-				continue
+				continue 
 			else
 				return Default --// exhausted all of our images, none good
 			end
@@ -391,6 +409,15 @@ function Utils.GetGameIcon()
 	return `rbxassetid://{Var.Services.HttpService:JSONDecode(
 		Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v1/games/{game.GameId}/icon`)
 	)["imageId"] or Utils.Icon("book")}`
+end
+
+function Utils.GetServerRegion()
+	local IP = Var.Services.HttpService:GetAsync("https://api.ipify.org/")
+	local IPInfo = Var.Services.HttpService:JSONDecode(
+		Var.Services.HttpService:GetAsync(`http://www.ip-api.com/json/{IP}?fields=status,message,countryCode,regionName,city`)
+	)
+
+	return `{IPInfo["countryCode"]}\\{IPInfo["regionName"]}`
 end
 
 function Utils.GetProminentColor(UserID)
@@ -449,7 +476,7 @@ function Utils.t(Player: Player | nil, Key: string): string
 		local LocaleResult = (
 			Var.CachedLocales[Player.UserId] or Var.DataStores.Settings:GetAsync(Player.UserId .. "Locale")
 		) or "en"
-		
+
 		Utils.Logging.Print(`Locale: {LocaleResult}`)
 
 		return (require(Locales:FindFirstChild(LocaleResult)) :: any)[Key] or Key
@@ -462,7 +489,7 @@ end
 
 function Utils.UpdateCallback(Services: { string })
 	local Data = {}
-	
+
 	for _, Service in Services do
 		if Service == "Administer" then
 			Data["Administer"] = HTTP.GetRoute(Var.DefaultAppServer, "/pub/versions", function(Data, Misc)

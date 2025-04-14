@@ -1,4 +1,4 @@
---// Administer (2.0)
+--// Administer
 --// pyxfluff 2022-2025
 
 local SharedLibs = script.Libraries
@@ -18,7 +18,10 @@ local t = Utilities.Translate
 Frontend.Close(true)
 
 Var.Version = Var.Remotes.GetVersions:InvokeServer({"administer"})["administer"]
-Var.Remotes.CheckForUpdates:InvokeServer({ "Administer" })
+Var.Remotes.CheckForUpdates:InvokeServer({ "org.admsoftware.Core" })
+_G.AdministerEnv = script
+
+warn(_G.AdministerEnv)
 
 task.spawn(Utilities.Heartbeat)
 
@@ -175,7 +178,7 @@ xpcall(function()
 		Admins.Load()
 	end)
 end, function(e)
-	warn(e)
+	error(e)
 end)
 
 if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled then

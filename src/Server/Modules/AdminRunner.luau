@@ -25,7 +25,7 @@ function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 
 	print(Rank)
 
-	if Rank.Apps["SuperAdmin"] == nil then
+	if Rank.Apps["SuperAdmin"] == false then
 		for ID, Object in Rank["Apps"]["PageIDs"] do
 			AllowedPages[ID] = {
 				["Name"] = Object.DisplayName,

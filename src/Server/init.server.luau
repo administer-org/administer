@@ -123,8 +123,7 @@ NewRemote("GetVersions", true, true, function(Player, Services)
 	
 	return Final
 end)
-NewRemote("GetGameArt", false, false, Utils.GetGameIcon)
-NewRemote("FilterString", true, true, Utils.GetFilteredString)
+
 NewRemote("GetPasses", false, false, function()
 	local Attempts, _Content = 0, ""
 
@@ -150,8 +149,13 @@ NewRemote("GetPasses", false, false, function()
 			},
 		}
 end)
+
 NewRemote("CheckForUpdates", true, false, Utils.UpdateCallback)
 NewRemote("GetSystemClock", false, false, os.time)
+NewRemote("GetGameArt", false, false, Utils.GetGameIcon)
+NewRemote("GetGameMedia", true, false, Utils.GetGameMedia)
+NewRemote("GetServerRegion", true, false, Utils.GetServerRegion)
+NewRemote("FilterString", true, true, Utils.GetFilteredString)
 
 NewRemote("GetProminentColorFromUserID", false, true, function(Player)
 	return Utils.GetProminentColor(Player.UserId)
