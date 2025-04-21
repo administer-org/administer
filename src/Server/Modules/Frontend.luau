@@ -25,10 +25,6 @@ function FrontendAPI.NewUpdateLogText(P: Player, Text)
 end
 
 function FrontendAPI.VersionCheck(Plr: Player): Types.Response
-	--// We need a better system for this
-	-- for i, Label in ScrollingFrame:GetChildren() do
-	-- 	if Label:IsA("TextLabel") and Label.Name ~= "TextLabel" then Label:Destroy() end
-	-- end
 	return HTTP.PostRoute(Var.DefaultAppServer, "/pub/versions", {
 		current_version = Config.VersData.String,
 	}, function(Data: Types.PythonVersionInfo, DebugInfo)
@@ -67,8 +63,8 @@ end
 function FrontendAPI.UpdateHomePage(Player, Data)
 	--// do some checks
 	if Data == nil then return {
-		UserFacingMessage = "Bad data sent by client.",
-		Result = "fail",
+		Success = true,
+		Message = "Bad data sent by client."
 	} end
 
 	local HomeInfo
@@ -93,13 +89,13 @@ function FrontendAPI.UpdateHomePage(Player, Data)
 		end)
 	then
 		return {
-			Result = "success",
-			UserFacingMessage = "Done!",
+			Success = true,
+			Message = "Done!"
 		}
 	else
 		return {
-			Result = "fail",
-			UserFacingMessage = "Something happened on Roblox's end, please try again later.",
+			Success = false,
+			Message = "Something happened on Roblox's end, please try again later."
 		}
 	end
 end

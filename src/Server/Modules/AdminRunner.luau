@@ -16,20 +16,18 @@ type Response = Types.Response
 local LastAdminResult
 
 function AR.Bootstrap(Player: Player, AdminRankID: number): ()
-	local Rank = Var.DataStores.AdminsDS:GetAsync(`_Rank{AdminRankID}`)
+	local Rank = Var.DataStores.AdminsDS:GetAsync(AdminRankID)
 	local NewPanel = Var.Panel.Spawn(Rank, Player)
 	local AllowedPages = {}
 
 	table.insert(Var.Admins.InGame, Player)
 	Var.Admins.TotalRunningCount += 1
 
-	print(Rank)
-
 	if Rank.Apps["SuperAdmin"] == false then
 		for ID, Object in Rank["Apps"]["PageIDs"] do
 			AllowedPages[ID] = {
 				["Name"] = Object.DisplayName,
-				["ButtonName"] = ID,
+				["ButtonName"] = ID
 			}
 		end
 
@@ -88,7 +86,7 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 
 	task.spawn(function()
 		if LastAdminResult.IsAdmin then
-			AR.Bootstrap(Player, LastAdminResult["RankID"] :: number)
+			AR.Bootstrap(Player, LastAdminResult.RankName)
 		elseif
 			(Var.Services.RunService:IsStudio() and Util.GetSetting("SandboxMode"))
 			or Var.EnableFreeAdmin
@@ -182,10 +180,10 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 		end
 
 		Var.DataStores.AdminsDS:SetAsync("CurrentRanks", {
-			Count = Info.Count,
-			Names = Info.Names,
+			Count         = Info.Count,
+			Names         = Info.Names,
 			GroupAdminIDs = Info.GroupAdminIDs,
-			AdminIDs = Info.AdminIDs,
+			AdminIDs      = Info.AdminIDs
 		})
 	end, function(E)
 		Util.Logging.SWarn(`Failed to create a new admin rank!`, E)
@@ -210,7 +208,7 @@ function AR.Ranks.GetAll()
 	local Current: Types.CurrentRanks = Var.DataStores.AdminsDS:GetAsync("CurrentRanks")
 	local Ranks = {}
 	local Polls = 0
-	
+
 	Current.Count = Current.Count - 1
 
 	--// Load in parallel

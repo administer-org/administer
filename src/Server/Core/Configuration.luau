@@ -24,11 +24,13 @@ return {
 		Minor = 0,
 		Tweak = 0,
 		
-		Extra = "Release Candidate 1 (public beta)",
+		Extra = "RC1 (target:RELEASE brnch:pubbeta) re95c12fb",
 		String = "2.0.0-rc1",
 		
 		NoExtraData = "2.0.0",
-		APIRevision = "2.0.0"
+		APIRevision = "2.0.0",
+		
+		ID = "org.admsoftware.Core"
 	},
 
 	Admins = {

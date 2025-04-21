@@ -6,7 +6,7 @@ local App = {
 	ServerAPI = {},
 	InvocationAPI = {},
 
-	RunningApps = {},
+	RunningApps = {}
 }
 
 local Ticks = {}
@@ -47,7 +47,7 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 		},
 
 		TextCommands = {},
-		State = {},
+		State = {}
 	}
 end
 
@@ -58,17 +58,17 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 	elseif not IsVersionSupported(AdmConfig.VersData.APIRevision, Config.Dependencies.AppPlatform) then
 		return {
 			false,
-			`this app does not support your application platform! expected {Config.Dependencies.AppPlatform}, got {AdmConfig.VersData.APIRevision}`,
+			`this app does not support your application platform! expected {Config.Dependencies.AppPlatform}, got {AdmConfig.VersData.APIRevision}`
 		}
 	elseif not IsVersionSupported(AdmConfig.VersData.String, Config.Dependencies.Administer) then
 		return {
 			false,
-			`this app does not support your administer version. please upgrade to the latest version of Administer.`,
+			`this app does not support your administer version. please upgrade to the latest version of Administer.`
 		}
 	elseif Misc == nil then
 		return {
 			false,
-			"misc. data must not be nil, please refer to the documentation for imformation how to properly return a Construct object",
+			"misc. data must not be nil, please refer to the documentation for imformation how to properly return a Construct object"
 		}
 	end
 
@@ -92,7 +92,7 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 		RunContext = Misc.RunContext,
 		RanksWithAccess = 0, --// TODO
 
-		Modules = Modules :: any,
+		Modules = Modules :: any
 	})
 
 	return { true, Config }
@@ -160,7 +160,7 @@ function App.Initialize(): boolean
 		table.insert(Apps, {
 			ID = App,
 			InstallDate = 0,
-			InstallSource = "",
+			InstallSource = ""
 		})
 	end
 
@@ -169,7 +169,7 @@ function App.Initialize(): boolean
 			App.LoadLocal(AppObj.ID, {
 				InstallDate = AppObj.InstallDate,
 				InstallSource = AppObj.InstallSource,
-				AppID = AppObj.ID,
+				AppID = AppObj.ID
 			})
 			i += 1
 		end)
@@ -226,7 +226,7 @@ function App.GetAll(Source: string): Types.TableWildcard
 	elseif Source == "DataStore_Raw" then
 		return {true, Var.DataStores.AppDB:GetAsync("AppList")}
 	elseif Source == "Combined" then
-		local AppList = Var.DataStores.AppDB:GetAsync("AppList")
+		local AppList = Var.DataStores.AppDB:GetAsync("AppList") or {}
 		local Final = {}
 
 		for i, Object in AppList do

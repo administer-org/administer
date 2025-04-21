@@ -159,7 +159,7 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 	end)
 end
 
-local Hovers = {}
+local DrawerConnections = {}
 local CurrentlyActive
 local Ready = true
 local IsQueued = false
@@ -168,7 +168,7 @@ local ShouldAnimate = true
 function Frontend.Drawer.Open(): ()
 	if not Var.DoHeaderEffects then return end --// Stops clicking the button multiple times which results in broken UI
 	if Var.PopupOpen then return end --// stops UI from breaking itself
-	
+
 	Frontend.Drawer.HoverEnd()
 
 	local Apps = Var.MainFrame.AppDrawer
@@ -179,26 +179,6 @@ function Frontend.Drawer.Open(): ()
 	Var.DoHeaderEffects = false
 	ShouldAnimate = true
 	Ready = true
-
-	local function Clear(MainPageStaysVisible: bool)
-		for _, Frame in Container:GetChildren() do
-			if Frame.Name == "Header" then continue end
-
-			if Frame:GetAttribute("AdmLinkSinglePage") then 
-				Frame.Visible = false
-
-				continue
-			end
-
-			for _, Frame in Frame:GetChildren() do
-				if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") or Frame:GetAttribute("AdmIgnoreVisibility") then continue end
-
-				Frame.Visible = false
-			end
-
-			Var.ActivePage.Visible = MainPageStaysVisible
-		end
-	end
 
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
@@ -233,8 +213,6 @@ function Frontend.Drawer.Open(): ()
 		end
 	end
 
-	Clear(true)
-
 	Var.Services.TweenService
 		:Create(Container, TweenInfo.new(TimeToComplete, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
 			GroupTransparency = 0,
@@ -261,54 +239,69 @@ function Frontend.Drawer.Open(): ()
 	for _, Button in Apps.AppHolder:GetDescendants() do
 		if Button.Name ~= "Activator" or Button:FindFirstAncestor("MultiThread") or Button:FindFirstAncestor("SingleThread") then continue end
 
-		local function AppOver(SubIcon, AppVisible)
-			--print(IsQueued, Ready, ShouldAnimate)
-			--print("expected: {} true true")
-			IsQueued = true
-			repeat task.wait() until Ready
-			Ready = false
+		local function AppOver(AppConfig, ButtonConfig, AppVisible)
+			local Card, ShouldBind
+			
+			print(AppVisible)
 
-			if not ShouldAnimate then return end
+			xpcall(function()
+				Card = Apps.AppDrawerCover.Card
+				ShouldBind = true
+			end, function()
+				--// It is already open, no need for concern
+				Card = Var.MainFrame.Parent.Card
+				ShouldBind = AppVisible
+			end)
 
-			Var.Services.TweenService:Create(Container, TweenInfo.new(.2), { GroupTransparency = 1 }):Play()
+			if AppVisible then
+				Card.AppPrimary.Image = AppConfig.Icon
+				Card.AppMenu.Image = ButtonConfig.Icon
+				
+				Card.Title.Text = AppConfig.AppName
+				Card.SubTitle.Text = ButtonConfig.Name
+				Card.Desc.Text = AppConfig.Description
+				
+				Card.Parent = Var.MainFrame.Parent
+				game:GetService("TweenService"):Create(Card, TweenInfo.new(.1), { GroupTransparency = 0 }):Play()
 
-			if IsQueued then
-				IsQueued = false
-				Ready = true
+				if ShouldBind then
+					DrawerConnections[`CardMovement`] = game:GetService("RunService").RenderStepped:Connect(function(dt)
+						if Card.Visible == false then return end
+
+						local Mouse = game:GetService("UserInputService"):GetMouseLocation()
+						local Pos = Vector2.new(Mouse.X, Mouse.Y - game:GetService("GuiService"):GetGuiInset().Y)
+
+						Card.Position = UDim2.fromOffset(Pos.X, Pos.Y)
+					end)
+				end
+			else
+				game:GetService("TweenService"):Create(Card, TweenInfo.new(.1), { GroupTransparency = 1 }):Play()
+				DrawerConnections["CardMovement"]:Disconnect()
 			end
-
-			Clear(false)
-			task.wait(.2)
-
-			--// Check again?
-			if not ShouldAnimate then return end
-
-			CurrentlyActive.Visible = not AppVisible
-			SubIcon.Frame.Visible = AppVisible
-
-			Var.Services.TweenService:Create(Container, TweenInfo.new(.2), { GroupTransparency = 0 }):Play()
-
-			Ready = true
 		end
 
-		Button.MouseEnter:Connect(function()
+		DrawerConnections[`Over-{math.random(1,10000)}`] = Button.MouseEnter:Connect(function()
 			--// Recursively find the frame bc idk!!
 			for _, Object in Var.CombinedButtonConfig do
 				for _, SubIcon in Object.SubIcons do
 					if SubIcon.Icon ~= Button.Parent.Icon.Image then continue end
 
-					AppOver(SubIcon, true)
+					task.defer(function() 
+						AppOver(Object, SubIcon, true)
+					end)
 				end
 			end
 		end)
 
-		Button.MouseLeave:Connect(function()
+		DrawerConnections[`Over-{math.random(1,10000)}`] = Button.MouseLeave:Connect(function()
 			--// Same dumb logic as above
 			for _, Object in Var.CombinedButtonConfig do
 				for _, SubIcon in Object.SubIcons do
-
 					if SubIcon.Icon ~= Button.Parent.Icon.Image then continue end
-					AppOver(SubIcon, false)
+
+					task.defer(function() 
+						AppOver(Object, SubIcon, false)
+					end)
 				end
 			end
 		end)
@@ -426,7 +419,7 @@ function Frontend.Popup.Open(): ()
 	for _, descendant in Var.MainFrame:GetChildren() do
 		if descendant:IsA("Frame") or descendant:IsA("CanvasGroup") then
 			if descendant:GetAttribute("AdmDoNotMove") then continue end
-			
+
 			local original = {
 				Size = descendant.Size,
 				Position = descendant.Position,
@@ -443,9 +436,9 @@ function Frontend.Popup.Open(): ()
 			}):Play()
 		end
 	end
-	
+
 	local Popup = Var.MainFrame.MessageBox
-	
+
 	local PopupOriginalSize = Popup.Size
 	local SizeStr = string.split(tostring(Popup.Size), ",")
 	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
@@ -499,7 +492,7 @@ function Frontend.Popup.Close(): ()
 
 	PopupTween:Play()
 	PopupTween.Completed:Wait()
-	
+
 	Box.Size = PopupOriginalSize
 	Box.Visible = false
 	Var.PopupOpen = false
@@ -546,13 +539,21 @@ function Frontend.Popup.new(
 		Utilities.Logging.Warn("Popups may not have more than two text inputs.")
 		return {false, "FAILED"}
 	end
-	
+
 	if Var.PopupOpen then
 		return {false, "Only one popup may be open at a time."}
 	end
 
+	--// Cleanup
 	for _, Signal in PopupButtons do
 		Signal:Disconnect()
+	end
+
+	for Num = 1, 2 do
+		local Input = MessageBox.TextInputs[Num].Box
+
+		Input.Text = ""
+		Input.ClearTextOnFocus = false
 	end
 
 	local ClosePopup = Frontend.Popup.Close
@@ -594,16 +595,16 @@ function Frontend.Popup.new(
 		MessageBox.Button1.AnchorPoint = Vector2.new(.5, 0)
 		MessageBox.Button1.Position = UDim2.fromScale(.5, MessageBox.Button1.Position.Y.Scale) 
 	end)
-	
+
 	if TextInputs == nil then
 		MessageBox.SubText.TextYAlignment = Enum.TextYAlignment.Center
-		
+
 		for _, Box in MessageBox.TextInputs:GetChildren() do
 			if Box:IsA("Frame") then Box.Visible = false end
 		end
 	else
 		MessageBox.SubText.TextYAlignment = Enum.TextYAlignment.Top
-		
+
 		for Num, Input in TextInputs do
 			MessageBox.TextInputs[Num].Visible = true
 			MessageBox.TextInputs[Num].Label.Text = Input.HeaderText
@@ -617,30 +618,31 @@ end
 function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Button)
 	local NewFrame
 
+	Ready = true
+
 	if Clicked == 0 then
 		NewFrame = AppConfig.MainButtonFrame
 	else
 		NewFrame = AppConfig.SubIcons[Clicked].Frame
 	end
-
-	for _, Frame in Var.MainFrame:GetChildren() do
-		--// Use their descendants, not the parent
-		if Frame.Name == "Header" or Frame.Name == "AppDrawer" then continue end
-
-		if Frame:GetAttribute("AdmLinkSinglePage") then 
-			Frame.Visible = false
-
-			continue
-		end
-
-		for _, Frame in Frame:GetChildren() do
-			if not Frame:IsA("CanvasGroup") and not Frame:IsA("Frame") or Frame:GetAttribute("AdmIgnoreVisibility") then continue end
-
-			Frame.Visible = false
-		end
-	end
-
+	
+	local OGFrame = Var.ActivePage
+	local OGFramePos, OGFrameAP, NewFramePos, NewFrameAP = Var.ActivePage.Position, Var.ActivePage.AnchorPoint, NewFrame.Position, NewFrame.AnchorPoint
+	local TInfo = TweenInfo.new(.75, Enum.EasingStyle.Quart)
+	
 	NewFrame.Visible = true
+	
+	NewFrame.Position = UDim2.new(1,0,.5,0)
+	NewFrame.AnchorPoint = Vector2.new(.5,0)
+	
+	Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
+	Var.Services.TweenService:Create(Var.ActivePage, TInfo, { Position = UDim2.new(-1, 0, .5, 0), AnchorPoint = Vector2.new(.5,0) }):Play()
+	
+	task.delay(1.5, function()
+		OGFrame.Position = OGFramePos
+		OGFrame.AnchorPoint = OGFrameAP
+		OGFrame.Visible = false
+	end)
 
 	Var.ActivePage = NewFrame
 

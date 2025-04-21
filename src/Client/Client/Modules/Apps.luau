@@ -54,7 +54,8 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button.Activator.MouseButton1Click:Connect(function()
 			if ButtonConfig.MainButtonFrame == nil then return end
 
-			Frontend.Drawer.Close()
+			task.defer(Frontend.Drawer.Close)
+			
 			Frontend.SwapApps(ButtonConfig, 0, Button)
 			ButtonConfig.MainButtonClick()
 		end)
@@ -66,7 +67,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			Clone.Title.Text = Icon.Name
 
 			Clone.Activator.MouseButton1Click:Connect(function()
-				Frontend.Drawer.Close()
+				task.defer(Frontend.Drawer.Close)
 				Frontend.SwapApps(ButtonConfig, Index, Clone)
 
 				xpcall(Icon.Click, Utilities.Logging.Warn)

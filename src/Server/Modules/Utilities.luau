@@ -18,7 +18,7 @@ local HTTP     = require(Root.Modules.HTTPRunner)
 local Settings = Config.Settings
 
 --Retrieves a setting from the Administer settings index. Setting must be valid Setting syntax (read docs)
-Utils.GetSetting = function(Setting): Types.SettingResponse
+Utils.GetSetting = function(setting: Types.Setting, settings: Types.SettingsGroup, userId: number?): Types.SettingResponse
 	return ""
 end
 
@@ -160,21 +160,18 @@ end
 
 -- Spawns a new admin notification. Yields, use with task.spawn to avoid.
 Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, NotificationSound, Options)
-	--// Type solver is dumb here, nothing I can do
 	local Panel
-	if
-		(
-			xpcall(function()
-				Panel = (Admin.PlayerGui :: PlayerGui):FindFirstChild("AdministerMainPanel")
+	if (xpcall(function()
+			Panel = Admin.PlayerGui:FindFirstChild("AdministerMainPanel")
 
-				if Panel == nil then error(nil) end
-			end, function()
-				Utils.Logging.SWarn(
-					"This player does not have the assets required to render a notification, ignoring request."
-				)
-				return false
-			end)
-		) == false
+			if Panel == nil then error(nil) end
+			return true
+		end, function()
+			Utils.Logging.SWarn(
+				"This player does not have the assets required to render a notification, ignoring request."
+			)
+			return false
+		end)) == false
 	then
 		return { false }
 	end
@@ -231,7 +228,7 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 		)
 	}
 
-	for i, v in pairs(Tweens) do
+	for i, v in Tweens do
 		v:Play()
 	end
 
@@ -363,12 +360,12 @@ end
 function Utils.GetShortNumer(Number)
 	local Decimals = 2
 
-	return math.floor(
-		((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3))
-			* 10 ^ (Decimals or 3)
-	) / 10 ^ (Decimals or 3) .. (({ "k", "M", "B", "T", "Qa", "Qn", "Sx", "Sp", "Oc", "N" })[math.floor(
-		math.log10(Number) / 3
-	)] or "")
+	return (
+		math.floor(
+			((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3))
+				* 10 ^ (Decimals or 3)
+		) / 10 ^ (Decimals or 3) .. (({ "k", "M", "B", "T", "Qa", "Qn", "Sx", "Sp", "Oc", "N" })[math.floor(math.log10(Number) / 3)] or "")
+	)
 end
 
 function Utils.RoundMS(num)

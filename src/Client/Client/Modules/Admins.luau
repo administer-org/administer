@@ -99,17 +99,21 @@ function Admins.Load(): ()
 							return game:GetService("GroupService"):GetGroupInfoAsync(User.ID)
 						end)
 
-						Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
-						Template.ProfilePictures[i].Visible = true
+						xpcall(function()
+							Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
+							Template.ProfilePictures[i].Visible = true
 
-						Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
+							Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
+						end, function()
+							--// do nothing? idk if i do i - 1 itll cause a loop so FIXME..?
+						end)
 
 						table.insert(UserNames, GroupInfo.Name)
 					end
 				end
 
 				Template.MembersText.Text = (
-					#UserNames == 3 and `<b>{UserNames[1]}</b>, <b>{UserNames[2]}</b>, <b>{UserNames[3]}</b>, and <b>{#v.Members - 3}</b> are members`
+					#UserNames == 3 and `<b>{UserNames[1]}</b>, <b>{UserNames[2]}</b>, <b>{UserNames[3]}</b>, and <b>{#v.Members - 3} {#v.Members - 3 == 1 and "other is a member" or "are members"}</b>`
 						or #UserNames == 2 and `<b>{UserNames[1]}</b> and <b>{UserNames[2]}</b> are members`
 						or `<b>{UserNames[1]}</b> is a member`
 				)

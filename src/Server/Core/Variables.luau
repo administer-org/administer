@@ -24,7 +24,7 @@ Variables.Services = setmetatable({}, {
     __index = function(self, Service)
         self[Service] = game:GetService(Service)
         return self[Service]
-    end,
+    end
 })
 
 --// The scheme is `app\widget-title`, anything will work here

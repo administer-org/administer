@@ -23,7 +23,7 @@ function Http.GetRoute(AppServer, Route, OnOK, OnError): Types.Response
 		Headers = {
 			["X-Adm-Version"] = Config.VersData.NoExtraData,
 			["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName) --// this is mostly just used for /versions but idc
-		},
+		}
 	})
 
 	if Response.StatusCode == 200 then

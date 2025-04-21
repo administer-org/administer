@@ -17,7 +17,7 @@ local t = Utilities.Translate
 
 Frontend.Close(true)
 
-Var.Version = Var.Remotes.GetVersions:InvokeServer({"administer"})["administer"]
+Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
 Var.Remotes.CheckForUpdates:InvokeServer({ "org.admsoftware.Core" })
 _G.AdministerEnv = script
 
@@ -224,9 +224,12 @@ xpcall(function(...)
 		Card.Parent = Info.UpdateCenter.ScrollingFrame
 		Card.Name = Data.Service.Name
 
+		Card.Data.Text = `{Data.IsUpToDate and "Up to date" or "Out of date"}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
 		Card.ServiceName.Text = Data.Service.Name
 		Card.Logo.Image = Data.Service.Icon
-		Card.Data.Text = `{Data.IsUpToDate and "Up to date" or "Out of date"}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
+		Card.ServiceRDNN.Text = Data.ID
+		
+		Card.Visible = true
 	end
 
 	NewVersCard(Var.Version)
@@ -244,7 +247,7 @@ xpcall(function(...)
 		Cloned.Parent = Var.MainFrame.Configuration.InfoPage.Donate.Buttons
 
 		if Var.Services.MarketplaceService:UserOwnsGamePassAsync(Var.Services.Players.LocalPlayer.UserId, Pass["id"]) then
-			Var.MainFrame.Configuration.InfoPage.Donate.Version.Text =
+			Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text =
 				`Thank you for your support, {Var.Services.Players.LocalPlayer.DisplayName}! Your donation helps ensure future Administer updates for years to come ^^`
 		end
 
