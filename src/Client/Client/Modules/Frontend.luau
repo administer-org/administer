@@ -638,7 +638,7 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Butto
 	Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
 	Var.Services.TweenService:Create(Var.ActivePage, TInfo, { Position = UDim2.new(-1, 0, .5, 0), AnchorPoint = Vector2.new(.5,0) }):Play()
 	
-	task.delay(1.5, function()
+	task.delay(.75, function()
 		OGFrame.Position = OGFramePos
 		OGFrame.AnchorPoint = OGFrameAP
 		OGFrame.Visible = false
