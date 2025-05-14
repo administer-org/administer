@@ -16,29 +16,40 @@ end
 -- For more information on this API, please refer to the documentation: https://docs.administer.notpyx.me
 function Http.GetRoute(AppServer, Route, OnOK, OnError): Types.Response
 	local ST = tick()
+	local Response
 
-	local Response = Var.Services.HttpService:RequestAsync({
-		Url = `{AppServer}{Route}`,
-		Method = "GET",
-		Headers = {
-			["X-Adm-Version"] = Config.VersData.NoExtraData,
-			["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName) --// this is mostly just used for /versions but idc
+	xpcall(function()
+		Response = Var.Services.HttpService:RequestAsync({
+			Url = `{AppServer}{Route}`,
+			Method = "GET",
+			Headers = {
+				["X-Adm-Version"] = Config.VersData.NoExtraData,
+				["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName) --// this is mostly just used for /versions but idc
+			}
+		})
+	end, function(e)
+		Response = {
+			StatusCode = 500,
+			StatusMessage = `Administer - Failed HTTP request: {e}`
 		}
-	})
+	end)
 
 	if Response.StatusCode == 200 then
-		return OnOK(Var.Services.HttpService:JSONDecode(Response.Body), {
+		local JSON
+		xpcall(function()
+			JSON = Var.Services.HttpService:JSONDecode(Response.Body)
+		end, function()
+			JSON = Response.Body
+		end)
+
+		return OnOK(JSON, {
 			ProcessedMS = RoundMS(tick() - ST),
 			RespMessage = Response.StatusMessage,
 			Code = 200
 		})
 	else
-		--// Proposed
-		--if AppServer == "https://administer.notpyx.me" then
-		--	return Http.GetRoute("https://administer-bk2.notpyx.me", Route, OnOK, OnError)
-		--end
 		local ErrorResp
-		
+
 		local R = xpcall(function()
 			ErrorResp = OnError(Response.StatusCode, {
 				ProcessedMS = RoundMS(tick() - ST),
@@ -48,7 +59,7 @@ function Http.GetRoute(AppServer, Route, OnOK, OnError): Types.Response
 		end, function(e)
 			warn(`Failed to send out OnError! {e}`)
 		end)
-		
+
 		return ErrorResp
 	end
 end

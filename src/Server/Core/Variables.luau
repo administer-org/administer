@@ -11,7 +11,7 @@ local Config = require(script.Parent.Configuration)
 --// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
 Variables.Config                     = require(script.Parent.Configuration) --// Config file location
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin            = false --// Free superadmin for all players. Not recommended for anything other than debugging.
+Variables.EnableFreeAdmin            = true --// Makes every user a superamdin. Not recommended for anything other than debugging.
 
 --Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
 Variables.DefaultAppServer           = "https://aos-canary.admsoftware.org" --// Must be an AOS app server instance.
@@ -157,18 +157,25 @@ Variables.AppServers = Variables.DataStores.AppDB:GetAsync("AppServerList") or {
 
 Variables.Panel.Spawn = function(Rank, Player)
 	local NewPanel = Variables.Panel.Path:Clone()
-
-	NewPanel:SetAttribute("_AdminRank", Rank.Name)
+	
+	xpcall(function()
+		NewPanel:SetAttribute("_AdminRank", Rank.Name)
+	end, function()
+		NewPanel:SetAttribute("_AdminRank", "Administrator")
+	end)
+	
 	NewPanel:SetAttribute(
 		"_HomeWidgets",
 		Variables.Services.HttpService:JSONEncode(
 			Variables.DataStores.HomeDS:GetAsync(Player.UserId) or Variables.BaseHomeInfo
 		)
 	)
+	
 	NewPanel:SetAttribute(
 		"_InstalledApps",
 		Variables.Services.HttpService:JSONEncode((require(script.Parent.Parent.Modules.Apps).RunningApps) :: any)
 	)
+	
 	NewPanel:SetAttribute("_CurrentBranch", Variables.Services.HttpService:JSONEncode(Variables.CurrentBranch))
 
 	return NewPanel

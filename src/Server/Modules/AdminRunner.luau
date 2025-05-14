@@ -23,17 +23,17 @@ function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 	table.insert(Var.Admins.InGame, Player)
 	Var.Admins.TotalRunningCount += 1
 
-	if Rank.Apps["SuperAdmin"] == false then
-		for ID, Object in Rank["Apps"]["PageIDs"] do
+	if Rank.Apps.SuperAdmin == false then
+		for ID, Object in Rank.Apps.PageIDs do
 			AllowedPages[ID] = {
-				["Name"] = Object.DisplayName,
-				["ButtonName"] = ID
+				Name = Object.DisplayName,
+				ButtonName = ID
 			}
 		end
 
-		for _, v in NewPanel.Main.Apps.MainFrame:GetChildren() do
-			if not v:IsA("CanvasGroup") then continue end
-			if table.find({ "Home", "Template" }, v.Name) then continue end --// Always allowed
+		for _, v in NewPanel.Main.AppDrawer.AppHolder.Apps:GetChildren() do
+			if not v:IsA("Frame") then continue end
+			if table.find({ "MultiThread", "SingleThread", "Home", "ZZ_AdministerData" }, v.Name) then continue end --// Always allowed
 
 			pcall(function()
 				xpcall(function()
@@ -102,7 +102,7 @@ end
 function AR.Removing(Player: Player): ()
 	if table.find(Var.Admins.InGame, Player) ~= nil then
 		table.remove(Var.Admins.InGame, table.find(Var.Admins.InGame, Player))
-		table.insert(Var.Admins.OutOfGame, Player)
+		table.insert(Var.Admins.OutOfGame, Player.UserId)
 	end
 end
 
@@ -176,17 +176,20 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 		if ShouldStep then
 			Info.Count = Data.RankID + 1
 			Info.Names = Info.Names or {}
+
 			table.insert(Info.Names, Data.Name)
 		end
 
-		Var.DataStores.AdminsDS:SetAsync("CurrentRanks", {
-			Count         = Info.Count,
-			Names         = Info.Names,
-			GroupAdminIDs = Info.GroupAdminIDs,
-			AdminIDs      = Info.AdminIDs
-		})
+		if Data.Overwrite ~= true then	
+			Var.DataStores.AdminsDS:SetAsync("CurrentRanks", {
+				Count         = Info.Count,
+				Names         = Info.Names,
+				GroupAdminIDs = Info.GroupAdminIDs,
+				AdminIDs      = Info.AdminIDs
+			})
+		end
 	end, function(E)
-		Util.Logging.SWarn(`Failed to create a new admin rank!`, E)
+		Util.Logging.Warn(`Failed to create a new admin rank!`, E)
 		return { false, E }
 	end)
 
@@ -209,8 +212,6 @@ function AR.Ranks.GetAll()
 	local Ranks = {}
 	local Polls = 0
 
-	Current.Count = Current.Count - 1
-
 	--// Load in parallel
 	for i, RankName in Current.Names do
 		task.spawn(function()
@@ -220,15 +221,32 @@ function AR.Ranks.GetAll()
 
 	repeat
 		Polls += 1
-		task.wait(0.05)
+		task.wait(0.1)
 		Util.Logging.Print("Rank check progress:", #Ranks / #Current.Names, Ranks, Current, Polls)
 	until #Ranks == #Current.Names or Polls == 10
 
-	if Polls == 7 then
+	if Polls == 10 then
 		Util.Logging.Warn(`Only managed to load {#Ranks / #Current.Names}% of ranks, possibly corrupt rank exists!`)
 	end
 
 	return Ranks
+end
+
+function AR.Socket(Msg)
+	local Data = Msg["Data"]
+
+	if Data["Message"] == "ForceAdminCheck" then
+		for i, Player in Var.Services.Players:GetPlayers() do
+			local AdminResult = Util.IsAdmin(Player)
+
+			if AdminResult["IsAdmin"] and not table.find(Var.Admins.InGame, Player) then
+				AR.PlayerAdded(Player)
+			elseif not AdminResult["IsAdmin"] and table.find(Var.Admins.InGame, Player) then
+				AR.Removing(Player)
+				Player.PlayerGui:FindFirstChild("AdministerMainPanel"):Destroy()
+			end
+		end
+	end
 end
 
 return AR

@@ -16,18 +16,20 @@ return function(): ()
 
 	Var.IsFirstBoot = true
 	Admins.Ranks.New({
+		AdmRankVersion = 3,
+		
 		Name = "Administrator",
 		Protected = true,
 		Members = {
 			{
 				ID = Owner.ID,
 				MemberType = (Owner.MemberType) :: "Group" | "User",
-				GroupRank = 255,
-			},
+				GroupRank = 255
+			}
 		},
 
-		AllowedApps = {
-			SuperAdmin = true,
+		Apps = {
+			SuperAdmin = true
 		},
 
 		CreationReason = "Added by System for first-time setup.",

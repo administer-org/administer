@@ -119,7 +119,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 	--	return true, "Data based on settings configured by an admin.", RanksData["RankId"], RanksData["RankName"]
 	--end
 
-	xpcall(function()
+	local _, Result = xpcall(function()
 		for ID, Group in RanksIndex.GroupAdminIDs do
 			ID = string.split(ID, "_")[1]
 			if not Player:IsInGroup(ID) then continue end
@@ -148,7 +148,15 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		else
 			error(e)
 		end
+
+		return {
+			IsAdmin = false
+		}
 	end)
+
+	if Result.IsAdmin then
+		return Result
+	end
 
 	return {
 		IsAdmin = false,
@@ -470,11 +478,17 @@ function Utils.t(Player: Player | nil, Key: string): string
 	if Player == nil then
 		return (require(Locales[Settings.Interface.Language.Value.Default]) :: any)[Key]
 	else
-		local LocaleResult = (
-			Var.CachedLocales[Player.UserId] or Var.DataStores.Settings:GetAsync(Player.UserId .. "Locale")
-		) or "en"
+		local LocaleResult
+		xpcall(function()
+			LocaleResult = (
+				Var.CachedLocales[Player.UserId] or Var.DataStores.Settings:GetAsync(Player.UserId .. "Locale")
+			) or "en"
+		end, function(x) --// idk why we need this?
+			warn(debug.traceback(x))
+			LocaleResult = "en"
+		end)
 
-		Utils.Logging.Print(`Locale: {LocaleResult}`)
+		--Utils.Logging.Print(`Locale: {LocaleResult}`)
 
 		return (require(Locales:FindFirstChild(LocaleResult)) :: any)[Key] or Key
 	end
@@ -496,6 +510,16 @@ function Utils.UpdateCallback(Services: { string })
 			end)
 		end	
 	end
+end
+
+function Utils.CountryToFlag(CountryCode)
+	local Flag = ""
+
+	for i = 1, string.len(CountryCode) do
+		Flag = Flag .. utf8.char((CountryCode:sub(i, i):byte() % 32) + 0x1F1E5)
+	end
+
+	return Flag
 end
 
 return Utils

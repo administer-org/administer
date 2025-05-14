@@ -34,6 +34,29 @@ function Frontend.Log(Text, LogLevel)
 	return { MainFrame = {} }
 end
 
+function Frontend.ToggleFullscreen(ForceClose): ()
+	if Var.IsPanelFullSize or ForceClose == true then
+		Var.IsPanelFullSize = false
+
+		Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(.843,0,.708,0) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0, 20) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame.Header.Mark, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Position = UDim2.new(.328, 0, 0, 0) }):Play()
+	else
+		Var.IsPanelFullSize = true
+
+		Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(1,0,1,0) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0,0) }):Play()
+		Var.Services.TweenService:Create(
+			Var.MainFrame.Header.Mark, 
+			TweenInfo.new(.75, Enum.EasingStyle.Quart), 
+			{ 
+				Position = UDim2.new(.328, Var.Services.GUIService.TopbarInset.Min.X, 0, 0), 
+				Size = UDim2.new(Var.MainFrame.Header.Mark.Size.X.Scale, 0, 0, Var.Services.GUIService.TopbarInset.Height)
+			}
+		):Play()
+	end	
+end
+
 function Frontend.Open(WaitForCompletion): ()
 	if not Var.Panel then Var.Panel = Frontend.Render() end
 	--local AS = tonumber(Utilities.GetSetting("AnimationSpeed"))
@@ -139,6 +162,10 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 		Var.IsOpen = false
 	end)
 
+	task.defer(function()
+		Frontend.ToggleFullscreen(true)
+	end)
+
 	if WaitForCompletion then
 		task.wait(Duration)
 	end
@@ -160,10 +187,11 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 end
 
 local DrawerConnections = {}
+local ShouldAnimate = true
+local IsQueued = false
 local CurrentlyActive
 local Ready = true
-local IsQueued = false
-local ShouldAnimate = true
+local Card
 
 function Frontend.Drawer.Open(): ()
 	if not Var.DoHeaderEffects then return end --// Stops clicking the button multiple times which results in broken UI
@@ -240,9 +268,7 @@ function Frontend.Drawer.Open(): ()
 		if Button.Name ~= "Activator" or Button:FindFirstAncestor("MultiThread") or Button:FindFirstAncestor("SingleThread") then continue end
 
 		local function AppOver(AppConfig, ButtonConfig, AppVisible)
-			local Card, ShouldBind
-			
-			print(AppVisible)
+			local ShouldBind
 
 			xpcall(function()
 				Card = Apps.AppDrawerCover.Card
@@ -256,13 +282,13 @@ function Frontend.Drawer.Open(): ()
 			if AppVisible then
 				Card.AppPrimary.Image = AppConfig.Icon
 				Card.AppMenu.Image = ButtonConfig.Icon
-				
+
 				Card.Title.Text = AppConfig.AppName
 				Card.SubTitle.Text = ButtonConfig.Name
 				Card.Desc.Text = AppConfig.Description
-				
+
 				Card.Parent = Var.MainFrame.Parent
-				game:GetService("TweenService"):Create(Card, TweenInfo.new(.1), { GroupTransparency = 0 }):Play()
+				game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 0 }):Play()
 
 				if ShouldBind then
 					DrawerConnections[`CardMovement`] = game:GetService("RunService").RenderStepped:Connect(function(dt)
@@ -275,7 +301,7 @@ function Frontend.Drawer.Open(): ()
 					end)
 				end
 			else
-				game:GetService("TweenService"):Create(Card, TweenInfo.new(.1), { GroupTransparency = 1 }):Play()
+				game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 }):Play()
 				DrawerConnections["CardMovement"]:Disconnect()
 			end
 		end
@@ -348,6 +374,8 @@ function Frontend.Drawer.Close(): ()
 			BackgroundTransparency = 1
 		})
 		:Play()
+	
+	game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 }):Play()
 
 	task.wait(TimeToComplete * .6)
 
@@ -372,6 +400,10 @@ function Frontend.Drawer.Close(): ()
 	Container.Parent.AnchorPoint = Vector2.new(0,0)
 
 	Container:Destroy()
+	
+	for _, Connection in DrawerConnections do
+		Connection:Disconnect()
+	end
 
 	Var.DoHeaderEffects = true
 	Ready = true
@@ -620,53 +652,96 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Butto
 
 	Ready = true
 
-	if Clicked == 0 then
+	if typeof(AppConfig) == "Instance" then
+		NewFrame = AppConfig
+	elseif Clicked == 0 then
 		NewFrame = AppConfig.MainButtonFrame
 	else
 		NewFrame = AppConfig.SubIcons[Clicked].Frame
 	end
-	
-	local OGFrame = Var.ActivePage
+
+	if NewFrame.Name == Var.ActivePage.Name then --// Stop them from breaking it
+		return
+	end
+
 	local OGFramePos, OGFrameAP, NewFramePos, NewFrameAP = Var.ActivePage.Position, Var.ActivePage.AnchorPoint, NewFrame.Position, NewFrame.AnchorPoint
 	local TInfo = TweenInfo.new(.75, Enum.EasingStyle.Quart)
-	
+
 	NewFrame.Visible = true
-	
+
 	NewFrame.Position = UDim2.new(1,0,.5,0)
 	NewFrame.AnchorPoint = Vector2.new(.5,0)
-	
+
 	Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
 	Var.Services.TweenService:Create(Var.ActivePage, TInfo, { Position = UDim2.new(-1, 0, .5, 0), AnchorPoint = Vector2.new(.5,0) }):Play()
-	
+
 	task.delay(.75, function()
-		OGFrame.Position = OGFramePos
-		OGFrame.AnchorPoint = OGFrameAP
-		OGFrame.Visible = false
+		Var.ActivePage.Position = OGFramePos
+		Var.ActivePage.AnchorPoint = OGFrameAP
+		Var.ActivePage.Visible = false
+
+		Var.ActivePage = NewFrame
 	end)
 
-	Var.ActivePage = NewFrame
 
 	repeat task.wait() until Var.MainFrame:FindFirstChild("Header") --// close animation 
 
-	Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer{Clicked ~= 0 and ` {AppConfig.AppName}` or ""}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
-	Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = AppConfig.Icon
-	Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and "rbxassetid://116599744136879" or AppConfig.SubIcons[Clicked].Icon
+	xpcall(function()
+		Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer{Clicked ~= 0 and ` {AppConfig.AppName}` or ""}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
+		Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = AppConfig.Icon
+		Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and "rbxassetid://116599744136879" or AppConfig.SubIcons[Clicked].Icon
+		
+		Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
+	end, function()
+		--// just dont change it lmao
+	end)
 end
 
 function Frontend.InitGestureBar()
 	local Connection
 
 	Var.MainFrame.Header.GestureBar.InputBegan:Connect(function(Input)
+		if Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and 
+			Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			Frontend.Close()
+		end
+
+		if Var.IsPanelFullSize then return end
+
 		if Connection then
 			Connection:Disconnect()
 		end
 
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local StartPos, StartSize = Input.Position, Var.MainFrame.Size
+			local MinX, MinY = -350, -300
 
 			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
 				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 					local Delta = -(MoveInput.Position - StartPos)
+					local ConstrainedBy = ""
+
+					if StartSize.X.Offset + -Delta.X <= MinX then
+						ConstrainedBy = "X"
+					elseif StartSize.Y.Offset + Delta.Y <= MinY then
+						ConstrainedBy = "Y"
+					end
+					
+					if StartSize.X.Offset + -Delta.X <= MinX and StartSize.Y.Offset + Delta.Y <= MinY then
+						ConstrainedBy = "XY"
+					end
+
+					if StartSize.X.Offset + -Delta.X <= MinX or StartSize.Y.Offset + Delta.Y <= MinY then
+						Var.MainFrame.Size = UDim2.new(
+							StartSize.X.Scale, 
+							ConstrainedBy == "XY" and StartSize.X.Offset + MinX or ConstrainedBy == "X" and StartSize.X.Offset + MinX or StartSize.X.Offset + -Delta.X, 
+							StartSize.Y.Scale, 
+							ConstrainedBy == "XY" and StartSize.Y.Offset + MinY or ConstrainedBy == "Y" and StartSize.Y.Offset + MinY or StartSize.Y.Offset + Delta.Y
+						)
+
+						return
+					end
+
 					Var.MainFrame.Size = UDim2.new(StartSize.X.Scale, StartSize.X.Offset + -(Delta.X), StartSize.Y.Scale, StartSize.Y.Offset + Delta.Y)
 				end
 			end)
@@ -681,11 +756,6 @@ function Frontend.InitGestureBar()
 				end
 			end)
 		end
-
-		if Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and 
-			Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-			Frontend.Close()
-		end
 	end)
 
 	Var.MainFrame.Header.GestureBar.InputEnded:Connect(function(Input)
@@ -698,6 +768,9 @@ function Frontend.InitGestureBar()
 			if Connection then
 				Connection:Disconnect()
 			end
+			
+			--// Insurance soontm
+			
 		end
 	end)
 end

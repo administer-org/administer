@@ -13,15 +13,28 @@ local Apps = {}
 local Connections = {}
 
 function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
-	table.insert(Var.CombinedButtonConfig, ButtonConfig)
-
 	local AppsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
+	
+	if ButtonConfig.ButtonID == nil then
+		return { false, "You must have a button link ID." }
+	end
+
+	if ButtonConfig.SubIcons ~= nil then
+		for Index, Icon in ButtonConfig.SubIcons do
+			if Icon.ButtonID == nil then
+				return { false, `Subicon {Icon.Name} must have a ButtonID!` }
+			end 
+		end
+	end
+
+	table.insert(Var.CombinedButtonConfig, ButtonConfig)
 
 	if #ButtonConfig.SubIcons == 0 then
 		--// Just make the one
 		local Button = AppsHolder.SingleThread:Clone()
 
 		Button.Parent = AppsHolder
+		Button.Name = ButtonConfig.AppName
 		Button.Icon.Image = ButtonConfig.Icon
 		Button.Title.Text = ButtonConfig.AppName
 
@@ -30,9 +43,11 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button.Visible = true
 
 		Button.Activator.MouseButton1Click:Connect(function()
-			Frontend.Drawer.Close()
+			task.defer(Frontend.Drawer.Close)
+
 			Frontend.SwapApps(ButtonConfig, 0, Button)
-			ButtonConfig.MainButtonClick()
+
+			xpcall(ButtonConfig.MainButtonClick, Utilities.Logging.Warn)
 		end)
 
 		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true)
@@ -55,9 +70,10 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			if ButtonConfig.MainButtonFrame == nil then return end
 
 			task.defer(Frontend.Drawer.Close)
-			
+
 			Frontend.SwapApps(ButtonConfig, 0, Button)
-			ButtonConfig.MainButtonClick()
+
+			xpcall(ButtonConfig.MainButtonClick, Utilities.Logging.Warn)
 		end)
 
 		for Index, Icon in ButtonConfig.SubIcons do
@@ -512,7 +528,7 @@ function Apps.LoadLibrary()
 						Callback = function(_Close)
 							local Response = Var.Remotes.ManageApp:InvokeServer(App.AppID)
 
-							print(Response)
+							_Close()
 
 							if Response[1] == false then
 								Frontend.Popup.new(
@@ -605,7 +621,11 @@ function Apps.LoadLibrary()
 						Callback = function(_Close)
 							local Response = Var.Remotes.RemoveAppServer:InvokeServer(Server.URL)
 
-							print(Response)
+							print(Response, Response[1] == false)
+
+							_Close()
+
+							print("closed!")
 
 							if Response[1] == false then
 								Frontend.Popup.new(
@@ -630,7 +650,6 @@ function Apps.LoadLibrary()
 									}}
 								)
 							else
-								_Close()
 								Apps.LoadLibrary()
 							end	
 						end,

@@ -217,7 +217,7 @@ export type RichConfig = {
 	State: {},
 	RunLocally: boolean?,
 
-	UIConstructor: () -> () | nil,
+	ClientFrame: Frame | CanvasGroup,
 	Bootstrap: (ExecutionAPI, State, AppFunction) -> () | nil,
 }
 

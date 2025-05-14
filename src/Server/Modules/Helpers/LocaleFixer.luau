@@ -1,4 +1,6 @@
-local Fixes = {}
+local Fixes = {
+    
+}
 
 local function requireModulesInDir(directory)
 	local modules = {}
@@ -23,7 +25,7 @@ return function(directory)
 	local MissingKeys = {}
 
 	for moduleName, module in modules do
-		local missing = {}
+        local missing = {}
 		if moduleName ~= "en" then
 			for key in pairs(baseModule) do
 				if module[key] == nil then table.insert(missing, key) end

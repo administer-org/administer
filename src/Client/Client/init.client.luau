@@ -30,6 +30,21 @@ Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 	if IsGameProc then return end
 
 	if KeyCode.KeyCode == Enum.KeyCode.F2 then
+		if Var.Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+			if not Var.IsOpen then
+				if Debounce then return end
+				Debounce = true
+				
+				Frontend.Open(true)
+
+				Debounce = false	
+			end
+			
+			Frontend.ToggleFullscreen()
+			
+			return
+		end
+
 		if Debounce then return end
 		Debounce = true
 
@@ -40,28 +55,6 @@ Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 		end
 
 		Debounce = false
-
-	elseif KeyCode.KeyCode == Enum.KeyCode.F4 then
-		if Var.IsPanelFullSize then
-			Var.IsPanelFullSize = false
-
-			Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(.843,0,.708,0) }):Play()
-			Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0, 20) }):Play()
-			Var.Services.TweenService:Create(Var.MainFrame.Header.Mark, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Position = UDim2.new(.328, 0, 0, 0) }):Play()
-		else
-			Var.IsPanelFullSize = true
-
-			Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(1,0,1,0) }):Play()
-			Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0,0) }):Play()
-			Var.Services.TweenService:Create(
-				Var.MainFrame.Header.Mark, 
-				TweenInfo.new(.75, Enum.EasingStyle.Quart), 
-				{ 
-					Position = UDim2.new(.328, Var.Services.GUIService.TopbarInset.Min.X, 0, 0), 
-					Size = UDim2.new(Var.MainFrame.Header.Mark.Size.X.Scale, 0, 0, Var.Services.GUIService.TopbarInset.Height)
-				}
-			):Play()
-		end
 	end
 end)
 
@@ -77,6 +70,7 @@ Apps.AddAppDrawerButton({
 	AppName = t("Apps.MainFrame.Home.Title"),
 	Description = t("Apps.MainFrame.Template.Desc"),
 	Icon = Utilities.Icon "home",
+	ButtonID = "AdmHomepage",
 
 	MainButtonClick = function() end,
 	MainButtonFrame = Var.MainFrame.Home,
@@ -88,31 +82,36 @@ Apps.AddAppDrawerButton({
 	AppName = t("Apps.MainFrame.Config.Title"),
 	Description = t("Apps.MainFrame.Config.Desc"),
 	Icon = Utilities.Icon "media",
+	ButtonID = "AdmConfiguration",
 
 	SubIcons = {
 		{
 			Name = t("Configuration.MenuBar.New.AInfoPage.HeaderLabel"),
 			Icon = Utilities.Icon "info",
 			Click = function() end,
-			Frame = Var.MainFrame.Configuration.InfoPage
+			Frame = Var.MainFrame.Configuration.InfoPage,
+			ButtonID = "Information"
 		},
 		{
 			Name = Utilities.ToSentenceCase(t("Configuration.Apps.Content.Template.Settings.HeaderLabel")),
 			Icon = Utilities.Icon "gear",
 			Click = function() end,
-			Frame = Var.MainFrame.Configuration.Settings
+			Frame = Var.MainFrame.Configuration.Settings,
+			ButtonID = "Settings"
 		},
 		{
 			Name = Utilities.ToSentenceCase( t("Header.AppDrawer.HeaderLabel") ),
 			Icon = Utilities.Icon "grid",
 			Click = Apps.LoadAppList,
-			Frame = Var.MainFrame.Configuration.Marketplace
+			Frame = Var.MainFrame.Configuration.Marketplace,
+			ButtonID = "Marketplace"
 		},
 		{
 			Name = t("Configuration.Admins.Container.Admins.Header.TLabel"),
 			Icon = Utilities.Icon "user-clip",
 			Click = function() end,
-			Frame = Var.MainFrame.Configuration.Admins
+			Frame = Var.MainFrame.Configuration.Admins,
+			ButtonID = "AdminConfig"
 		}
 	}
 })
@@ -228,7 +227,7 @@ xpcall(function(...)
 		Card.ServiceName.Text = Data.Service.Name
 		Card.Logo.Image = Data.Service.Icon
 		Card.ServiceRDNN.Text = Data.ID
-		
+
 		Card.Visible = true
 	end
 

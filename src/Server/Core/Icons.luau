@@ -1,13 +1,12 @@
 --// Administer
 --// pyxfluff 2024 - 2025
 
---local imageTable =
 return {
 	["Meta"] = {
 		Name = "UIcons",
 		Author = "FlatIcon",
 		Type = "full-set",
-		AllowThemeDependencies = true,
+		AllowThemeDependencies = true
 	},
 
 	["logos"] = {
@@ -15,9 +14,10 @@ return {
 		["administer-can"] = "18841275783",
 		["administer-beta"] = "18770010888",
 		["administer-wireframe"] = "83950641785996",
-		["logo-twitter-black"] = "12167431902",
+		["logo-twitter-black"] = "12167431902"
 	},
-
+	
+	["administer"] = "116599744136879", --// I know logos exists I just use this too much 
 	["alarm"] = "18925390063",
 	["angle-left"] = "17685578876",
 	["apps"] = "18512337347",
@@ -122,6 +122,7 @@ return {
 	["star-filled"] = "100883084418403",
 	["stopwatch"] = "13725940157",
 	["sword"] = "12654990840",
+	["text-input"] = "82357874222016",
 	["ticket"] = "15483554733",
 	["time-fading"] = "18759922371",
 	["trash"] = "16832240361",
@@ -131,6 +132,7 @@ return {
 	["user-clip-admin"] = "15082144953",
 	["user-missing"] = "17278414887",
 	["user-exit"] = "134560090176498",
+	["user-search"] = "82207944923903",
 	["user-shield"] = "80051630716373",
 	["users"] = "15317927036",
 	["volume"] = "13703642008",

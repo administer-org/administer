@@ -3,10 +3,14 @@
 local SettingsAPI = {}
 
 local Types = require(script.Parent.Parent.Core.Types)
+local Utilities = require(script.Parent.Utilities)
 local Signal = require(script.Signal)
 
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local SettingsDataStore = DataStoreService:GetDataStore("Administer_SettingPresets")
 
 type Setting = Types.Setting
@@ -47,6 +51,7 @@ local function categoryFromString(settingName: string, settingsGroup: SettingsGr
 end
 
 function SettingsAPI.new(setting)
+	local isServer = RunService:IsServer()
 	local APIController = {}
 	local dataStoreKey = setting["_SettingsMeta"].Name
 	setting["_SettingsMeta"] = nil
@@ -105,20 +110,34 @@ function SettingsAPI.new(setting)
 		if success then changedSignal:Fire(name) end
 		return success
 	end
-	
-	function APIController.Save(): boolean
-		local success, err = pcall(function()
-			saveDataStore(dataStoreKey, settingsGroup)
-		end)
-		return success
+
+	function APIController.Save(UserId: number?): boolean
+		if isServer then
+			local success, err = pcall(function()
+				saveDataStore(dataStoreKey .. "#" .. UserId, settingsGroup)
+			end)
+			return success
+		else
+			local localPlayer = Players.LocalPlayer
+			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
+			local saveRemote: RemoteFunction = remoteFolder:FindFirstChild("SaveSettings")
+			return saveRemote:InvokeServer(setting, UserId)
+		end
 	end
-	
-	function APIController.Load(customSettings: SettingsGroup?): boolean
-		if customSettings then settingsGroup = customSettings end
-		local success, err = pcall(function()
-			settingsGroup = loadDataStore(dataStoreKey)
-		end)
-		return success
+
+	function APIController.Load(UserId: number?, customSettings: SettingsGroup?): boolean
+		if isServer then
+			if customSettings then settingsGroup = customSettings end
+			local success, err = pcall(function()
+				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId)
+			end)
+			return success
+		else
+			local localPlayer = Players.LocalPlayer
+			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
+			local loadRemote: RemoteFunction = remoteFolder:FindFirstChild("LoadSettings")
+			return loadRemote:InvokeServer(setting, UserId, customSettings)
+		end
 	end
 	return APIController
 end

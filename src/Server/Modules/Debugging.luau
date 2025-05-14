@@ -87,14 +87,4 @@ Debugging.Table = {
 	},
 }
 
-function Debugging.SocketMessage(Msg)
-	local Data = Msg["Data"]
-
-	if Data["Message"] == "ForceAdminCheck" then
-		for i, Player in Var.Services.Players:GetPlayers() do
-			AdminRunner.PlayerAdded(Player, false, false)
-		end
-	end
-end
-
 return Debugging

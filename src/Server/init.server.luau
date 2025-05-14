@@ -20,6 +20,7 @@ local HttpRunner     = require(Modules.HTTPRunner)
 local Utils          = require(Modules.Utilities)
 local Debugging      = require(Modules.Debugging)
 local SettingsAPI    = require(Modules.SettingsAPI)
+local Migrator       = require(Modules.Helpers.AdmV1Migrator)
 
 local Configuration  = require(Core.Configuration)
 local Types          = require(Core.Types)
@@ -35,9 +36,9 @@ Utils.Logging.Print(`[✓] Init() OK in {Utils.RoundMS(os.clock() - Var.InitCloc
 Var.InitClock.TempInit = os.clock()
 xpcall(function()
 	Var.IsFirstBoot = (Var.IsFirstBoot or Var.DataStores.Settings:GetAsync("HasInit") == nil and true or false)
-	
+
 	Utils.Logging.Print(`[✓] DataStoreService connection established in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
-	
+
 	local Settings
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
@@ -54,7 +55,7 @@ xpcall(function()
 		Settings = SettingsAPI.new(Configuration.Settings)
 		--Settings:Load()
 	end
-	
+
 end, function(e)
 	Utils.Logging.Warn(e)
 	Utils.Logging.Warn(
@@ -113,14 +114,14 @@ NewRemote("UpdateHomePage", true, true, FrontendAPI.UpdateHomePage)
 --// Utilities
 NewRemote("GetVersions", true, true, function(Player, Services)
 	local Final = {}
-	
+
 	for _, Service in Services do
 		--// BIG TODO here
 		if Service == "administer" then
 			Final["administer"] = Configuration.VersData
 		end
 	end
-	
+
 	return Final
 end)
 
@@ -197,12 +198,27 @@ end)
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
 Utils.Logging.Print(`[-] Running startup jobs!`)
 
+xpcall(
+	function()
+		Var.Services.MessagingService:SubscribeAsync("Administer", AdminRunner.Socket)
+	end,
+
+	function()
+		warn("[Administer]: MessagingService seems to be busy (did not bind on message Administer), some cross-server features disabled!")
+	end
+)
+
 HttpRunner.PostRoute(Var.DefaultAppServer, "/api/report-version", {
 	version = Configuration.VersData.NoExtraData,
-	branch = Var.CurrentBranch["BranchName"],
+	branch = Var.CurrentBranch["BranchName"]
 }, function(...)
 	return { ... }
 end, function(...)
 	Utils.Logging.SWarn(...)
 	return { ... }
 end)
+
+print("###############################3")
+
+--print(AppsModule.ServerAPI.GetAOSInstances(true))
+Migrator.Migrate()

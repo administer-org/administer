@@ -4,6 +4,7 @@ local Modules = script.Parent
 local Libs = script.Parent.Parent.Libraries
 
 local Utilities = require(Modules.Utilities)
+local Frontend = require(Modules.Frontend)
 local Var = require(Modules.Variables)
 
 local Admins = {}
@@ -58,7 +59,7 @@ function Admins.Load(): ()
 					Card.AppName.Text = `{#v.Apps - 5} others...`
 					Card.Parent = Template.Pages
 				else
-					for k, App in v["Apps"] do
+					for k, App in v.Apps do
 						if type(App) == "boolean" then continue end
 						local Card = Template.Pages.Frame:Clone()
 
@@ -126,7 +127,6 @@ function Admins.Load(): ()
 end
 
 function Admins.RunCreatorApp()
-	--// TODO
 	local TweenService = game:GetService("TweenService")
 
 	local Page = 1
@@ -134,37 +134,30 @@ function Admins.RunCreatorApp()
 	local Env = require(script.Parent.UI.AdminHelperEnv)
 	local Frames = Var.MainFrame.Configuration.Admins.NewAdmin
 
+	local function ClearEditState()
+		if Env.EditMode == true then
+			Env.EditMode = false
+			Env.EditModeMembers = {}
+			Env.EditModeApps = {}
+			Env.EditModeName = ""
+			Env.EditModeIsProtected = false
+			Env.EditModeRank = 0
+		end
+		
+		--// stuff to clear regardless
+		Env.Apps = {}
+	end
+
 	local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 		if type(Spin) == "number" then PageNumber = Spin end
 
 		Page = PageNumber
 		local TTC = 0.4
 
-		for _, descendant in Page1:GetDescendants() do
-			if descendant:IsA("ImageLabel") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					ImageTransparency = 1,
-					BackgroundTransparency = 1,
-				}):Play()
-			elseif descendant:IsA("GuiObject") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Transparency = 1,
-				}):Play()
-			elseif descendant:IsA("TextLabel") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					TextTransparency = 1,
-					BackgroundTransparency = 1,
-				}):Play()
-			elseif descendant:IsA("Frame") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					BackgroundTransparency = 1,
-				}):Play()
-			end
-		end
 		local Tweem = TweenService:Create(
 			Page1,
 			TweenInfo.new(TTC * 1.3, Enum.EasingStyle.Cubic),
-			{ Position = UDim2.new(-0.5, 0, 0, 0) }
+			{ Position = UDim2.new(-0.5, 0, 0, 0), GroupTransparency = 1 }
 		)
 
 		Tweem:Play()
@@ -180,21 +173,10 @@ function Admins.RunCreatorApp()
 		):Play()
 
 		Tweem.Completed:Wait()
-		for _, descendant in Page2:GetDescendants() do
-			if descendant:IsA("ImageLabel") then
-				descendant.ImageTransparency = 1
-				descendant.BackgroundTransparency = 1
-			elseif descendant:IsA("GuiObject") then
-				descendant.Transparency = 1
-			elseif descendant:IsA("TextLabel") then
-				descendant.TextTransparency = 1
-				descendant.BackgroundTransparency = 1
-			elseif descendant:IsA("Frame") then
-				descendant.BackgroundTransparency = 1
-			end
-		end
 
 		Page2.Position = UDim2.new(0.3, 0, 0, 0)
+		Page2.GroupTransparency = 1
+
 		Frames.SideDecor.ImageLabel.Position = UDim2.new(0.8, 0, 0.5, 0)
 		Frames.SideDecor.AdmSpinner.Position = UDim2.new(0.8, 0, 0.5, 0)
 
@@ -205,42 +187,10 @@ function Admins.RunCreatorApp()
 		Page2.Visible = true
 		Page1.Visible = false
 
-		for _, descendant in Page2:GetDescendants() do
-			if descendant:IsA("ImageLabel") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					ImageTransparency = 0,
-				}):Play()
-			elseif descendant:IsA("TextLabel") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					TextTransparency = 0,
-				}):Play()
-			elseif descendant:IsA("TextBox") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					TextTransparency = 0,
-					BackgroundTransparency = 0,
-				}):Play()
-			elseif descendant:IsA("TextButton") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					TextTransparency = 0,
-				}):Play()
-				if descendant.Name == "NextPage" then
-					TweenService
-						:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-							BackgroundTransparency = 0,
-						})
-						:Play()
-				end
-			elseif descendant:IsA("Frame") and not descendant:GetAttribute("hide") then
-				TweenService:Create(descendant, TweenInfo.new(TTC, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					BackgroundTransparency = 0,
-				}):Play()
-			end
-		end
-
 		local ET = TweenService:Create(
 			Page2,
 			TweenInfo.new(TTC * 1.2, Enum.EasingStyle.Cubic),
-			{ Position = UDim2.new(0, 0, 0, 0) }
+			{ Position = UDim2.new(0, 0, 0, 0), GroupTransparency = 0 }
 		)
 		TweenService:Create(
 			Frames.SideDecor.ImageLabel,
@@ -260,9 +210,13 @@ function Admins.RunCreatorApp()
 		for i, Dot in Dots:GetChildren() do
 			if not Dot:IsA("Frame") then continue end
 			Dot.UIStroke.Thickness = 0
+			Dot.UIStroke.Color = Color3.fromRGB(37, 72, 194)
+
+			Dot.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
 		end
 
 		Dots[`Dot{PageNumber}`].UIStroke.Thickness = 2
+		Dots[`Dot{PageNumber}`].BackgroundColor3 = Color3.fromRGB(37, 72, 194)
 		Dots.AProgress.Text = `Step {Page}/5`
 
 		ET.Completed:Wait() --// stop the animation from being too quick
@@ -280,7 +234,6 @@ function Admins.RunCreatorApp()
 	end)
 
 	Frames.Page1.NextPage.MouseButton1Click:Connect(function()
-		-- Verify the filtering service is online
 		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true, 1)
 
 		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
@@ -294,6 +247,7 @@ function Admins.RunCreatorApp()
 			return
 		end
 
+		--// Verify the filtering service is online
 		local Success, FilterResult = pcall(function()
 			return Var.Remotes.FilterString:InvokeServer("test string")
 		end)
@@ -330,10 +284,35 @@ function Admins.RunCreatorApp()
 	end)
 
 	Frames.Page2.NextPage.MouseButton1Click:Connect(function()
+		if string.len(Frames.Page2.TextInput.Text) == 0 or string.len(Frames.Page2.TextInput.Text) > 50 then
+			Frontend.Popup.new(
+				{
+					Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
+					Name = "Administer",
+					Subheader = "Rank Creator"
+				}, {
+					Primary = Utilities.Icon "warning-filled",
+					SubIcon = Utilities.Icon "x"
+				},
+				"Invalid input",
+				"Rank name must be more than one character and less than 50.",
+				{
+					{
+						Text = "Ok",
+						Icon = Utilities.Icon "check-plain",
+						Callback = function(c)
+							c()
+						end
+					}
+				}
+			)
+			
+			return
+		end
+
 		SwapPages(Frames.Page2, Frames.Loading, "rbxassetid://11102397100", true, 2)
 
 		local ExistingRank = Var.Remotes.GetRank:InvokeServer(Frames.Page2.TextInput.Text)
-
 		if ExistingRank ~= nil and not Env.EditMode then
 			Frames.Page5.Header.Text = "Oops! That's not meant to happen."
 			Frames.Page5.Body.Text = `A rank already has the name {Frames.Page2.TextInput.Text}. Please re-open the creator and choose another. If you are looking to edit this rank instead, click the gear icon.`
@@ -377,7 +356,7 @@ function Admins.RunCreatorApp()
 			end
 
 			local Thread
-			ConnectionsTable["Evemt" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
+			ConnectionsTable["Event" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
 				if Checking then
 					task.cancel(Thread) --// too quick, stop the old one...
 
@@ -418,15 +397,14 @@ function Admins.RunCreatorApp()
 					Clone._Name.Text = `{Info[1]}`
 					Clone.Image.Image = Info[2]
 				else
-					print(Info)
 					Clone._Name.Text = `Not found`
 					Clone.Image.Image = "rbxassetid://15105863258"
 				end
 			end
 
-			ConnectionsTable["Evemt" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
+			ConnectionsTable["Event" .. math.random(1, 500)] = Clone.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
 				if Checking then
-					task.cancel(Thread) --// too quick, stop the old one...
+					task.cancel(Thread)
 
 					Thread = task.spawn(CheckTask)
 				else
@@ -463,6 +441,40 @@ function Admins.RunCreatorApp()
 	end)
 
 	Frames.Page3.NextPage.MouseButton1Click:Connect(function()
+		local MemberCount = 0
+		for i, v in Frames.Page3.Members.Members:GetChildren() do
+			if not v:IsA("Frame") then continue end
+			if v:GetAttribute("IsTemplate") then continue end
+
+			MemberCount += 1
+		end
+		
+		if MemberCount == 0 then
+			Frontend.Popup.new(
+				{
+					Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
+					Name = "Administer",
+					Subheader = "Rank Creator"
+				}, {
+					Primary = Utilities.Icon "warning-filled",
+					SubIcon = Utilities.Icon "x"
+				},
+				"Invalid input",
+				"You must have at least one member in this rank.",
+				{
+					{
+						Text = "Ok",
+						Icon = Utilities.Icon "check-plain",
+						Callback = function(c)
+							c()
+						end
+					}
+				}
+			)
+
+			return
+		end
+		
 		SwapPages(Frames.Page3, Frames.Loading, "rbxassetid://11102397100", true, 3)
 
 		for i, v in ConnectionsTable do
@@ -472,45 +484,30 @@ function Admins.RunCreatorApp()
 		for i, Child in Frames.Page4.Apps.Apps:GetChildren() do
 			if Child.Name ~= "Template" and Child:IsA("Frame") then Child:Destroy() end
 		end
-
-		local function NewAppCard(AppName, Icon, TechName, DescText)
-			local Template = Frames.Page4.Apps.Apps.Template:Clone()
-
-			Template.Parent = Frames.Page4.Apps.Apps
-			Template.AppName.Text = AppName
-			Template.Icon.Image = Icon
-			Template.AppDesc.Text = DescText
-			Template.Name = AppName
-			Template.StatusImage.Image = "rbxassetid://15106359967"
-			Template.Status.Text = "Enabled"
-			Template.Visible = true
-
-			Template:SetAttribute("Showing", true)
-			Template:SetAttribute("TechName", TechName)
-
-			ConnectionsTable[AppName] = Template.Toggle.MouseButton1Click:Connect(function()
-				if Template:GetAttribute("Showing") then
-					Template.StatusImage.Image = "rbxassetid://15082598696"
-					Template.Status.Text = "Disabled"
-					Template:SetAttribute("Showing", false)
-				else
-					Template.StatusImage.Image = "rbxassetid://15106359967"
-					Template.Status.Text = "Enabled"
-					Template:SetAttribute("Showing", true)
-				end
-			end)
-		end
+		
+		print(Var.CombinedButtonConfig)
 
 		for i, v: Instance in Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() do
-			if not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout" }, v.Name) then
+			if not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout", "Home" }, v.Name) then
 				if v:GetAttribute("ThreadType") == "multi" then
-					for _, App in v.SubCollection:GetChildren() do
-						if App.Name == "Object" or App.Name == "UIListLayout" then continue end
+					local NewApp = v:Clone()
 
-						NewAppCard(`{v.Title.Text} - {App.Title.Text}`, App.Icon.Image, App.Name, "This is a subapp and it does not have a description.")
+					NewApp.Parent = Frames.Page4.AppDrawer.AppHolder.Apps
+					NewApp.Size = UDim2.new(.911, 0, .636, 0)
+
+					for _, App in NewApp.SubCollection:GetChildren() do
+						if not App:IsA("Frame") then continue end
+						
+						App:FindFirstChildWhichIsA("TextButton").MouseButton1Click:Connect(function()
+							print(App:GetFullName())
+						end)
 					end
 				else
-					NewAppCard(v.Title.Text, v.Icon.Image, v.Name, v.Desc.Text)
+					local NewApp = v:Clone()
+
+					NewApp.Parent = Frames.Page4.AppDrawer.AppHolder.Apps
+					NewApp.Size = UDim2.new(.911, 0, .13, 0)
+
 				end
 			end
 		end
@@ -518,7 +515,7 @@ function Admins.RunCreatorApp()
 		for i, App in Env.EditModeApps :: { { DisplayName: string, Icon: string, Name: string } } do
 			if Frames.Page4.Apps.Apps:FindFirstChild(App.DisplayName) then continue end
 
-			NewAppCard(
+			NewLegacyCard(
 				App.DisplayName,
 				App.Icon,
 				App.Name,
@@ -542,14 +539,14 @@ function Admins.RunCreatorApp()
 
 			if v:GetAttribute("TemplateType") == "Group" then
 				table.insert(Members, {
-					["MemberType"] = "Group",
-					["ID"] = v.TextInput.Text or 0,
-					["GroupRank"] = v.GroupRankInput.Text or 0,
+					MemberType = "Group",
+					ID = v.TextInput.Text or 0,
+					GroupRank = v.GroupRankInput.Text or 0
 				})
 			else
 				table.insert(Members, {
-					["MemberType"] = "User",
-					["ID"] = v.TextInput.Text or 0,
+					MemberType = "User",
+					ID = v.TextInput.Text or 0
 				})
 			end
 		end
@@ -560,9 +557,9 @@ function Admins.RunCreatorApp()
 			if not v:GetAttribute("Showing") then continue end
 
 			table.insert(AllowedPages, {
-				["Name"] = v:GetAttribute("TechName"),
-				["DisplayName"] = v.AppName.Text or "Failed to fetch",
-				["Icon"] = v.Icon.Image or "rbxassetid://0",
+				Name = v:GetAttribute("TechName"),
+				DisplayName = v.AppName.Text or "Failed to fetch",
+				Icon = v.Icon.Image or "rbxassetid://0"
 			})
 		end
 
@@ -586,7 +583,6 @@ function Admins.RunCreatorApp()
 		if Result[1] then
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
 		else
-			print(Result)
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
 			Frames.Page5.Header.Text = require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError
 			Frames.Page5.Body.Text =
@@ -595,20 +591,15 @@ function Admins.RunCreatorApp()
 	end)
 
 	Frames.Page5.NextPage.MouseButton1Click:Connect(function()
+		ClearEditState()
 		SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
+
 		Frames.BottomData.RankTitle.Text = "Creating a rank"
 		CanGoBack = true
 	end)
 
 	Frames.BottomData.Controls.Exit.MouseButton1Click:Connect(function()
-		if Env.EditMode == true then
-			Env.EditMode = false
-			Env.EditModeMembers = {}
-			Env.EditModeApps = {}
-			Env.EditModeName = ""
-			Env.EditModeIsProtected = false
-			Env.EditModeRank = 0
-		end
+		ClearEditState()
 
 		task.delay(1, function()
 			if Page == 2 then

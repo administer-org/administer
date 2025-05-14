@@ -86,7 +86,7 @@ function Widgets.Edit(
 		Var.Services.TweenService:Create(Editing.Preview, TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart), {
 			Size = UDim2.new(0.459, 0, 0.551, 0),
 			Position = UDim2.new(0.271, 0, 0.057, 0),
-			BackgroundTransparency = 0.4,
+			BackgroundTransparency = 0.4
 		}),
 		--Var.Services.TweenService:Create(ContainingUI.Content, TweenInfo.new(AnimSpeed * .8), {GroupTransparency = .9,}),
 		Var.Services.TweenService:Create(
@@ -103,7 +103,7 @@ function Widgets.Edit(
 			Editing.Preview.DefaultCorner_,
 			TweenInfo.new(AnimSpeed),
 			{ CornerRadius = UDim.new(0, 18) }
-		),
+		)
 	}
 
 	Editing.AppName.Text = ContainingUI:GetAttribute("AppName")
@@ -173,7 +173,7 @@ function Widgets.Edit(
 				Editing.Next.ImageLabel,
 				TweenInfo.new(AnimSpeed),
 				{ ImageTransparency = 1 }
-			),
+			)
 		}
 
 		for _, Tween in Tweens do
@@ -212,7 +212,7 @@ function Widgets.Edit(
 			EventType = "UPDATE",
 			EventID = `ChangeWidget-{ContainingUI.Name}`,
 			WidgetID = ContainingUI.Name,
-			NewIdentifier = Selected,
+			NewIdentifier = Selected
 		})
 
 		task.wait(AnimSpeed)
@@ -262,7 +262,7 @@ function Widgets.Edit(
 				Editing.WidgetName,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
 				{ Position = UDim2.new(-1, 0, 0.647, 0), TextTransparency = 1 }
-			),
+			)
 		}
 		for _, t in Tweens do
 			t:Play()

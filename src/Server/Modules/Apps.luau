@@ -82,9 +82,9 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 			Modules[Request.Name] = require(script.Parent:FindFirstChild(Request.Name)) :: {}
 		end
 	end
-	
+
 	local UIClone = Config.ClientFrame:Clone()
-	
+
 	UIClone.Parent = Var.Panel.Path.Main
 
 	Config.Bootstrap({}, Config.State, {
@@ -132,7 +132,7 @@ function App.LoadLocal(
 		TargetApp.Name = RealApp[2].AppMeta.Name
 
 		Utils.Logging.Print(`[✓] App bootstrap OK in {Utils.RoundMS(tick() - Ticks[Path])}ms`)
-		
+
 		App.RunningApps[RealApp[2].AppMeta.Name] = TargetApp
 	end, function(e)
 		Utils.Logging.Warn(`[X] Failed bootstrapping app: {e}`) --// We cannot Logging.Error() here because the thread will suppress it for some reason
@@ -185,7 +185,7 @@ function App.Initialize(): boolean
 			`[thread APPS] Failed to initialize some apps after the polling limit! Try looking for faulty apps or increasing the limit if you have a heavy app. {i / AppsCount}% of {AppsCount} cloud apps loaded in {TotalAttempts} tries/{tick() - Start}s.`
 		)
 	end
-	
+
 	Utils.Logging.Print(`Finished bootstrapping apps! ({Utils.RoundMS(tick() - Start)}ms)`)
 
 	Var.DidBootstrap = true
@@ -196,7 +196,7 @@ end
 function App.Uninstall(AppID: number): Types.Response
 	local Apps = Var.DataStores.AppDB:GetAsync("AppList")
 	local DidUninstall = false
-	
+
 	Utils.Logging.Warn(`Removing app {AppID}`)
 
 	for i, App in Apps do
@@ -208,7 +208,7 @@ function App.Uninstall(AppID: number): Types.Response
 	end
 
 	Var.DataStores.AppDB:SetAsync("AppList", Apps)
-	
+
 	if DidUninstall then
 		return { true, Utils.t(nil, "generic.Done") }
 	else
@@ -316,7 +316,7 @@ end
 
 function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 	Utils.Logging.Print("Installing app server...")
-	
+
 	HTTP.GetRoute(URL, "/pub/.administer", function(Data, Info)
 		if Data["server"] ~= "AdministerAppServer" then
 			Utils.Logging.Warn("This URL doesn't seem to be an Administer app server.")
@@ -345,46 +345,57 @@ end
 
 function App.ServerAPI.GetServerStatuses(): Types.Response
 	local Resps = {}
-	
+
 	for _, Server in Var.AppServers do
-		table.insert(Resps, HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(Data, Meta)
+		xpcall(function()
+			table.insert(Resps, HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(Data, Meta)
+				return {
+					URL           = Server.ServerURL,
+					Name          = Data.instance_name,
+					IsDev         = Data.is_dev,
+					Uptime        = Data.uptime,
+					Banner        = Data.banner,
+					AOSVers       = Data.api_version,
+					PingTime      = Meta.ProcessedMS,
+					InstalledBy   = Server.Creator,
+					ServerInstall = Server.Time 
+				}
+			end, function(Code, Data)
+				return {
+					URL           = Server.ServerURL,
+					Code          = Code,
+					Failed        = true,
+					PingTime      = Data.ProcessedMS,  
+					InstalledBy   = Server.Creator,
+					ServerInstall = Server.Time
+				}
+			end))
+		end, function()
 			return {
 				URL           = Server.ServerURL,
-				Name          = Data.instance_name,
-				IsDev         = Data.is_dev,
-				Uptime        = Data.uptime,
-				Banner        = Data.banner,
-				AOSVers       = Data.api_version,
-				PingTime      = Meta.ProcessedMS,
-				InstalledBy   = Server.Creator,
-				ServerInstall = Server.Time 
-			}
-		end, function(Code, Data)
-			return {
-				URL           = Server.ServerURL,
-				Code          = Code,
+				Code          = "Invalid server URL!",
 				Failed        = true,
-				PingTime      = Data.ProcessedMS,  
+				PingTime      = 0,  
 				InstalledBy   = Server.Creator,
 				ServerInstall = Server.Time
-			}
-		end))
+			}	
+		end)
 	end
-	
+
 	return { true, Resps }
 end
 
 function App.ServerAPI.UninstallServer(ServerURL): Types.Response
 	local Done = false
 	Utils.Logging.SWarn(`Uninstalling app server {ServerURL}`)
-	
+
 	for i, Server in Var.AppServers do
 		if Server.ServerURL == ServerURL then
 			table.remove(Var.AppServers, i)
 			Done = true
 		end
 	end
-	
+
 	if Done then
 		Var.DataStores.AppDB:SetAsync("AppServerList", Var.AppServers)
 
@@ -397,12 +408,12 @@ end
 
 function App.GetTotals()
 	local RunningApps = 0
-	
+
 	for _, App in App.RunningApps do
 		RunningApps += 1
 	end
-	
-	
+
+
 	return { Servers = #Var.AppServers, Apps = RunningApps }
 end
 
@@ -414,7 +425,10 @@ function App.ServerAPI.GetApp(AppServer: string, AppID: number): Types.Response
 	end)
 end
 
-function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Types.Response
+function App.ServerAPI.InstallFromServer(
+	ServerURL: string,
+	AppID: number
+): Types.Response
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
 		local RealID = Content["InstallID"]
 		if RealID == 0 then
@@ -431,7 +445,7 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Type
 					--// AOS detected a duplicate, probably safe
 					return { true, `{Utils.t(nil, "generic.Done")}!` }	
 				end
-				
+
 				return { false, Utils.t(nil, "generic.error.TryAgainLater") }
 			end)
 		else
@@ -443,20 +457,60 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: number): Type
 	end)
 end
 
-function App.ServerAPI.Vote(ServerURL: string, AppID: string, Vote: number): Types.Response
+function App.ServerAPI.Vote(
+	ServerURL: string, 
+	AppID: string, 
+	Vote: number
+): Types.Response
 	return game:GetService("HttpService"):RequestAsync({
 		Url = `{ServerURL}/api/asset/{AppID}/vote`,
 		Method = "PUT",
-		
+
 		Body = game:GetService("HttpService"):JSONEncode({
 			vote = Vote,
 			is_favorite = Vote == 2
 		}),
-		
+
 		Headers = {
 			["Content-Type"] = "application/json"
 		}
 	})
+end
+
+
+function App.ServerAPI.GetAOSInstances(
+	DoStatusChecks: boolean
+): (any)
+	local function DoStatusCheck(URL)
+		local Start = tick()
+		
+		return HTTP.GetRoute(URL, "/", function(Data)
+			return {
+				IsUp = true,
+				Ping = Data.ProcessedMS
+			}
+		end, function(_, Data)
+			return {
+				IsUp = false,
+				Ping = Data.ProcessedMS
+			}
+		end)
+	end
+	
+	return HTTP.GetRoute("https://gateway.admsoftware.org", `/`, function(Content)
+		if DoStatusChecks then
+			for _, URL in Content.instances do
+				local Result = DoStatusCheck(URL.url)
+				
+				URL.IsUp = Result.IsUp
+				URL.Ping = Result.Ping
+			end
+		end
+		
+		return Content.instances
+	end, function(...)
+		print(...)
+	end)
 end
 
 return App
