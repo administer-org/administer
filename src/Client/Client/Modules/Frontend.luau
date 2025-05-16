@@ -1,4 +1,4 @@
---// Administer (2.0.0)
+--// Administer
 
 --// pyxfluff (2024-2025)
 
@@ -72,7 +72,7 @@ function Frontend.Open(WaitForCompletion): ()
 	if Var.UseAcrylic then
 		Libraries.Neon:BindFrame(Var.Panel.MainFrame, {
 			Transparency = 0.95,
-			BrickColor = BrickColor.new("Institutional white"),
+			BrickColor = BrickColor.new("Institutional white")
 		})
 	end
 
@@ -95,7 +95,7 @@ function Frontend.Open(WaitForCompletion): ()
 			Var.MainFrame,
 			TweenInfo.new(AS, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false, AS * 0.2),
 			{
-				Size = UDim2.fromScale(X, Y),
+				Size = UDim2.fromScale(X, Y)
 			}
 		)
 		:Play()
@@ -132,7 +132,7 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 		TweenInfo.new(Duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
 		{
 			Size = UDim2.fromScale(X / 1.5, Y / 1.5),
-			GroupTransparency = 0.5,
+			GroupTransparency = 0.5
 		}
 	)
 
@@ -187,10 +187,6 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 end
 
 local DrawerConnections = {}
-local ShouldAnimate = true
-local IsQueued = false
-local CurrentlyActive
-local Ready = true
 local Card
 
 function Frontend.Drawer.Open(): ()
@@ -205,8 +201,6 @@ function Frontend.Drawer.Open(): ()
 	local TimeToComplete
 
 	Var.DoHeaderEffects = false
-	ShouldAnimate = true
-	Ready = true
 
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
@@ -235,9 +229,9 @@ function Frontend.Drawer.Open(): ()
 		if (Child:IsA("Frame") or Child:IsA("CanvasGroup")) and Child.Name ~= "AppDrawer" then
 			Child.Parent = Container 
 
-			if Child.Name == Var.ActivePage.Name then
-				CurrentlyActive = Child
-			end
+			-- if Child.Name == Var.ActivePage.Name then
+			-- 	CurrentlyActive = Child
+			-- end
 		end
 	end
 
@@ -247,20 +241,20 @@ function Frontend.Drawer.Open(): ()
 			BackgroundTransparency = 0.25,
 			Size = UDim2.new(0.95, 0, 0.95, 0),
 			Position = UDim2.new(0.5, 0, 0.5, 0),
-			AnchorPoint = Vector2.new(0.5, 0.5),
+			AnchorPoint = Vector2.new(0.5, 0.5)
 		})
 		:Play()
 
 	Var.Services.TweenService
 		:Create(Apps, TweenInfo.new(TimeToComplete * 0.3, Enum.EasingStyle.Quart), {
-			Position = UDim2.new(0, 0, 0, 0),
+			Position = UDim2.new(0, 0, 0, 0)
 		})
 		:Play()
 
 	Var.Services.TweenService
 		:Create(Apps.AppHolder, TweenInfo.new(TimeToComplete * 0.55, Enum.EasingStyle.Quart), {
 			GroupTransparency = 0,
-			Position = UDim2.new(0, 0, 0, 0),
+			Position = UDim2.new(0, 0, 0, 0)
 		})
 		:Play()
 
@@ -339,8 +333,6 @@ function Frontend.Drawer.Close(): ()
 	local Container = Apps.AppDrawerCover.CanvasGroup
 	local TimeToComplete
 
-	ShouldAnimate = false
-
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed")) or 1
 	end, function(e)
@@ -354,14 +346,14 @@ function Frontend.Drawer.Close(): ()
 
 	Var.Services.TweenService
 		:Create(Apps, TweenInfo.new(TimeToComplete * 0.75, Enum.EasingStyle.Quart), {
-			Position = UDim2.new(0, 0, 1, 0),
+			Position = UDim2.new(0, 0, 1, 0)
 		})
 		:Play()
 
 	Var.Services.TweenService
 		:Create(Apps.AppHolder, TweenInfo.new(TimeToComplete * 0.55, Enum.EasingStyle.Quart), {
 			Position = UDim2.new(0, 0, .75, 0),
-			GroupTransparency = 1,
+			GroupTransparency = 1
 		})
 		:Play()
 
@@ -370,7 +362,7 @@ function Frontend.Drawer.Close(): ()
 			Position = UDim2.new(0.5,0,0.5,0),
 			Size = UDim2.new(1,0,1,0),
 
-			AnchorPoint = Vector2.new(.5,.5),
+			AnchorPoint = Vector2.new(.5, .5),
 			BackgroundTransparency = 1
 		})
 		:Play()
@@ -406,7 +398,6 @@ function Frontend.Drawer.Close(): ()
 	end
 
 	Var.DoHeaderEffects = true
-	Ready = true
 end
 
 function Frontend.Drawer.HoverBegin()
@@ -770,7 +761,6 @@ function Frontend.InitGestureBar()
 			end
 			
 			--// Insurance soontm
-			
 		end
 	end)
 end
