@@ -19,11 +19,18 @@ Frontend.Close(true)
 
 Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
 Var.Remotes.CheckForUpdates:InvokeServer({ "org.admsoftware.Core" })
-_G.AdministerEnv = script
-
-warn(_G.AdministerEnv)
 
 task.spawn(Utilities.Heartbeat)
+
+if not pcall(function()
+		if script.Parent:GetAttribute("StartID") == nil then error() end
+		
+		Var.Remotes.Ping:InvokeServer()
+	end) then
+	Utilities.NewNotification("Administer", "rbxassetid://", "Administer has been incorrectly installed and may not continue loading.", "Startup failed", 999)
+	error(`Could not connect to the server, is Administer improperly installed?`)
+end
+
 
 local Debounce = false
 Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
@@ -57,13 +64,6 @@ Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 		Debounce = false
 	end
 end)
-
-if not pcall(function()
-		Var.Remotes.Ping:InvokeServer()
-	end) then
-	--Utilities.NewNotification("Administer", "")
-	error(`Could not connect to the server, is Administer improperly installed?`)
-end
 
 Widgets.Initialize()
 Apps.AddAppDrawerButton({
@@ -230,14 +230,32 @@ xpcall(function(...)
 
 		Card.Visible = true
 	end
-
+	
+	repeat
+		task.wait(.1)
+		Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
+	until Var.Version.IsUpToDate ~= nil
+	
 	NewVersCard(Var.Version)
+	
+	local Contributors = Var.Remotes.GetContributors:InvokeServer()
+	
+	for _, Contrib in Contributors do
+		local Card = Info.Credits.Users.Template:Clone()
+		
+		Card.Username.Text = Contrib.Name
+		Card.Task.Text = Contrib.Job
+		Card.ImageLabel.Image = game.Players:GetUserThumbnailAsync(Contrib.UserID, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size180x180)
+		
+		Card.Parent = Info.Credits.Users
+		Card.Visible = true
+	end
 
 	--// We need to do this last because it's a possible failure point so we should load the actual content first
 	for _, Pass in Var.Remotes.GetPasses:InvokeServer() do
 		local Cloned = Var.MainFrame.Configuration.InfoPage.Donate.Buttons.Temp:Clone()
 
-		Cloned.Label.Text = `{Pass["price"]}`
+		Cloned.Label.Text = Pass["price"]
 		Cloned.MouseButton1Click:Connect(function()
 			IsDonating = true
 			Var.Services.MarketplaceService:PromptGamePassPurchase(Var.Services.Players.LocalPlayer, Pass["id"])

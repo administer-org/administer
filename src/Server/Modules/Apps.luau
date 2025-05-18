@@ -405,18 +405,6 @@ function App.ServerAPI.UninstallServer(ServerURL): Types.Response
 	end
 end
 
-
-function App.GetTotals()
-	local RunningApps = 0
-
-	for _, App in App.RunningApps do
-		RunningApps += 1
-	end
-
-
-	return { Servers = #Var.AppServers, Apps = RunningApps }
-end
-
 function App.ServerAPI.GetApp(AppServer: string, AppID: number): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
 		return { true, Data }
@@ -511,6 +499,28 @@ function App.ServerAPI.GetAOSInstances(
 	end, function(...)
 		print(...)
 	end)
+end
+
+function App.ServerAPI.Search(
+	ServerURL,
+	Query
+): {}
+	return HTTP.GetRoute(ServerURL, `/api/search/{Query}`, function(Data, ...)
+		return Data
+	end, function(...)
+		return ...
+	end)
+end
+
+function App.GetTotals()
+	local RunningApps = 0
+
+	for _, App in App.RunningApps do
+		RunningApps += 1
+	end
+
+
+	return { Servers = #Var.AppServers, Apps = RunningApps }
 end
 
 return App

@@ -112,7 +112,7 @@ function Utilities.NewNotification(
 	Options: { any }?,
 	OpenTime: number?
 ): ()
-	local Panel = script.Parent
+	local Panel = script.Parent.Parent.Parent
 
 	Options = Options or {}
 	OpenTime = OpenTime or 1.25
@@ -165,7 +165,7 @@ function Utilities.NewNotification(
 			{
 				GroupTransparency = 0,
 			}
-		),
+		)
 	}
 
 	for _, Tween: Tween in Tweens do
@@ -271,7 +271,9 @@ function Utilities.Heartbeat(): ()
 
 		table.insert(Var.Ping, (tick() - PingStart) * 1000)
 
-		Var.MainFrame.AppDrawer.AppHolder.Apps.ZZ_AdministerData.Version.Text = `{Var.Version.String} ({Var.Services.HttpService:JSONDecode(Var.MainFrame.Parent:GetAttribute("_CurrentBranch")).BranchName}); connected ({tostring((tick() - PingStart) * 1000):sub(1, 5)}ms)`
+		pcall(function()
+			Var.MainFrame.AppDrawer.AppHolder.Apps.ZZ_AdministerData.Version.Text = `{Var.Version.String} ({Var.Services.HttpService:JSONDecode(Var.MainFrame.Parent:GetAttribute("_CurrentBranch")).BranchName}); connected ({tostring((tick() - PingStart) * 1000):sub(1, 5)}ms)`
+		end)
 
 		Ticks += 1
 		if Ticks == Var.PingTicksLog then

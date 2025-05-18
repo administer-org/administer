@@ -141,13 +141,13 @@ NewRemote("GetPasses", false, false, function()
 	return Var.Services.HttpService:JSONDecode(_Content)["data"]
 		or {
 			{
-				["price"] = "Failed to load.",
-				["id"] = 0,
+				price = "Failed to load.",
+				id = 0
 			},
 			{
-				["price"] = "The proxy may be offline or experiencing issues.",
-				["id"] = 0,
-			},
+				price = "The proxy may be offline or experiencing issues.",
+				id = 0
+			}
 		}
 end)
 
@@ -166,6 +166,10 @@ NewRemote("GetIconPack", false, false, function()
 	return require(script.Core.Icons) :: any
 end)
 
+NewRemote("GetContributors", false, false, function()
+	return Configuration.Contributors
+end)
+
 --// Apps
 NewRemote("GetAppList", true, false, function(QueryType)
 	return AppsModule.ServerAPI.GetList(nil, QueryType)
@@ -179,6 +183,7 @@ NewRemote("ManageApp", true, false, AppsModule.Uninstall)
 NewRemote("GetAppServers", true, false, AppsModule.ServerAPI.GetServerStatuses)
 NewRemote("RemoveAppServer", true, false, AppsModule.ServerAPI.UninstallServer)
 NewRemote("GetAppCounts", true, false, AppsModule.GetTotals)
+NewRemote("AOSRichSearch", true, false, AppsModule.ServerAPI.Search)
 
 --// Admin routes
 NewRemote("GetRanks", true, false, AdminRunner.Ranks.GetAll)
@@ -186,10 +191,12 @@ NewRemote("NewRank", true, false, AdminRunner.Ranks.New)
 NewRemote("GetRank", true, false, function(Rankname)
 	return Var.DataStores.AdminsDS:GetAsync(Rankname)
 end)
-NewRemote("LoadSettings", false, false, function(setting, userId, customSettings: Types.SettingsGroup?)
+
+NewRemote("LoadSettings", true, false, function(setting, userId, customSettings: Types.SettingsGroup?)
 	local settingsToLoad = SettingsAPI.new(setting)
 	return settingsToLoad.Load(userId, customSettings)
 end)
+
 NewRemote("SaveSettings", true, false, function(setting, userId)
 	local settingsToLoad = SettingsAPI.new(setting)
 	return settingsToLoad.Save(userId)
@@ -204,7 +211,7 @@ xpcall(
 	end,
 
 	function()
-		warn("[Administer]: MessagingService seems to be busy (did not bind on message Administer), some cross-server features disabled!")
+		Utils.Logging.Warn("[Administer]: MessagingService seems to be busy (did not bind on message Administer), some cross-server features disabled!")
 	end
 )
 
@@ -218,7 +225,9 @@ end, function(...)
 	return { ... }
 end)
 
-print("###############################3")
+--// Initial version stuff
+Configuration.VersData.InstallDate = Utils.CheckVersion()
+Configuration.VersData.IsUpToDate = not Utils.UpdateCallback({ "org.admsoftware.Core" })["org.admsoftware.Core"].your_version.is_outdated
 
---print(AppsModule.ServerAPI.GetAOSInstances(true))
-Migrator.Migrate()
+--// Dev
+--Migrator.Migrate()

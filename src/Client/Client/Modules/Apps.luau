@@ -14,7 +14,7 @@ local Connections = {}
 
 function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 	local AppsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
-	
+
 	if ButtonConfig.ButtonID == nil then
 		return { false, "You must have a button link ID." }
 	end
@@ -232,7 +232,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		end
 	end
 
-	Connections["LikeButton"] = AppInfoFrame.Details.Votes.Likes.TextButton.MouseButton1Click:Connect(function()
+	local function DoVote(VoteType)
 		local Response = Var.Remotes.Vote:InvokeServer(ServerURL, ID, 1)
 
 		if Response.StatusCode == 400 then
@@ -263,16 +263,14 @@ function Apps.Show(ServerURL, ID, Reason): string
 		end
 
 		return Apps.Show(ServerURL, ID, Reason)
+	end
+
+	Connections["LikeButton"] = AppInfoFrame.Details.Votes.Likes.TextButton.MouseButton1Click:Connect(function()
+		DoVote(1)
 	end)
 
 	Connections["DislikeButton"] = AppInfoFrame.Details.Votes.Dislikes.TextButton.MouseButton1Click:Connect(function()
-		Var.Remotes.Vote:InvokeServer(ServerURL, ID, 0)
-
-		for _, Event in Connections do
-			Event:Disconnect()
-		end
-
-		return Apps.Show(ServerURL, ID, Reason)
+		DoVote(0)
 	end)
 
 	return "Get"
@@ -288,61 +286,43 @@ function Apps.Clear(): ()
 	end
 end
 
-function Apps.Search(Query: string): {}
-	local Result = Var.Remotes.SearchAppsByMarketplaceServer:InvokeServer(Var.Marketplace.Servers, Query)
+function Apps.Search(Query: string, ServerURL: string): {}
+	local Result = Var.Remotes.AOSRichSearch:InvokeServer(ServerURL, Query)
 	local Final: { { Type: string, Value: any } } = {}
 
-	if Result.SearchIndex == "NoResultsFound" then
+	print(Result)
+
+	if Result.index == "no_results" then
 		return {
 			Success = false,
 			Data = {
 				{
 					Type = "text",
-					Value = "Sorry, but we couldn't find any results for that.",
-				},
+					Value = "Sorry, but we couldn't find any results for that."
+				}
 			},
+			AOSProcessedInfo = Result.meta._aos_search_api
 		}
-	elseif Result.RatioInfo.IsRatio == true then
+	elseif Result.meta.ratio_info.is_ratio == true then
 		table.insert(Final, {
 			Type = "text",
-			Value = `We think you meant {Result.RatioInfo.RatioKeyword} ({string.sub(
-				string.gsub(Result.RatioInfo.RatioConfidence, "0.", ""),
-				1,
-				2
-			) .. "%"} confidence), results for it may be included.`,
+			Value = `We think you meant {Result.meta.ratio_info.keyword} ({
+			string.sub(string.gsub(Result.meta.ratio_info.confidence, "0.", ""), 1, 2) .. "%"
+			} confidence), results for it may be included.`
 		})
 	end
 
-	for Index, SearchResult in Result.SearchIndex do
-		local Frame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content.Template:Clone()
-		Frame.Parent = Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content
-
-		Frame.AppName.Text = SearchResult["AppName"]
-		Frame.ShortDesc.Text = SearchResult["AppShortDescription"]
-		Frame.InstallCount.Text = SearchResult["AppDownloadCount"]
-		Frame.Rating.Text = "--%"
-		Frame.Name = Index
-
+	for Index, SearchResult in Result.index do
 		table.insert(Final, {
 			Type = "card",
-			Value = {
-				Name = SearchResult["Name"],
-				ShortDesc = SearchResult["ShortDescription"],
-				InstallCount = SearchResult["DownloadCount"],
-				Rating = SearchResult["Rating"]["Ratio"],
-				ShownBecause = `You searched for it ({SearchResult["IndexedBecause"]} in query).`,
-				SourceServer = "https://administer.notpyx.me",
-				AdministerID = SearchResult["Metadata"]["AdministerID"],
-				Index = Index,
-			},
+			Value = SearchResult
 		})
-
-		Frame.Visible = true
 	end
 
 	return {
 		Success = true,
 		Data = Final,
+		AOSProcessedInfo = Result.meta._aos_search_api
 	}
 end
 
@@ -367,8 +347,9 @@ function Apps.LoadAppList(List: {} | nil): ()
 
 	InProgress = true
 
-	for _, Connection in Connections do
-		(Connection :: RBXScriptConnection):Disconnect()
+	for Name, Connection in Connections do
+		Connection:Disconnect()
+		Connections[Name] = nil
 	end
 
 	local function Card(CardData, ListLoc)
@@ -384,8 +365,33 @@ function Apps.LoadAppList(List: {} | nil): ()
 			NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
 			NewCard.Stats.Rating.Label.Text = CardData.rating
 
-			Connections[`Download-{math.random(1,4923498)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
+			Connections[`Download-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
 				Apps.Show(CardData.Server, CardData.id, CardData.Server)
+			end)
+
+			Connections[`Show-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton2Click:Connect(function()
+				Frontend.Popup.new(
+					{
+						Icon = Utilities.Icon "grid",
+						Name = "Marketplace",
+						Subheader = "AOS Instance"
+					},
+					{
+						Primary = Utilities.Icon "administer",
+						SubIcon = Utilities.Icon "question-circle"
+					},
+					"App Info",
+					`AOS Data URL: {CardData.Server}\nAOSId2: {CardData.id}\nWeighted Score: {CardData.weighted_score}\nObject Type: {CardData.object_type}\nDeveloper: {game:GetService("HttpService"):JSONEncode(CardData.developer)}`,
+					{
+						{
+							Text = "OK",
+							Icon = "check-plain",
+							Callback = function(c)
+								c()
+							end
+						}
+					}
+				)
 			end)
 		end, function(e)
 			if e == "Unable to assign property Name. string expected, got nil" then
@@ -397,13 +403,15 @@ function Apps.LoadAppList(List: {} | nil): ()
 	end
 
 	local AppList = List or Var.Remotes.GetAppList:InvokeServer(Var.Marketplace.ActivePageType)
+	
+	print(Var.Marketplace.ActivePage)
 
 	if Var.Marketplace.ActivePage == "AAFeatured" then
 		local Featured = {}
 		local Index = 1
 
 		for _, Item in Market.MainMarketplace.AAFeatured.TopGrid:GetChildren() do
-			if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
+			if Item:IsA("CanvasGroup") and Item.Name ~= "Template" then Item:Destroy() end
 		end
 
 		repeat
@@ -425,12 +433,50 @@ function Apps.LoadAppList(List: {} | nil): ()
 		for _, App in Featured do
 			Card(App, Market.MainMarketplace.AAFeatured.TopGrid)
 		end
+
+		--// make the 1st result the featured card, will prob have an algo soon
+		local TopCard = Market.MainMarketplace.AAFeatured.MainHot
+		local Selected = Featured[1]
+
+		TopCard.ObjName.Text = Selected.name
+		TopCard.Server.Text = `{Selected.object_type} by @{Selected.developer.Name} from {Selected.Server}`
+		TopCard.Stats.Installs.Label.Text = Utilities.ShortNumber(Selected.downloads)
+		TopCard.Stats.Rating.Label.Text = Selected.rating
+
+		TopCard.Stats.DownloadButton.MouseButton1Click:Connect(function()
+			Apps.Show(Selected.Server, Selected.id, Selected.Server)
+		end)
+
+		TopCard.Stats.DownloadButton.MouseButton2Click:Connect(function()
+			Frontend.Popup.new(
+				{
+					Icon = Utilities.Icon "grid",
+					Name = "Marketplace",
+					Subheader = "AOS Instance"
+				},
+				{
+					Primary = Utilities.Icon "question-circle",
+					SubIcon = Utilities.Icon "administer"
+				},
+				"Why is this here?",
+				`You're seeing this featured because it's server, {Selected.Server}, has reported its weighted score to be {Selected.weighted_score}, which is the highest among your installed servers.\nIf this is being done maliciously, remove the server.`,
+				{
+					{
+						Text = "OK",
+						Icon = "check",
+						Callback = function(c)
+							c()
+						end
+					}
+				}
+			)
+		end)
 	else
 		local Featured = {}
 		local Index = 1
 
-		for _, Item in Market.MainMarketplace.AAFeatured.TopGrid:GetChildren() do
-			if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
+		for _, Item in Market.MainMarketplace.CardGrid:GetChildren() do
+			if Item:IsA("CanvasGroup") and Item.Name ~= "Template" then Item:Destroy() end
 		end
 
 		for SUrl, Server in AppList do
@@ -505,6 +551,8 @@ function Apps.LoadLibrary()
 				)
 			)
 		end
+
+		NewTemplate.Buttons.LongText.Title.Text = `Initialized in {App.BuildTime * 1000}ms`
 
 		NewTemplate.Parent = AppsMenu.Content
 		NewTemplate.Visible = true
@@ -621,11 +669,7 @@ function Apps.LoadLibrary()
 						Callback = function(_Close)
 							local Response = Var.Remotes.RemoveAppServer:InvokeServer(Server.URL)
 
-							print(Response, Response[1] == false)
-
 							_Close()
-
-							print("closed!")
 
 							if Response[1] == false then
 								Frontend.Popup.new(
@@ -652,7 +696,7 @@ function Apps.LoadLibrary()
 							else
 								Apps.LoadLibrary()
 							end	
-						end,
+						end
 					},
 					{
 						Text = Utilities.Translate("generic.Cancel"),

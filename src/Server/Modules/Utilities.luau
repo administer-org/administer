@@ -483,7 +483,7 @@ function Utils.t(Player: Player | nil, Key: string): string
 			LocaleResult = (
 				Var.CachedLocales[Player.UserId] or Var.DataStores.Settings:GetAsync(Player.UserId .. "Locale")
 			) or "en"
-		end, function(x) --// idk why we need this?
+		end, function(x) --// idk why we need should this?
 			warn(debug.traceback(x))
 			LocaleResult = "en"
 		end)
@@ -502,14 +502,19 @@ function Utils.UpdateCallback(Services: { string })
 	local Data = {}
 
 	for _, Service in Services do
-		if Service == "Administer" then
-			Data["Administer"] = HTTP.GetRoute(Var.DefaultAppServer, "/pub/versions", function(Data, Misc)
-				print(Data, Misc)
+		if Service == "org.admsoftware.Core" then
+			Data["Administer"] = HTTP.GetRoute(Var.DefaultAppServer, "/pub/versions", function(VersionInfo, Misc)
+				Data["org.admsoftware.Core"] = VersionInfo
 			end, function(...)
 				warn(...)
+				Data["org.admsoftware.Core"] = VersionInfo
 			end)
+		else
+			--// ...
 		end	
 	end
+	
+	return Data
 end
 
 function Utils.CountryToFlag(CountryCode)
@@ -520,6 +525,21 @@ function Utils.CountryToFlag(CountryCode)
 	end
 
 	return Flag
+end
+
+function Utils.CheckVersion()
+	local Vers = Config.VersData.String
+	local SavedInstalls = Var.DataStores.AppDB:GetAsync("InstallDates") or {
+		["org.admsoftware.Core"] = {}
+	}
+	
+	if SavedInstalls["org.admsoftware.Core"][Vers] == nil then
+		SavedInstalls["org.admsoftware.Core"][Vers] = os.time()
+	end
+	
+	Var.DataStores.AppDB:SetAsync("InstallDates", SavedInstalls)
+	
+	return SavedInstalls["org.admsoftware.Core"][Vers]
 end
 
 return Utils
