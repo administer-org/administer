@@ -22,6 +22,8 @@ function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 
 	table.insert(Var.Admins.InGame, Player)
 	Var.Admins.TotalRunningCount += 1
+	
+	print(Rank, AdminRankID)
 
 	if Rank.Apps.SuperAdmin == false then
 		for ID, Object in Rank.Apps.PageIDs do
@@ -142,7 +144,7 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 		NewRank.CreationReason = Data.CreationReason
 
 		NewRank.Members = Data.Members
-		NewRank.Apps = Data.AllowedApps
+		NewRank.Apps = Data.Apps
 
 		table.insert(NewRank.Modifications, {
 			Reason = Util.t(nil, "admin.rank.created"),
