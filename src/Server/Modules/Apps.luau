@@ -385,7 +385,7 @@ function App.ServerAPI.GetServerStatuses(): Types.Response
 	return { true, Resps }
 end
 
-function App.ServerAPI.UninstallServer(ServerURL): Types.Response
+function App.ServerAPI.UninstallServer(ServerURL, IsStatic): Types.Response
 	local Done = false
 	Utils.Logging.SWarn(`Uninstalling app server {ServerURL}`)
 
@@ -394,6 +394,12 @@ function App.ServerAPI.UninstallServer(ServerURL): Types.Response
 			table.remove(Var.AppServers, i)
 			Done = true
 		end
+	end
+	
+	if IsStatic then
+		pcall(function()
+			table.remove(Var.AppServers, table.find(Var.AppServers, ServerURL))
+		end)
 	end
 
 	if Done then
