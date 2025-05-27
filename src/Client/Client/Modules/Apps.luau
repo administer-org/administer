@@ -39,6 +39,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button.Title.Text = ButtonConfig.AppName
 
 		Button:SetAttribute("ThreadType", "single")
+		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
 
 		Button.Visible = true
 
@@ -63,7 +64,8 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button.Title.Text = ButtonConfig.AppName
 
 		Button:SetAttribute("ThreadType", "multi")
-
+		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
+		
 		Button.Visible = true
 
 		Button.Activator.MouseButton1Click:Connect(function()
@@ -81,6 +83,8 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 			Clone.Icon.Image = Icon.Icon
 			Clone.Title.Text = Icon.Name
+			
+			Clone:SetAttribute("ButtonID", `{ButtonConfig.ButtonID}\\{Icon.ButtonID}`)
 
 			Clone.Activator.MouseButton1Click:Connect(function()
 				task.defer(Frontend.Drawer.Close)
@@ -209,7 +213,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 			)
 		end
 
-		task.delay(5, function()
+		task.delay(2, function()
 			AppInfoFrame.Details.Downloads.Value.Text = Utilities.ShortNumber(Data["Downloads"])
 		end)
 	end)

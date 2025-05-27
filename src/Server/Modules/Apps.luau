@@ -33,7 +33,7 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 			Name = "Default App",
 			Icon = "",
 			Version = "0",
-			Description = "This is an application which is improperly configured.",
+			Description = "This is an application which is improperly configured."
 		},
 
 		Dependencies = {
@@ -43,7 +43,7 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 
 			AdministerModules = {},
 
-			IsAdministerVersionRelevant = true,
+			IsAdministerVersionRelevant = true
 		},
 
 		TextCommands = {},
@@ -83,9 +83,11 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 		end
 	end
 
-	local UIClone = Config.ClientFrame:Clone()
+	if Config.ClientFrame ~= nil then
+		local UIClone = Config.ClientFrame:Clone()
 
-	UIClone.Parent = Var.Panel.Path.Main
+		UIClone.Parent = Var.Panel.Path.Main
+	end
 
 	Config.Bootstrap({}, Config.State, {
 		FinishTime = string.sub(tostring(tick() - Ticks[Misc.TechID]), 1, 5),
@@ -194,7 +196,7 @@ function App.Initialize(): boolean
 end
 
 function App.Uninstall(AppID: number): Types.Response
-	local Apps = Var.DataStores.AppDB:GetAsync("AppList")
+	local Apps = Var.DataStores.AppDB:GetAsync("AppList") or {}
 	local DidUninstall = false
 
 	Utils.Logging.Warn(`Removing app {AppID}`)
@@ -395,7 +397,7 @@ function App.ServerAPI.UninstallServer(ServerURL, IsStatic): Types.Response
 			Done = true
 		end
 	end
-	
+
 	if IsStatic then
 		pcall(function()
 			table.remove(Var.AppServers, table.find(Var.AppServers, ServerURL))
@@ -477,7 +479,7 @@ function App.ServerAPI.GetAOSInstances(
 ): (any)
 	local function DoStatusCheck(URL)
 		local Start = tick()
-		
+
 		return HTTP.GetRoute(URL, "/", function(Data)
 			return {
 				IsUp = true,
@@ -490,17 +492,17 @@ function App.ServerAPI.GetAOSInstances(
 			}
 		end)
 	end
-	
+
 	return HTTP.GetRoute("https://gateway.admsoftware.org", `/`, function(Content)
 		if DoStatusChecks then
 			for _, URL in Content.instances do
 				local Result = DoStatusCheck(URL.url)
-				
+
 				URL.IsUp = Result.IsUp
 				URL.Ping = Result.Ping
 			end
 		end
-		
+
 		return Content.instances
 	end, function(...)
 		print(...)

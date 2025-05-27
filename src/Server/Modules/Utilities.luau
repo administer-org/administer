@@ -3,7 +3,7 @@
 
 --// Initialization
 local Utils = {
-	Time = {},
+	Time = {}
 }
 
 --// Dependencies
@@ -47,7 +47,7 @@ Utils.Logging = {
 	Debug = function(...)
 		--// TODO
 		print(debug.traceback(...))
-	end,
+	end
 }
 
 --Checks if a provided player is an Administer admin.
@@ -142,6 +142,10 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 				}
 			end
 		end
+
+		return {
+			IsAdmin = false
+		}
 	end, function(e)
 		if string.find(e, "of table") ~= nil then
 			--// can disregard
@@ -287,6 +291,7 @@ function Utils.NewRemote(
 		end)
 
 		return
+			
 	elseif RemoteType == "RemoteFunction" then
 		(Rem :: RemoteFunction).OnServerInvoke = function(Player: Player, ...)
 			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] then return false end
@@ -507,13 +512,16 @@ function Utils.UpdateCallback(Services: { string })
 				Data["org.admsoftware.Core"] = VersionInfo
 			end, function(...)
 				warn(...)
-				Data["org.admsoftware.Core"] = VersionInfo
+				Data["org.admsoftware.Core"] = {
+					IsError = true,
+					Misc = ...
+				}
 			end)
 		else
 			--// ...
 		end	
 	end
-	
+
 	return Data
 end
 
@@ -532,13 +540,13 @@ function Utils.CheckVersion()
 	local SavedInstalls = Var.DataStores.AppDB:GetAsync("InstallDates") or {
 		["org.admsoftware.Core"] = {}
 	}
-	
+
 	if SavedInstalls["org.admsoftware.Core"][Vers] == nil then
 		SavedInstalls["org.admsoftware.Core"][Vers] = os.time()
 	end
-	
+
 	Var.DataStores.AppDB:SetAsync("InstallDates", SavedInstalls)
-	
+
 	return SavedInstalls["org.admsoftware.Core"][Vers]
 end
 

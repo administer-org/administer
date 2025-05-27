@@ -1,5 +1,5 @@
 local Utilities = {
-	Logging = {},
+	Logging = {}
 }
 
 --local RequestSettingsRemote = AdministerRemotes:WaitForChild("SettingsRemote", 10):WaitForChild("RequestSettings", 10)
@@ -94,7 +94,7 @@ Utilities.Logging.Print = function(...)
 end
 
 Utilities.Logging.Warn = function(...)
-	warn("[Administer] [warn]", ...)
+	warn("[Administer] [warn]", ..., debug.traceback(""))
 	Frontend.Log("wrn", ...)
 end
 

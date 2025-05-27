@@ -22,8 +22,11 @@ function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 
 	table.insert(Var.Admins.InGame, Player)
 	Var.Admins.TotalRunningCount += 1
-	
-	print(Rank, AdminRankID)
+
+	if Rank.Apps == nil then
+		Util.Logging.Warn(`RankStore seems to be corrupt! \nRankData: {game:GetService("HttpService"):JSONEncode(Rank)}\nRankID: {AdminRankID}`)
+		return {false, "Corrupt RankStore, please reset your database"}
+	end
 
 	if Rank.Apps.SuperAdmin == false then
 		for ID, Object in Rank.Apps.PageIDs do
@@ -217,7 +220,9 @@ function AR.Ranks.GetAll()
 	--// Load in parallel
 	for i, RankName in Current.Names do
 		task.spawn(function()
-			Ranks[i] = Var.DataStores.AdminsDS:GetAsync(RankName)
+			pcall(function()
+				Ranks[i] = Var.DataStores.AdminsDS:GetAsync(RankName)
+			end)
 		end)
 	end
 
