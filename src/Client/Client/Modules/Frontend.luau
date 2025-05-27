@@ -187,6 +187,10 @@ function Frontend.CheckForUpdates(Products: {}?): ()
 end
 
 local DrawerConnections = {}
+local ShouldAnimate = true
+local IsQueued = false
+local CurrentlyActive
+local Ready = true
 local Card
 
 function Frontend.Drawer.Open(): ()
@@ -201,6 +205,8 @@ function Frontend.Drawer.Open(): ()
 	local TimeToComplete
 
 	Var.DoHeaderEffects = false
+	ShouldAnimate = true
+	Ready = true
 
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
@@ -229,9 +235,9 @@ function Frontend.Drawer.Open(): ()
 		if (Child:IsA("Frame") or Child:IsA("CanvasGroup")) and Child.Name ~= "AppDrawer" then
 			Child.Parent = Container 
 
-			-- if Child.Name == Var.ActivePage.Name then
-			-- 	CurrentlyActive = Child
-			-- end
+			if Child.Name == Var.ActivePage.Name then
+				CurrentlyActive = Child
+			end
 		end
 	end
 
@@ -333,6 +339,8 @@ function Frontend.Drawer.Close(): ()
 	local Container = Apps.AppDrawerCover.CanvasGroup
 	local TimeToComplete
 
+	ShouldAnimate = false
+
 	xpcall(function()
 		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed")) or 1
 	end, function(e)
@@ -366,8 +374,10 @@ function Frontend.Drawer.Close(): ()
 			BackgroundTransparency = 1
 		})
 		:Play()
-	
-	game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 }):Play()
+
+	pcall(function()
+		game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 }):Play()
+	end)
 
 	task.wait(TimeToComplete * .6)
 
@@ -392,12 +402,13 @@ function Frontend.Drawer.Close(): ()
 	Container.Parent.AnchorPoint = Vector2.new(0,0)
 
 	Container:Destroy()
-	
+
 	for _, Connection in DrawerConnections do
 		Connection:Disconnect()
 	end
 
 	Var.DoHeaderEffects = true
+	Ready = true
 end
 
 function Frontend.Drawer.HoverBegin()
@@ -663,25 +674,25 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Butto
 	NewFrame.Position = UDim2.new(1,0,.5,0)
 	NewFrame.AnchorPoint = Vector2.new(.5,0)
 
-	Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
+	local x = Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP })
 	Var.Services.TweenService:Create(Var.ActivePage, TInfo, { Position = UDim2.new(-1, 0, .5, 0), AnchorPoint = Vector2.new(.5,0) }):Play()
 
-	task.delay(.75, function()
-		Var.ActivePage.Position = OGFramePos
-		Var.ActivePage.AnchorPoint = OGFrameAP
-		Var.ActivePage.Visible = false
+	x:Play()
+	x.Completed:Wait()
 
-		Var.ActivePage = NewFrame
-	end)
+	Var.ActivePage.Position = OGFramePos
+	Var.ActivePage.AnchorPoint = OGFrameAP
+	Var.ActivePage.Visible = false
 
+	Var.ActivePage = NewFrame
 
 	repeat task.wait() until Var.MainFrame:FindFirstChild("Header") --// close animation 
 
 	xpcall(function()
-		Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer{Clicked ~= 0 and ` {AppConfig.AppName}` or ""}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
+		Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>{Clicked ~= 0 and `{AppConfig.AppName}` or "Administer"}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
 		Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = AppConfig.Icon
 		Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and "rbxassetid://116599744136879" or AppConfig.SubIcons[Clicked].Icon
-		
+
 		Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
 	end, function()
 		--// just dont change it lmao
@@ -717,7 +728,7 @@ function Frontend.InitGestureBar()
 					elseif StartSize.Y.Offset + Delta.Y <= MinY then
 						ConstrainedBy = "Y"
 					end
-					
+
 					if StartSize.X.Offset + -Delta.X <= MinX and StartSize.Y.Offset + Delta.Y <= MinY then
 						ConstrainedBy = "XY"
 					end
@@ -759,7 +770,7 @@ function Frontend.InitGestureBar()
 			if Connection then
 				Connection:Disconnect()
 			end
-			
+
 			--// Insurance soontm
 		end
 	end)

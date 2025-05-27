@@ -18,7 +18,6 @@ function Migrator.CheckForV1()
 	local SuperAdmin = Var.DataStores.AdminsDS:GetAsync("_Rank1")
 
 	if SuperAdmin == nil then return false end
-	if SuperAdmin.FinishedMigration then return false end
 
 	return true
 end
@@ -33,7 +32,7 @@ function Migrator.Migrate()
 			--// Replace it
 			Utilities.Logging.Print(`[-] Administer found a new version of {App.Name}, installing!`)
 
-			print(Apps.Install(AppAssociations[App.ID], `Administer Migrator (1.0 -> 2.0), AOS Gateway`, App.Name))
+			print(Apps.Install(AppAssociations[App.ID], `Administer Migrator (1.2.3 -> 2.0), AOS Gateway`, App.Name))
 
 			Apps.Uninstall(App.ID)
 
@@ -45,6 +44,8 @@ function Migrator.Migrate()
 	
 	Apps.ServerAPI.UninstallServer("https://administer.notpyx.me", true)
 	Apps.ServerAPI.New("https://aos-canary.admsoftware.org", 1)
+	
+	Apps.ServerAPI.RegisterPrimary(Var.DefaultAppServer)
 
 	local AdminKeys: DataStorePages = Var.DataStores.AdminsDS:ListKeysAsync()
 	--local AdminKeys = {
@@ -61,9 +62,22 @@ function Migrator.Migrate()
 			else
 				Utilities.Logging.Print(`Hit {Key.KeyName}`)
 			end
+			
+			local Name = Key.KeyName
+			
+			if Name == "" then
+				Name = `AutoMigrate-{math.random(1,1000)}`
+				print(`Overwriting blank rank name! '' -> {Name}`)
+				
+				local Info = Var.DataStores.AdminsDS:GetAsync("CurrentRanks") or Var.DefaultRankData
+
+				table.remove(Info.Names, table.find(Info.Names, ""))
+				table.insert(Info.Names, Name)
+
+				Var.DataStores.AdminsDS:SetAsync("CurrentRanks", Info)
+			end
 
 			local Data = Var.DataStores.AdminsDS:GetAsync(Key.KeyName)
-			print(Data)
 
 			if Data.RankName == "Admin" then
 				AdminRunner.Ranks.New({
@@ -74,7 +88,7 @@ function Migrator.Migrate()
 					Members = Data.Members,
 
 					Apps = {
-						SuperAdmin = true,
+						SuperAdmin = true
 					},
 
 					CreationReason = `Migrated by Administer 2.0.0 automatically ({Data.CreationReason}).`,
@@ -101,7 +115,7 @@ function Migrator.Migrate()
 				Members = Data.Members,
 
 				Apps = {
-					SuperAdmin = true,
+					SuperAdmin = true
 				},
 
 				CreationReason = `Migrated by Administer 2.0.0 automatically ({Data.CreationReason}).`,
@@ -115,6 +129,11 @@ function Migrator.Migrate()
 
 		AdminKeys:AdvanceToNextPageAsync()
 	end
+	
+	--// Delete Rank1 so CheckForV1() will be false
+	Var.DataStores.AdminsDS:RemoveAsync("_Rank1")
+	
+	Utilities.Logging.Print("[ok] Administer has migrated!")
 end
 
 return Migrator

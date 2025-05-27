@@ -345,6 +345,28 @@ function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 	return { false, Utils.t(nil, "generic.error.Generic") }
 end
 
+function App.ServerAPI.RegisterPrimary(URL: string): Types.Response
+	HTTP.PostRoute(URL, "/api/register-home-node", {}, function(Data, Info)
+		Utils.Logging.Print("Registered!", Data)
+		
+		for _, Server in Var.AppServers do
+			if Server["ServerURL"] == URL then
+				Server["IsPrimary"] = true
+			end
+		end
+		
+		Var.DataStores.AppDB:SetAsync("AppServerList", Var.AppServers)
+
+		return { true, "Done!" }
+	end, function(...)
+		Utils.Logging.Warn(`Failed to register this AOS instance as your primary, is it accepting primary registrations?`, ...)
+
+		return { false, Utils.t(nil, "generic.error.CheckLogs") }
+	end)
+
+	return { false, Utils.t(nil, "generic.error.Generic") }
+end
+
 function App.ServerAPI.GetServerStatuses(): Types.Response
 	local Resps = {}
 

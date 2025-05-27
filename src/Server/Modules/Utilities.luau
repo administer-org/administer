@@ -31,7 +31,7 @@ Utils.Logging = {
 
 	--Creates a warning, with a traceback.
 	Warn = function(...)
-		warn(`[{Config.Name}] [warn]`, debug.traceback(...))
+		warn(`[{Config.Name}] [warn]`, ..., debug.traceback(""))
 	end,
 
 	--Warns without a debugging traceback both for the console and for admins.
@@ -291,7 +291,7 @@ function Utils.NewRemote(
 		end)
 
 		return
-			
+
 	elseif RemoteType == "RemoteFunction" then
 		(Rem :: RemoteFunction).OnServerInvoke = function(Player: Player, ...)
 			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] then return false end

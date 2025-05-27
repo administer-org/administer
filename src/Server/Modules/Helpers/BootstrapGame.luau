@@ -39,9 +39,17 @@ return function(): ()
 	})
 
 	Apps.ServerAPI.New(Var.DefaultAppServer, -1)
+	
+	--// TODO: Remove this and let the setup assistant do it so the user can choose
+	Apps.ServerAPI.RegisterPrimary(Var.DefaultAppServer)
+	
 	Apps.ServerAPI.InstallFromServer(
 		Var.DefaultAppServer, --// Assuming this is (hopefully) AOS
-		1
+		"org.admsoftware.player-management.Main"
+	)
+	Apps.ServerAPI.InstallFromServer(
+		Var.DefaultAppServer,
+		"org.admsoftware.Reporter"
 	)
 
 	Utils.Logging.Print("[✓] Welcome to Administer!")

@@ -48,6 +48,13 @@ xpcall(function()
 		--// This system is better than the old one because it allows the user
 		--// to uninstall AOS without causing the system to overwrite stuff
 		Var.DataStores.Settings:SetAsync("HasInit", true)
+	else
+		if Migrator.CheckForV1() then
+			Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
+			Migrator.Migrate()
+		else
+			Utils.Logging.Print("V1 Installation not found!")
+		end
 	end
 
 	--// Now load settings
@@ -228,6 +235,3 @@ end)
 --// Initial version stuff
 Configuration.VersData.InstallDate = Utils.CheckVersion()
 Configuration.VersData.IsUpToDate = not Utils.UpdateCallback({ "org.admsoftware.Core" })["org.admsoftware.Core"].your_version.is_outdated
-
---// Dev
---Migrator.Migrate()
