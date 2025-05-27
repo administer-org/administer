@@ -24,7 +24,7 @@ return {
 		Minor = 0,
 		Tweak = 0,
 		
-		Extra = "RC1 (target:RELEASE brnch:pubbeta) re95c12fb",
+		Extra = "RC1 (target:PRLSE\\pubbeta) 54340f3",
 		String = "2.0.0-rc1",
 		
 		NoExtraData = "2.0.0",
@@ -50,6 +50,59 @@ return {
 			[0] = { --// User ID
 				AdminRankID = 1
 			},
+		}
+	},
+	
+	Contributors = {
+		{
+			UserID = 133017837,
+			Name   = "pyxfluff",
+			Job    = "project lead, AOS, frontend/backend"
+		},
+		{
+			UserID = 3610087630,
+			Name   = "dogo8me2",
+			Job    = "core assistance, apps"
+		},
+		{
+			UserID = 630064214,
+			Name   = "DullerKill7r",
+			Job    = "app development"
+		},
+		{
+			UserID = 3952806136,
+			Name   = "RoltairTheProtogen",
+			Job    = "community management, product testing"
+		},
+		{
+			UserID = 1,
+			Name   = "iiPythonx",
+			Job    = "hosting, database administration"
+		},
+		{
+			UserID = 3239844753,
+			Name   = "CDot_NightHawk",
+			Job    = "hosting infrastructure"
+		},
+		{
+			UserID = 1,
+			Name   = "FlatIcon",
+			Job    = "default icon pack"
+		},
+		{
+			UserID = 365438147,
+			Name   = "pixe_ated",
+			Job    = "QuickBlur"
+		},
+		{
+			UserID = 345072461,
+			Name   = "WinnersTakesAll",
+			Job    = "Shime"
+		},
+		{
+			UserID = 1516442,
+			Name   = "Fractality",
+			Job    = "neon"
 		}
 	},
 
@@ -209,7 +262,7 @@ return {
 			["_CategoryOpts"] = {
 				["DisplayName"] = "Apps",
 				["Color"] = "#fff",
-				["Description"] = "Manage app settings.",
+				["Description"] = "Manage app settings."
 			},
 
 			["LoadDelay"] = {
@@ -224,7 +277,7 @@ return {
 					"All",
 					["Value"] = "None",
 					["Default"] = "None",
-				},
+				}
 			},
 
 			["FetchAppServers"] = {
@@ -287,9 +340,9 @@ return {
 					
 					["Value"] = "regular",
 					["Default"] = "regular"
-				},
-			},
-		},
+				}
+			}
+		}
 	},
 
 	BetaOptIns = {},
