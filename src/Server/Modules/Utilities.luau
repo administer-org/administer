@@ -56,7 +56,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		return {
 			IsAdmin  = true,
 			Reason   = Utils.t(Player, "admincheck.SUDO"),
-			RankID   = 1,
+			RankID   = "Administrator",
 			RankName = Utils.t(Player, "admin.RankDefault")
 		}
 	end
@@ -67,7 +67,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		return {
 			IsAdmin = true,
 			Reason = Utils.t(Player, "admincheck.OVERRIDE"),
-			RankID = 1,
+			RankID = "Administrator",
 			RankName = Utils.t(Player, "admin.RankDefault")
 		}
 	else
@@ -77,7 +77,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 					return {
 						IsAdmin = true,
 						Reason = Utils.t(Player, "admincheck.OVERRIDE"),
-						RankID = Data.AdminRankID,
+						RankID = Data.AdminRankName,
 						RankName = "Admin"
 					}
 				end
@@ -96,7 +96,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 			return {
 				IsAdmin = true,
 				Reason = Utils.t(Player, "admincheck.RANKINDEX"),
-				RankID = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankID,
+				RankID = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName,
 				RankName = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName
 			}
 		else
@@ -130,14 +130,14 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 				return {
 					IsAdmin = true,
 					Reason = Utils.t(Player, "admincheck.GROUP"),
-					RankID = Group.AdminRankID,
+					RankID = Group.AdminRankName,
 					RankName = Group.AdminRankName
 				}
 			else
 				return {
 					IsAdmin = true,
 					Reason = Utils.t(Player, "admincheck.GROUP"),
-					RankID = Group.AdminRankID,
+					RankID = Group.AdminRankName,
 					RankName = Group.AdminRankName
 				}
 			end
