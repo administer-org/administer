@@ -1,14 +1,11 @@
 --// Administer
 --// pyxfluff 2024 - 2025
 
-local L = script.Parent.Locales:GetChildren()
-local Locales = {}
+local Locales = {} for _, Locale in script.Parent.Locales:GetChildren() do table.insert(Locales, Locale.Name) end
 
-for _, Locale in L do
-	table.insert(Locales, L.Name)
-end
-
-Locales["Default"] = "en" --// Default locale here
+--// Change the default locale here
+--// Make sure it is supported by Administer! See ./Locales for the list.
+Locales["Default"] = "en"
 Locales["Value"] = "en"
 
 return {
@@ -19,17 +16,17 @@ return {
 			Name = "Administer",
 			Icon = `rbxassetid://{require(script.Parent.Icons).logos["administer-blue"]}`
 		},
-		
+
 		Major = 2,
 		Minor = 0,
 		Tweak = 0,
-		
-		Extra = "RC1 (target:PRLSE\\pubbeta) 54340f3",
-		String = "2.0.0-rc1",
-		
+
+		Extra = "RC2 (trg PRLS.pbta) 0d23e82",
+		String = "2.0.0-rc2",
+
 		NoExtraData = "2.0.0",
 		APIRevision = "2.0.0",
-		
+
 		ID = "org.admsoftware.Core"
 	},
 
@@ -37,7 +34,7 @@ return {
 		--// Hardcoded admins go here.
 		--// If you have no idea what a dictionary is then please just
 		--// use GUI-based rank configuration, you are going to make a syntax error.
-		
+
 		Groups = {
 			--// Change the ID in the table key here. Copy this entry to make more.
 			[0] = { --// Group ID
@@ -45,14 +42,14 @@ return {
 				AdminRankID = 1   --// Administer rank ID, leave 1 for administrator rights
 			},
 		},
-		
+
 		Players = {
 			[0] = { --// User ID
 				AdminRankID = 1
 			},
 		}
 	},
-	
+
 	Contributors = {
 		{
 			UserID = 133017837,
@@ -87,7 +84,7 @@ return {
 		{
 			UserID = 1,
 			Name   = "FlatIcon",
-			Job    = "default icon pack"
+			Job    = "icons"
 		},
 		{
 			UserID = 365438147,
@@ -180,12 +177,12 @@ return {
 					["Step"] = 0.1
 				}
 			},
-			
+
 			["AllowThemeScriptHooks"] = {
 				["DisplayName"] = "Allow themes to run Lua",
 				["Description"] = "If enabled, all themes will be allowed to run external Luau code. This is useful for more advanced themes or other modifications.",
 				["SettingType"] = "boolean",
-				
+
 				["Value"] = {
 					["Value"] = true,
 					["Default"] = true
@@ -337,7 +334,7 @@ return {
 					"medium",
 					"large",
 					"extralarge",
-					
+
 					["Value"] = "regular",
 					["Default"] = "regular"
 				}
