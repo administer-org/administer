@@ -41,7 +41,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button:SetAttribute("ThreadType", "single")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
 
-		Button.Visible = true
+		Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
 
 		Button.Activator.MouseButton1Click:Connect(function()
 			task.defer(Frontend.Drawer.Close)
@@ -51,7 +51,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			xpcall(ButtonConfig.MainButtonClick, Utilities.Logging.Warn)
 		end)
 
-		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true)
+		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true) --// TODO: do we need this anymore?
 
 		return Button
 	else
@@ -66,7 +66,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button:SetAttribute("ThreadType", "multi")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
 		
-		Button.Visible = true
+		Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
 
 		Button.Activator.MouseButton1Click:Connect(function()
 			if ButtonConfig.MainButtonFrame == nil then return end
@@ -94,7 +94,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			end)
 
 			Clone.Parent = Button.SubCollection
-			Clone.Visible = true
+			Clone.Visible = Var.Remotes.CanUseApp:InvokeServer(Clone:GetAttribute("ButtonID"))
 			Clone.Name = Icon.Frame.Name
 
 			Height += .23
@@ -407,8 +407,6 @@ function Apps.LoadAppList(List: {} | nil): ()
 	end
 
 	local AppList = List or Var.Remotes.GetAppList:InvokeServer(Var.Marketplace.ActivePageType)
-	
-	print(Var.Marketplace.ActivePage)
 
 	if Var.Marketplace.ActivePage == "AAFeatured" then
 		local Featured = {}
@@ -753,7 +751,7 @@ function Apps.Init()
 	end
 
 	--// hopefully the icon pack has loaded by now?
-	Sidebar.Parent.MainMarketplace.XLibrary.AdministerLogo.Image = `rbxassetid://{Var.Icons.logos["administer-blue"]}` 
+	Sidebar.Parent.MainMarketplace.XLibrary.AdministerLogo.Image = Utilities.Icon "administer" 
 	Sidebar.Parent.MainMarketplace.XLibrary.GameArt.Image = Var.Remotes.GetGameArt:InvokeServer()
 
 	local Counts = Var.Remotes.GetAppCounts:InvokeServer()

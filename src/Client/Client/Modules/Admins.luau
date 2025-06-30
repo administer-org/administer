@@ -32,7 +32,7 @@ function Admins.Load(): ()
 
 	task.defer(function()
 		local List
-		
+
 		xpcall(function()
 			List = Var.Remotes.GetRanks:InvokeServer()
 		end, function(e)
@@ -57,7 +57,7 @@ function Admins.Load(): ()
 					}
 				}
 			)
-			
+
 			List = {}
 		end)
 
@@ -68,27 +68,56 @@ function Admins.Load(): ()
 		else
 			for i, v in List do
 				local Template = RanksFrame.Template:Clone()
-
+				local CreatorName = v.CreatorID == 1 and "System" or Var.Services.Players:GetNameFromUserIdAsync(v.CreatorID)
 				Template.Name = v.Name
 				Template.RankName.Text = v.Name
 				Template.Info.Text =
-					`{v.RankID} • {v.Apps.SuperAdmin and "Full Access" or #v.Apps .. " apps"}{v.Protected and " • Protected" or ""} • {v.CreationReason} • Created {Utilities.FormatRelativeTime(v.Modified)}`
-				
+					`{v.RankID} • {v.Apps.SuperAdmin and "Full Access" or #v.Apps .. " apps"} • Created by @{CreatorName} {Utilities.FormatRelativeTime(v.Modified)}`
+
 				if v.Apps.SuperAdmin then
 					local Card = Template.Pages.Frame:Clone()
+					local Tip = Instance.new("TextButton")
 
 					Card.Visible = true
 					Card.AppName.Text = "Super Administrator"
 					Card.ImageLabel.Image = Utilities.Icon "user-shield"
 					Card.Parent = Template.Pages
+					
+					Tip.Size = UDim2.new(1,0,1,0)
+					Tip.BackgroundTransparency = 1
+					Tip.BorderSizePixel = 0
+					Tip.Parent = Card
+					Tip.Text = ""
+					
+					table.insert(Connections, Tip.MouseButton1Click:Connect(function()
+						Frontend.Popup.new(
+							{
+								Icon = Utilities.Icon "administer",
+								Name = "Administer",
+								Subheader = "Information"
+							},
+							{
+								Primary = Utilities.Icon "user-shield"
+							},
+							"Super Administrator",
+							"Because this user is a Super Administrator, they'll be able to access any App (currently installed and installed in the future), manage + audit system functionality, and use restricted functionalities.",
+							{
+								{
+									Text = "OK",
+									Icon = Utilities.Icon "check-plain",
+									Callback = function(c) c() end
+								}
+							}
+						)
+					end))
 				end
-				
+
 				local UsableAppInfo = {}
 				local AppCount = 0
-				
+
 				for App, IsVisible in v.Apps do
 					if App == "CachedData" or App == "AdmHomepage" or App == "SuperAdmin" then continue end
-					
+
 					if IsVisible then
 						AppCount += 1
 						table.insert(UsableAppInfo, v.Apps.CachedData[App])
@@ -98,7 +127,7 @@ function Admins.Load(): ()
 				if AppCount > 6 then
 					for j = 1, 5 do
 						if type(v.Apps[j]) == "boolean" then continue end
-						
+
 						local Card = Template.Pages.Frame:Clone()
 
 						Card.Visible = true
@@ -114,7 +143,7 @@ function Admins.Load(): ()
 				else
 					for k, App in UsableAppInfo do
 						if type(App) == "boolean" then continue end
-						
+
 						local Card = Template.Pages.Frame:Clone()
 
 						Card.Visible = true
@@ -172,6 +201,67 @@ function Admins.Load(): ()
 						or #UserNames == 2 and `<b>{UserNames[1]}</b> and <b>{UserNames[2]}</b> are members`
 						or `<b>{UserNames[1]}</b> is a member`
 				)
+				
+				table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
+					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
+						Position = UDim2.fromScale(0.1, 0.036),
+						Size = UDim2.fromScale(0.858, 0.126)
+					}):Play()
+					
+					Var.Services.TweenService:Create(Template.Configure, TweenInfo.new(.3), {
+						ImageTransparency = 0
+					}):Play()
+				end))
+				
+				table.insert(Connections, Template.EditTrigger.MouseLeave:Connect(function()
+					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
+						Position = UDim2.fromScale(0.025, 0.036),
+						Size = UDim2.fromScale(0.955, 0.126)
+					}):Play()
+
+					Var.Services.TweenService:Create(Template.Configure, TweenInfo.new(.3), {
+						ImageTransparency = 1
+					}):Play()
+				end))
+				
+				if v.Protected then
+					Template.Configure.Image = Utilities.Icon "lock"
+					
+					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
+						Frontend.Popup.new(
+							{
+								Icon = Utilities.Icon "administer",
+								Name = "Rank Editor",
+								Subheader = "Access Denied"
+							},
+							{
+								Primary = Utilities.Icon "user-shield",
+								SubIcon = Utilities.Icon "triangle-warning"
+							},
+							"Insufficient Permissions",
+							"Editing protected ranks is prohibited because they are generally created by the system and are important for Administer's functionality. If this is incorrect and you need to edit the rank, please contact whoever installed Administer.",
+							{
+								{
+									Text = "OK",
+									Icon = Utilities.Icon "check-plain",
+									Callback = function(c) c() end
+								}
+							}
+						)
+					end))
+				else
+					local Env = require(script.Parent.UI.AdminHelperEnv)
+					
+					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
+						Env.EditMode = true
+						Env.EditModeMembers = v.Members
+						Env.EditModeApps = v.Apps
+						Env.EditModeName = v.Name
+						Env.EditModeColor = v.Color
+						
+						Admins.OpenCreator()
+					end))
+				end
 			end
 		end
 
@@ -262,6 +352,7 @@ function Admins.ClearEditState(Env)
 		Env.EditModeMembers = {}
 		Env.EditModeApps = {}
 		Env.EditModeName = ""
+		Env.EditModeColor = ""
 		Env.EditModeIsProtected = false
 		Env.EditModeRank = 0
 	end
@@ -271,10 +362,12 @@ function Admins.ClearEditState(Env)
 end
 
 function Admins.OpenCreator()
-	
+	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
 end
 
 function Admins.CloseCreator()
+	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
+	
 	task.delay(1, function()
 		if Page == 2 then
 			SwapPages(Frames.Page2, Frames.Page1, "rbxassetid://18151072839", false, 1)
@@ -298,9 +391,9 @@ function Admins.RunCreatorApp()
 
 	Frames.BottomData.Controls.ALast.MouseButton1Click:Connect(function()
 		if not CanGoBack then return end
-		
+
 		print(Page, Page <= 1)
-		
+
 		if Page <= 1 then return end
 
 		Page -= 1
@@ -311,15 +404,6 @@ function Admins.RunCreatorApp()
 		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true, 1)
 
 		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
-
-		if Env.EditModeIsProtected then
-			Frames.Page5.Header.Text = "Access Denied"
-			Frames.Page5.Body.Text =
-				"Sorry, but this rank is protected and may not be edited. Please contact whoever installed Administer."
-
-			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
-			return
-		end
 
 		--// Verify the filtering service is online
 		local Success, FilterResult = pcall(function()
@@ -338,9 +422,16 @@ function Admins.RunCreatorApp()
 				end),
 
 				Frames.Page2.ColorInput:GetPropertyChangedSignal("Text"):Connect(function()
-					Frames.Page2.ColorPreview.Text = `Rank Color (<font color="#{Frames.Page2.ColorInput.Text}">The quick brown fox jumps over the lazy dog</font>)`
+					xpcall(function()
+						Frames.Page2.ColorPreview.BackgroundColor3 = Color3.fromHex(Frames.Page2.ColorInput.Text)
+					end, function()
+						Frames.Page2.ColorPreview.BackgroundColor3 = Color3.fromHex("fff")
+					end)
 				end)
 			}
+			
+			Frames.Page2.TextInput.Text = Env.EditModeName
+			Frames.Page2.ColorInput.Text = Env.EditModeColor
 		else
 			Frames.Page5.Header.Text = "Oops! That's not meant to happen."
 			if FilterResult[2] then
@@ -460,7 +551,7 @@ function Admins.RunCreatorApp()
 					Thread = task.spawn(CheckTask)
 				end
 			end)
-			
+
 			ConnectionsTable["Close" .. math.random(1, 500)] = Clone.Delete.MouseButton1Click:Connect(function()
 				Clone:Destroy()
 			end)
@@ -474,7 +565,7 @@ function Admins.RunCreatorApp()
 
 			Clone.Parent = Frames.Page3.Members.Members
 			Clone.Visible = true
-			
+
 			Clone:SetAttribute("IsTemplate", false)
 			Clone:SetAttribute("TemplateType", "User")
 
@@ -551,7 +642,7 @@ function Admins.RunCreatorApp()
 		if MemberCount == 0 then
 			Frontend.Popup.new(
 				{
-					Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
+					Icon = Utilities.Icon "administer",
 					Name = "Administer",
 					Subheader = "Rank Creator"
 				}, {
@@ -574,24 +665,48 @@ function Admins.RunCreatorApp()
 			)
 
 			return
+		elseif MemberCount > Env.MaxPeople then
+			Frontend.Popup.new(
+				{
+					Icon = Utilities.Icon "administer",
+					Name = "Administer",
+					Subheader = "Rank Creator"
+				}, {
+					Primary = Utilities.Icon "warning-filled",
+					SubIcon = Utilities.Icon "x"
+				},
+				"Invalid input",
+				`One rank may not have more than {Env.MaxPeople} people in it.`,
+				{
+					{
+						Text = "Ok",
+						Icon = Utilities.Icon "check-plain",
+						Callback = function(c)
+							SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
+
+							c()
+						end
+					}
+				}
+			)
 		end
 
 		local ShouldGoBack = false
 		local Toggled = false
-		
+
 		for i, v in Frames.Page3.Members.Members:GetChildren() do	
 			if not v:IsA("Frame") then continue end
 			if v:GetAttribute("IsTemplate") then continue end
 
 			pcall(function()
 				if ShouldGoBack then return true end
-				
+
 				Toggled = false
-				
+
 				if v.TextInput.Text == "" then
 					Frontend.Popup.new(
 						{
-							Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
+							Icon = Utilities.Icon "administer",
 							Name = "Administer",
 							Subheader = "Rank Creator"
 						}, {
@@ -622,11 +737,11 @@ function Admins.RunCreatorApp()
 
 			repeat task.wait() until Toggled
 			Toggled = false
-			
+
 		end
 
 		if ShouldGoBack then return end
-		
+
 		ShouldGoBack = false
 
 		for i, v in ConnectionsTable do
@@ -717,16 +832,18 @@ function Admins.RunCreatorApp()
 				end
 			end
 		end
+		
+		print(Env.EditModeApps)
 
 		for i, App in Env.EditModeApps :: { { DisplayName: string, Icon: string, Name: string } } do
 			if Frames.Page4.Apps.Apps:FindFirstChild(App.DisplayName) then continue end
 
-			NewLegacyCard(
-				App.DisplayName,
-				App.Icon,
-				App.Name,
-				"You don't have the permissions to access this app, so we don't know anything else about it."
-			)
+			--NewLegacyCard(
+			--	App.DisplayName,
+			--	App.Icon,
+			--	App.Name,
+			--	"You don't have the permissions to access this app, so we don't know anything else about it."
+			--)
 		end
 
 		SwapPages(Frames.Loading, Frames.Page4, "rbxassetid://14865439768", false, 4)

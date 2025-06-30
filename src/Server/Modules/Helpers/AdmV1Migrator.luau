@@ -46,6 +46,12 @@ function Migrator.Migrate()
 	Apps.ServerAPI.New("https://aos-canary.admsoftware.org", 1)
 	
 	Apps.ServerAPI.RegisterPrimary(Var.DefaultAppServer)
+	
+	--// install the v2 reporter regardless bc yes 
+	Apps.ServerAPI.InstallFromServer(
+		Var.DefaultAppServer,
+		"org.admsoftware.Reporter"
+	)
 
 	local AdminKeys: DataStorePages = Var.DataStores.AdminsDS:ListKeysAsync()
 	--local AdminKeys = {

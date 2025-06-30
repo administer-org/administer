@@ -15,95 +15,98 @@ Importer.Systems = {
 }
 
 function Importer.GetData(SystemName)
-	return xpcall(function()
-		if SystemName == "EXE_5" then
-			--// Find ELEMENTS
-			local Exe5Elements = require(game.ServerScriptService:FindFirstAncestor("ELEMENTS"))
-			local ExeFoundSanitizedAdmins = {}
+	if SystemName == "EXE_5" then
+		--// Find ELEMENTS
+		local Exe5Elements = require(game.ServerScriptService:FindFirstAncestor("ELEMENTS"))
+		local ExeFoundSanitizedAdmins = {}
 
-			if Exe5Elements == nil then error() end
-
-			local ExeGroup = Exe5Elements.FETCH_GROUP()
-			local ExeGroupRanks = Exe5Elements.FETCH_RANKS()
-			local ExePlayers = Exe5Elements.FETCH_PLAYERS()
-
-			for UserID, Data in ExePlayers do
-				table.insert(ExeFoundSanitizedAdmins, {
-					MemberType = "User",
-					ID = UserID
-				})
-			end
-
-			for _, Rank in ExeGroupRanks do
-				table.insert(ExeFoundSanitizedAdmins, {
-					MemberType = "Group",
-					RankName = "Administrator",
-
-					ID = ExeGroup,
-					GroupRank = Rank
-				})
-			end
-
-			return { true, {
-				Commands = {},
-				Ranks = {
-					"Administrator"	
-				},
-				Admins = ExeFoundSanitizedAdmins,
-				Logs = {}
-			}}
-
-		elseif SystemName == "HD_ADMIN" then
-			local HDRoot = game:FindFirstAncestor("HD Admin")
-			local HDSanitizedAdmins = {}
-			local HDRankNames = {}
-
-			if HDRoot == nil then error() end
-
-			local HDSettings = require(HDRoot.Settings)
-
-			for GroupID, RankData in HDSettings.Groups do
-				for GroupRank, RankName in RankData do
-					table.insert(HDSanitizedAdmins, {
-						MemberType = "Group",
-						RankName = RankName,
-
-						ID = GroupID,
-						GroupRank = GroupRank
-					})	
-				end
-			end 
-
-			--// i hate this so much HD admins parsing is so buns
-			--// Realistically idk how it works so I'm just guessing..
-			for _, Rank in HDSettings.Ranks do
-				for _, Child in Rank do
-					if typeof(Child) ~= "table" then continue end
-					
-					table.insert(HDRankNames)
-					table.insert(HDSanitizedAdmins, {
-						MemberType = "User",
-						RankName = Rank[1],
-
-						ID = Child[1],
-					})	
-				end
-			end
-
-			return { true, {
-				Commands = {},
-				Ranks = {
-					"Administrator"	
-				},
-				Admins = HDSanitizedAdmins,
-				Logs = {}
-			}}
+		if Exe5Elements == nil then 
+			return {false, "Exe 5 is not installed."}
 		end
-	end, function()
-		Utils.Logging.Print(`Installation {SystemName} not found!`)
 
-		return {false, "NotFound"} 
-	end)
+		local ExeGroup = Exe5Elements.FETCH_GROUP()
+		local ExeGroupRanks = Exe5Elements.FETCH_RANKS()
+		local ExePlayers = Exe5Elements.FETCH_PLAYERS()
+
+		for UserID, Data in ExePlayers do
+			table.insert(ExeFoundSanitizedAdmins, {
+				MemberType = "User",
+				ID = UserID
+			})
+		end
+
+		for _, Rank in ExeGroupRanks do
+			table.insert(ExeFoundSanitizedAdmins, {
+				MemberType = "Group",
+				RankName = "Administrator",
+
+				ID = ExeGroup,
+				GroupRank = Rank
+			})
+		end
+
+		return { true, {
+			Commands = {},
+			Ranks = {
+				"Administrator"	
+			},
+			Admins = ExeFoundSanitizedAdmins,
+			Logs = {}
+		}}
+
+	elseif SystemName == "HD_ADMIN" then
+		local HDRoot = game:FindFirstAncestor("HD Admin")
+		local HDSanitizedAdmins = {}
+		local HDRankNames = {}
+
+		if HDRoot == nil then 
+			return { false, "HD Admin is not installed." }
+		end
+
+		local HDSettings = require(HDRoot.Settings)
+
+		for GroupID, RankData in HDSettings.Groups do
+			for GroupRank, RankName in RankData do
+				table.insert(HDSanitizedAdmins, {
+					MemberType = "Group",
+					RankName = RankName,
+
+					ID = GroupID,
+					GroupRank = GroupRank
+				})	
+			end
+		end 
+
+		--// i hate this so much HD admins parsing is so buns
+		--// Realistically idk how it works so I'm just guessing..
+		for _, Rank in HDSettings.Ranks do
+			for _, Child in Rank do
+				if typeof(Child) ~= "table" then continue end
+
+				table.insert(HDRankNames)
+				table.insert(HDSanitizedAdmins, {
+					MemberType = "User",
+					RankName = Rank[1],
+
+					ID = Child[1]
+				})	
+			end
+		end
+
+		return { true, {
+			Commands = {},
+			Ranks = {
+				"Administrator"	
+			},
+			Admins = HDSanitizedAdmins,
+			Logs = {}
+		}}
+	else
+		return {
+			false,
+			`{SystemName} is not installed`
+		}
+	end
 end
 
 function Importer.ListFoundSystems()
@@ -111,17 +114,31 @@ function Importer.ListFoundSystems()
 	local Final = {}
 
 	for _, System in Importer.Systems do
-		local Data = Importer.GetData(System)
+		xpcall(function()
+			local Data = Importer.GetData(System)
 
-		if Data[1] then
-			Data = Data[2]
+			print(Data)
+			
+			if Data[1] then
+				Data = Data[2]
 
+				Final[System] = {
+					Commands = #Data.Commands,
+					Ranks = #Data.Ranks,
+					Admins = #Data.Admins
+				}
+			end	
+		end, function(e)
+			Utils.Logging.Print(`System not found: {e}`)
 			Final[System] = {
-				Commands = #Data.Commands,
-				Ranks = #Data.Ranks,
-				Admins = #Data.Admins
+				Error = true,
+				Data = e,
+
+				Commands = -1,
+				Ranks = -1,
+				Admins = -1
 			}
-		end	
+		end)
 	end
 
 

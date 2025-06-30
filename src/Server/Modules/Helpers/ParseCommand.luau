@@ -49,6 +49,6 @@ return function(Input: string): { Command: string, Flags: {} }
 
 	return {
 		Command = Split[1],
-		Flags = Options,
+		Flags = Options
 	}
 end

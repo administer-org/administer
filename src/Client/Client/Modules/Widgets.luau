@@ -3,7 +3,7 @@
 --// pyxfluff 2024-2025
 
 local Widgets = {
-	Active = {},
+	Active = {}
 }
 
 local Modules = script.Parent
@@ -58,7 +58,7 @@ function Widgets.GetAvailableWidgets(): { Small: { {} }, Large: { {} } }
 end
 
 function Widgets.Edit(
-	ContainingUI --// DO NOT TYPE THIS FOR NOW
+	ContainingUI
 ): ()
 	local Editing = ContainingUI.Editing
 	local AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2
@@ -304,7 +304,7 @@ function Widgets.Edit(
 				Editing.WidgetName,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
 				{ Position = UDim2.new(0.04, 0, 0.647, 0), TextTransparency = 0 }
-			),
+			)
 		}
 		for _, t in Tweens do
 			t:Play()
@@ -343,7 +343,7 @@ function Widgets.Edit(
 				Editing.WidgetName,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
 				{ Position = UDim2.new(1, 0, 0.647, 0), TextTransparency = 1 }
-			),
+			)
 		}
 		for _, t in Tweens do
 			t:Play()
@@ -385,7 +385,7 @@ function Widgets.Edit(
 				Editing.WidgetName,
 				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
 				{ Position = UDim2.new(0.04, 0, 0.647, 0), TextTransparency = 0 }
-			),
+			)
 		}
 		for _, t in Tweens do
 			t:Play()

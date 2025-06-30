@@ -68,7 +68,7 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 	elseif Misc == nil then
 		return {
 			false,
-			"misc. data must not be nil, please refer to the documentation for imformation how to properly return a Construct object"
+			"misc. data must not be nil, please refer to the documentation for information how to properly return a Construct object"
 		}
 	end
 
@@ -118,6 +118,8 @@ function App.LoadLocal(
 
 	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
+		
+		return
 	end
 
 	--// Construct UI here
@@ -157,22 +159,27 @@ function App.Initialize(): boolean
 	if DelaySetting == "InStudio" and Var.Services.RunService:IsStudio() or DelaySetting == "All" then
 		task.wait(3)
 	end
+	
+	print(script.Parent.Parent.Parent.LocalApps:GetChildren())
 
 	for i, App in script.Parent.Parent.Parent.LocalApps:GetChildren() do
 		table.insert(Apps, {
 			ID = App,
 			InstallDate = 0,
-			InstallSource = ""
+			InstallSource = "",
+			IsPhysicalApp = true
 		})
 	end
 
 	for _, AppObj in Apps do
+		Utils.Logging.Print(`Importing app:`, AppObj)
 		task.defer(function()
 			App.LoadLocal(AppObj.ID, {
 				InstallDate = AppObj.InstallDate,
 				InstallSource = AppObj.InstallSource,
 				AppID = AppObj.ID
 			})
+			
 			i += 1
 		end)
 	end
@@ -316,13 +323,13 @@ function App.ServerAPI.GetList(
 	return Combined
 end
 
-function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
+function App.ServerAPI.New(URL: string, ActingUser: number?): Types.Response
 	Utils.Logging.Print("Installing app server...")
 
-	HTTP.GetRoute(URL, "/pub/.administer", function(Data, Info)
+	return HTTP.GetRoute(URL, "/pub/.administer", function(Data, Info)
 		if Data["server"] ~= "AdministerAppServer" then
-			Utils.Logging.Warn("This URL doesn't seem to be an Administer app server.")
-			return { false, "This is not a valid Administer app server." }
+			Utils.Logging.Warn("This does not seem to be a valid or up-to-date AOS instance.")
+			return { false, "This is not a valid AOS instance." }
 		end
 
 		Utils.Logging.Print("This server is valid!", Data)
@@ -337,16 +344,14 @@ function App.ServerAPI.New(URL: string, ActingUser: number): Types.Response
 
 		return { true, "Done!" }
 	end, function(SC)
-		Utils.Logging.Warn(`Failed to connect to the app server, is it running? (statuscode {SC})`)
+		Utils.Logging.Warn(`Failed to connect to AOS, is it running and accessible? (statuscode {SC})`)
 
-		return { false, Utils.t(nil, "generic.error.CheckLogs") }
+		return { false, `AOS is not healthy or accessible. Got code {SC} on /pub/.administer` }
 	end)
-
-	return { false, Utils.t(nil, "generic.error.Generic") }
 end
 
 function App.ServerAPI.RegisterPrimary(URL: string): Types.Response
-	HTTP.PostRoute(URL, "/api/register-home-node", {}, function(Data, Info)
+	return HTTP.PostRoute(URL, "/api/register-home-node", {}, function(Data, Info)
 		Utils.Logging.Print("Registered!", Data)
 		
 		for _, Server in Var.AppServers do
@@ -359,12 +364,10 @@ function App.ServerAPI.RegisterPrimary(URL: string): Types.Response
 
 		return { true, "Done!" }
 	end, function(...)
-		Utils.Logging.Warn(`Failed to register this AOS instance as your primary, is it accepting primary registrations?`, ...)
+		Utils.Logging.Warn(`Failed to register this AOS instance as your primary, is it online and accepting primary registrations?`, ...)
 
 		return { false, Utils.t(nil, "generic.error.CheckLogs") }
 	end)
-
-	return { false, Utils.t(nil, "generic.error.Generic") }
 end
 
 function App.ServerAPI.GetServerStatuses(): Types.Response
@@ -382,7 +385,8 @@ function App.ServerAPI.GetServerStatuses(): Types.Response
 					AOSVers       = Data.api_version,
 					PingTime      = Meta.ProcessedMS,
 					InstalledBy   = Server.Creator,
-					ServerInstall = Server.Time 
+					ServerInstall = Server.Time,
+					RawResp = Data
 				}
 			end, function(Code, Data)
 				return {
@@ -435,7 +439,7 @@ function App.ServerAPI.UninstallServer(ServerURL, IsStatic): Types.Response
 	end
 end
 
-function App.ServerAPI.GetApp(AppServer: string, AppID: number): Types.Response
+function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
 		return { true, Data }
 	end, function(...)
@@ -445,7 +449,7 @@ end
 
 function App.ServerAPI.InstallFromServer(
 	ServerURL: string,
-	AppID: number
+	AppID: string
 ): Types.Response
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
 		local RealID = Content["InstallID"]
@@ -453,7 +457,7 @@ function App.ServerAPI.InstallFromServer(
 			return { false, "This server gave us bad data, please report the error to the server owner." }
 		end
 
-		local Result: Types.Response = App.Install(RealID, ServerURL, Content["AppName"])
+		local Result: Types.Response = App.Install(RealID, ServerURL, Content["Name"])
 
 		if Result[1] then
 			return HTTP.PostRoute(ServerURL, `/api/asset/{AppID}/install`, {}, function(): Types.Response
@@ -502,10 +506,12 @@ function App.ServerAPI.GetAOSInstances(
 	local function DoStatusCheck(URL)
 		local Start = tick()
 
-		return HTTP.GetRoute(URL, "/", function(Data)
+		return HTTP.GetRoute(URL, "/pub/.administer", function(Data, Debugging)
 			return {
 				IsUp = true,
-				Ping = Data.ProcessedMS
+				Ping = Debugging.ProcessedMS,
+				Version = Data.api_version,
+				IsDev = Data.is_dev
 			}
 		end, function(_, Data)
 			return {
@@ -519,9 +525,10 @@ function App.ServerAPI.GetAOSInstances(
 		if DoStatusChecks then
 			for _, URL in Content.instances do
 				local Result = DoStatusCheck(URL.url)
-
-				URL.IsUp = Result.IsUp
-				URL.Ping = Result.Ping
+				
+				for Key, Value in Result do
+					URL[Key] = Value
+				end
 			end
 		end
 

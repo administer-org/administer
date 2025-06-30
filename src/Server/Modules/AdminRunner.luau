@@ -18,7 +18,6 @@ local LastAdminResult
 function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 	local Rank = Var.DataStores.AdminsDS:GetAsync(AdminRankID)
 	local NewPanel = Var.Panel.Spawn(Rank, Player)
-	local AllowedPages = {}
 
 	table.insert(Var.Admins.InGame, Player)
 	Var.Admins.TotalRunningCount += 1
@@ -28,47 +27,38 @@ function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 		return {false, "Corrupt RankStore, please reset your database"}
 	end
 
-	if Rank.Apps.SuperAdmin == false then
-		for ID, Object in Rank.Apps.PageIDs do
-			AllowedPages[ID] = {
-				Name = Object.DisplayName,
-				ButtonName = ID
-			}
-		end
-
-		for _, v in NewPanel.Main.AppDrawer.AppHolder.Apps:GetChildren() do
-			if not v:IsA("Frame") then continue end
-			if table.find({ "MultiThread", "SingleThread", "Home", "ZZ_AdministerData" }, v.Name) then continue end --// Always allowed
-
-			pcall(function()
-				xpcall(function()
-					if AllowedPages[v.Name] == nil then
-						Util.Logging.Print("Not allowed by rank (i think)")
-
-						for i, Page in NewPanel.Main:GetChildren() do
-							if Page:GetAttribute("LinkID") == v:GetAttribute("LinkID") then Page:Destroy() end
-						end
-
-						v:Destroy()
-					end
-				end, function(r)
-					Util.Logging.Warn(`Failed performing permission checks on {v.Name}! `)
-				end)
-			end)
-		end
-	end
-
 	NewPanel.Parent = Player.PlayerGui
 
 	Util.NewNotification(
 		Player :: Player,
-		string.format(Util.t(Player, "onboarding.Welcome"), Config.Name, Rank.Name, Util.GetSetting("Keybind")),
+		--string.format(Util.t(Player, "onboarding.Welcome"), Config.Name, Rank.Name, Util.GetSetting("Keybind")),
+		string.format(Util.t(Player, "onboarding.Welcome"), Config.Name, Rank.Name, "F2"), --// Will replace when we have settings again
 		string.format(Util.t(Player, "onboarding.Head"), Config.Name),
 		"rbxassetid://16105499426",
 		15,
 		nil,
 		{}
 	)
+end
+
+function AR.CanUseApp(Identifier: Player | string, AppID: string)
+	local Rank
+	
+	print(typeof(Identifier))
+	
+	if typeof(Identifier) == "Instance" then
+		local Result = Util.IsAdmin(Identifier)
+
+		if not Result.IsAdmin then 
+			return false
+		end
+
+		Rank = Var.DataStores.AdminsDS:GetAsync(Result.RankID)
+	else
+		Rank = Var.DataStores.AdminsDS:GetAsync(Identifier)
+	end
+
+	return Rank.Apps.SuperAdmin and true or (Rank.Apps[AppID] ~= nil and Rank.Apps[AppID] or (Rank.Apps.NewAppsOn == true and true or false))
 end
 
 function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): Types.Response
@@ -85,7 +75,7 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 	if IsScan and table.find(Var.Admins.InGame, Player) and not Var.DisableBootstrapProtection then
 		return {
 			false,
-			"This person is already an admin and by default cannot be bootstrapped twice. Change this in the configuration module.",
+			"This person is already an admin and by default cannot be bootstrapped twice. Change this in the configuration module."
 		}
 	end
 
@@ -93,7 +83,7 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 		if LastAdminResult.IsAdmin then
 			AR.Bootstrap(Player, LastAdminResult.RankName)
 		elseif
-			(Var.Services.RunService:IsStudio() and Util.GetSetting("SandboxMode"))
+			(Var.Services.RunService:IsStudio() and Util.GetSetting("SandboxMode") == true)
 			or Var.EnableFreeAdmin
 			or ForceAdmin
 		then

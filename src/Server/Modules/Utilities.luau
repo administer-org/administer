@@ -550,4 +550,40 @@ function Utils.CheckVersion()
 	return SavedInstalls["org.admsoftware.Core"][Vers]
 end
 
+function Utils.HasSeenTutorial(
+	Player: Player | number | string, 
+	TutorialName
+)
+	if typeof(Player) ~= "Instance" then
+		Player = {
+			UserId = Player
+		}
+	end
+	
+	local Data = Var.DataStores.AdminsDS:GetAsync(`__{Player.UserId}_Tutorials`) or {}
+	
+	if Data[TutorialName] == nil then 
+		return false
+	else
+		return true
+	end
+end
+
+function Utils.TutorialSeen(Player, Tutorial)
+	if typeof(Player) ~= "Instance" then
+		Player = {
+			UserId = Player
+		}
+	end
+	
+	local Data = Var.DataStores.AdminsDS:GetAsync(`__{Player.UserId}_Tutorials`) or {}
+	
+	Data[Tutorial] = true
+	
+	Var.DataStores.AdminsDS:SetAsync(`__{Player.UserId}_Tutorials`, Data)
+	
+	return {true, `OK __{Player.UserId}_Tutorials: {Tutorial} true`}	
+end
+
+
 return Utils

@@ -105,4 +105,8 @@ function Http.PostRoute(
 	end
 end
 
+function Http.GUID()
+	return Var.Services.HttpService:GenerateGUID(false)
+end
+
 return Http

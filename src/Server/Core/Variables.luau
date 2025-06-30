@@ -11,7 +11,7 @@ local Config = require(script.Parent.Configuration)
 --// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
 Variables.Config                     = require(script.Parent.Configuration) --// Config file location
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin            = true --// Makes every user a superamdin. Not recommended for anything other than debugging.
+Variables.EnableFreeAdmin            = false --// Makes every user a superamdin. Not recommended for anything other than debugging.
 
 --Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
 Variables.DefaultAppServer           = "https://aos-canary.admsoftware.org" --// Must be an AOS app server instance.
@@ -19,6 +19,7 @@ Variables.ProxyURL                   = "https://proxy.pyxfluff.dev" --// Roblox 
 Variables.Locales                    = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit            = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
 Variables.WaitForBootstrap           = false --// Whether or not we will wait for apps to load before sending out panels.
+Variables.IsFirstBoot                = false --// Setting this to true will fully reset your game's Administer store so be careful!! Use the Utilities app to do it properly
 
 Variables.Services = setmetatable({}, {
     __index = function(self, Service)
@@ -60,8 +61,7 @@ Variables.LogJoins                   = true
 Variables.PanelFound                 = Root.Resources:FindFirstChild("AdministerMainPanel")
 Variables.Branch                     = nil
 Variables.DisableBootstrapProtection = true
-Variables.IsFirstBoot                = false --// Setting this to true will fully reset your game's Administer store so be careful!! Use the Utilities app to do it properly
-Variables.IsRecentV1xMigration       = true
+Variables.IsRecentV1xMigration       = false
 
 --// Note to self: when adding these, remember to type in the Types file!!
 Variables.ModuleSensitivity = {
@@ -157,6 +157,7 @@ Variables.AppServers = Variables.DataStores.AppDB:GetAsync("AppServerList") or {
 
 Variables.Panel.Spawn = function(Rank, Player)
 	local NewPanel = Variables.Panel.Path:Clone()
+	local Tutorials = Variables.DataStores.AdminsDS:GetAsync("__Global_Tutorials") or {}
 	
 	xpcall(function()
 		NewPanel:SetAttribute("_AdminRank", Rank.Name)
@@ -177,7 +178,11 @@ Variables.Panel.Spawn = function(Rank, Player)
 	)
 	
 	NewPanel:SetAttribute("_CurrentBranch", Variables.Services.HttpService:JSONEncode(Variables.CurrentBranch))
-
+	NewPanel:SetAttribute("StartID", Variables.Services.HttpService:GenerateGUID(false))
+	-- TODO
+	--NewPanel:SetAttribute("NeedsSetup", Tutorials["FirstTimeSetup"] ~= true)
+	
+	NewPanel:SetAttribute("NeedsSetup", false)
 	return NewPanel
 end
 

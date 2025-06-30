@@ -171,21 +171,6 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	end
 end
 
-function Frontend.CheckForUpdates(Products: {}?): ()
-	--// TODO: Full product checking, need to redo this regardless
-	local Label = Var.MainFrame.Configuration.InfoPage.VersionDetails.Update.Label
-	Label.Text = "CHECKING"
-
-	--// fake slowdown lol
-	task.wait(0.25)
-	Var.Remotes.CheckForUpdates:InvokeServer()
-	Label.Text = "COMPLETE"
-
-	task.delay(3, function()
-		Label.Text = "CHECK FOR UPDATES"
-	end)
-end
-
 local DrawerConnections = {}
 local ShouldAnimate = true
 local IsQueued = false
@@ -443,6 +428,18 @@ function Frontend.Drawer.HoverEnd()
 	}):Play()
 end
 
+--// TODO
+function Frontend.Toast(Config: {
+	Text: string,
+	Subtext: string,
+	Icon: string,
+	Timeout: number,
+
+	OnClick: () -> ()	
+})
+	
+end
+
 Frontend.Popup.OriginalStates = {}
 
 function Frontend.Popup.Open(): ()
@@ -553,28 +550,34 @@ function Frontend.Popup.new(
 
 	Options: { 
 		{ 
-			Text: string, Icon: string, Callback: (Close: () -> (), TextInputChoices: { string? }) -> () 
+			Text: string,
+			Icon: string,
+			Callback: (Close: () -> (), TextInputChoices: { string? }) -> () 
 		}
 	},
 
-	TextInputs: { 
-		{ 
-			HeaderText: string 
+	TextInputs: {
+		{
+			HeaderText: string
 		}
 	}
 
 ): ()
 	if Options ~= nil and #Options > 2 then 
-		Utilities.Logging.Warn("Popups may not have more than two buttons.")
-		return {false, "FAILED"}
+		Utilities.Logging.Warn("Popups may not have more than two buttons")
+
+		return {false, "Popups may not have more than two buttons"}
 	end
 
 	if TextInputs ~= nil and #TextInputs > 2 then 
 		Utilities.Logging.Warn("Popups may not have more than two text inputs.")
-		return {false, "FAILED"}
+
+		return {false, "Popups may not have more than two text inputs."}
 	end
 
 	if Var.PopupOpen then
+		Utilities.Logging.Warn("A popup is already open and must be closed before a new one is opened.")
+
 		return {false, "Only one popup may be open at a time."}
 	end
 
@@ -599,7 +602,10 @@ function Frontend.Popup.new(
 	MessageBox.SubText.Text = BodyText
 
 	MessageBox.AppLogo.LogoImage.Image = Icons.Primary
-	MessageBox.SubIcon.Image = Icons.SubIcon
+	MessageBox.SubIcon.Image = Icons.SubIcon and Icons.SubIcon or ""
+
+	MessageBox.AppLogo.LogoImage.Position = not Icons.SubIcon and UDim2.fromScale(0.5, 0.5) or UDim2.fromScale(0.047, 0.149)
+	MessageBox.AppLogo.LogoImage.AnchorPoint = not Icons.SubIcon and Vector2.new(0.5, 0.5) or Vector2.new(0,0)
 
 	MessageBox.Button1.Label.Text = Options[1].Text
 	MessageBox.Button1.Icon.Image = Options[1].Icon
@@ -625,6 +631,7 @@ function Frontend.Popup.new(
 		MessageBox.Button1.Position = ButtonOneOriginalPos
 	end, function()
 		--// Allow for having only one button
+		
 		MessageBox.Button2.Visible = false
 		MessageBox.Button1.AnchorPoint = Vector2.new(.5, 0)
 		MessageBox.Button1.Position = UDim2.fromScale(.5, MessageBox.Button1.Position.Y.Scale) 
@@ -649,7 +656,46 @@ function Frontend.Popup.new(
 	MessageBox.Visible = true
 end
 
-function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number, Button)
+function Frontend.SwapAppBasic(
+	NewFrame: Frame | CanvasGroup, 
+	NewConfig: { Name: string, Icon: string }
+)
+	if NewFrame.Name == Var.ActivePage.Name then
+		return
+	end
+
+	local OGFramePos, OGFrameAP, NewFramePos, NewFrameAP = Var.ActivePage.Position, Var.ActivePage.AnchorPoint, NewFrame.Position, NewFrame.AnchorPoint
+	local TInfo = TweenInfo.new(.75, Enum.EasingStyle.Quart)
+
+	NewFrame.Visible = true
+
+	NewFrame.Position = UDim2.new(1,0,.5,0)
+	NewFrame.AnchorPoint = Vector2.new(.5,0)
+
+	local x = Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP })
+	Var.Services.TweenService:Create(Var.ActivePage, TInfo, { Position = UDim2.new(-1, 0, .5, 0), AnchorPoint = Vector2.new(.5,0) }):Play()
+
+	x:Play()
+	x.Completed:Wait()
+
+	Var.ActivePage.Position = OGFramePos
+	Var.ActivePage.AnchorPoint = OGFrameAP
+	Var.ActivePage.Visible = false
+
+	Var.ActivePage = NewFrame
+
+	repeat task.wait() until Var.MainFrame:FindFirstChild("Header")
+
+	pcall(function()
+		Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> · {NewConfig.Name}`
+		Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = NewConfig.Icon
+		Var.MainFrame.Header.Mark.Logo.Image = Utilities.Icon "administer"
+
+		Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
+	end)
+end
+
+function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number)
 	local NewFrame
 
 	Ready = true

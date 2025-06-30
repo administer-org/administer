@@ -12,18 +12,6 @@ local Types = require(Root.Core.Types)
 
 local Config = Var.Config
 
-function FrontendAPI.NewUpdateLogText(P: Player, Text)
-	--// TODO
-	--[[
-	local Template = P.ScrollingFrame.TextLabel:Clone()
-
-	Template.Visible = true
-	Template.Text = Text
-	Template.Name = Text
-	Template.Parent = P.ScrollingFrame
-    ]]
-end
-
 function FrontendAPI.VersionCheck(Plr: Player): Types.Response
 	return HTTP.PostRoute(Var.DefaultAppServer, "/pub/versions", {
 		current_version = Config.VersData.String,
@@ -41,12 +29,12 @@ function FrontendAPI.VersionCheck(Plr: Player): Types.Response
 			)
 
 			for _, Change in Data.versions[Data.provided_information.can_update_to.name].logs do
-				FrontendAPI.NewUpdateLogText(Plr, Change)
+				--FrontendAPI.NewUpdateLogText(Plr, Change)
 			end
 		end
 
-		return
-	end, function(StatusCode)
+		return Data
+	end, function(StatusCode, Info)
 		Utils.NewNotification(
 			Plr,
 			string.format(Utils.t(Plr, "updater.Failed.Body"), tostring(StatusCode)),
@@ -56,7 +44,10 @@ function FrontendAPI.VersionCheck(Plr: Player): Types.Response
 			Var.Notification.Ding,
 			{}
 		)
-		return
+		
+		return {
+			false, Info
+		}
 	end, nil, nil)
 end
 

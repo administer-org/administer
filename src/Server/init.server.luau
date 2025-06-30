@@ -21,6 +21,7 @@ local Utils          = require(Modules.Utilities)
 local Debugging      = require(Modules.Debugging)
 local SettingsAPI    = require(Modules.SettingsAPI)
 local Migrator       = require(Modules.Helpers.AdmV1Migrator)
+local Importer       = require(Modules.Importer)
 
 local Configuration  = require(Core.Configuration)
 local Types          = require(Core.Types)
@@ -40,6 +41,15 @@ xpcall(function()
 	Utils.Logging.Print(`[✓] DataStoreService connection established in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
 	local Settings
+	if Migrator.CheckForV1() then
+		Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
+		Migrator.Migrate()
+		
+		Var.IsFirstBoot = false
+	else
+		Utils.Logging.Print("V1 Installation not found!")
+	end
+	
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
 		Settings = SettingsAPI.new(Configuration.Settings) --// Initialize for the first time
@@ -49,12 +59,7 @@ xpcall(function()
 		--// to uninstall AOS without causing the system to overwrite stuff
 		Var.DataStores.Settings:SetAsync("HasInit", true)
 	else
-		if Migrator.CheckForV1() then
-			Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
-			Migrator.Migrate()
-		else
-			Utils.Logging.Print("V1 Installation not found!")
-		end
+
 	end
 
 	--// Now load settings
@@ -152,7 +157,7 @@ NewRemote("GetPasses", false, false, function()
 				id = 0
 			},
 			{
-				price = "The proxy may be offline or experiencing issues.",
+				price = "Your proxy may be offline.",
 				id = 0
 			}
 		}
@@ -164,13 +169,17 @@ NewRemote("GetGameArt", false, false, Utils.GetGameIcon)
 NewRemote("GetGameMedia", true, false, Utils.GetGameMedia)
 NewRemote("GetServerRegion", true, false, Utils.GetServerRegion)
 NewRemote("FilterString", true, true, Utils.GetFilteredString)
+NewRemote("HasSeenTutorial", true, true, Utils.HasSeenTutorial)
+NewRemote("TutorialSeen", true, true, Utils.TutorialSeen)
+NewRemote("GetImports", true, true, Importer.ListFoundSystems)
+NewRemote("PerformImport", true, true, Importer.Import)
 
 NewRemote("GetProminentColorFromUserID", false, true, function(Player)
 	return Utils.GetProminentColor(Player.UserId)
 end)
 
 NewRemote("GetIconPack", false, false, function()
-	return require(script.Core.Icons) :: any
+	return require(script.Core.Icons)
 end)
 
 NewRemote("GetContributors", false, false, function()
@@ -191,10 +200,14 @@ NewRemote("GetAppServers", true, false, AppsModule.ServerAPI.GetServerStatuses)
 NewRemote("RemoveAppServer", true, false, AppsModule.ServerAPI.UninstallServer)
 NewRemote("GetAppCounts", true, false, AppsModule.GetTotals)
 NewRemote("AOSRichSearch", true, false, AppsModule.ServerAPI.Search)
+NewRemote("GetAOSInstances", true, false, AppsModule.ServerAPI.GetAOSInstances)
+NewRemote("RegisterPrimaryAOS", true, false, AppsModule.ServerAPI.RegisterPrimary)
+NewRemote("InstallServer", true, false, AppsModule.ServerAPI.New)
 
 --// Admin routes
 NewRemote("GetRanks", true, false, AdminRunner.Ranks.GetAll)
 NewRemote("NewRank", true, false, AdminRunner.Ranks.New)
+NewRemote("CanUseApp", true, true, AdminRunner.CanUseApp)
 NewRemote("GetRank", true, false, function(Rankname)
 	return Var.DataStores.AdminsDS:GetAsync(Rankname)
 end)
@@ -210,6 +223,14 @@ NewRemote("SaveSettings", true, false, function(setting, userId)
 end)
 
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
+Utils.Logging.Print(
+	`\n-- Administer {Configuration.VersData.String} loaded! --`,
+	"\n		> Startup information:",
+	Var.InitClock,
+	"\n		> Env:",
+	Var,
+	Var.EnableFreeAdmin and "\n		>[!] Free admin is enabled, you should probably disable it for a production game." or ""
+)
 Utils.Logging.Print(`[-] Running startup jobs!`)
 
 xpcall(
