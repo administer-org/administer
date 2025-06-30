@@ -104,7 +104,7 @@ end
 function App.LoadLocal(
 	Path: number | Instance,
 	AppMeta: { InstallDate: number, InstallSource: string, AppID: number }
-): Types.Response
+): { any }
 	Utils.Logging.Print(
 		`[-] Loading app from source {string.lower(typeof(Path))}_{(typeof(Path) == "Instance" and Path:GetFullName() or Path)}`
 	)
@@ -119,7 +119,7 @@ function App.LoadLocal(
 	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
 		
-		return
+		return { false, "Refer to the console for more information" }
 	end
 
 	--// Construct UI here

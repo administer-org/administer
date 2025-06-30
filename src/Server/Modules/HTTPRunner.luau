@@ -50,7 +50,7 @@ function Http.GetRoute(AppServer, Route, OnOK, OnError): Types.Response
 	else
 		local ErrorResp
 
-		local R = xpcall(function()
+		local _ = xpcall(function()
 			ErrorResp = OnError(Response.StatusCode, {
 				ProcessedMS = RoundMS(tick() - ST),
 				RespMessage = Response.StatusMessage,
@@ -69,11 +69,11 @@ function Http.PostRoute(
 	AppServer: string,
 	Route: string,
 	Body: {},
-	OnOK: (any, { ProcTime: number, RespMessage: string, Code: number }) -> any,
+	OnOK: (any, { ProcessedMS: number, RespMessage: string, Code: number }) -> any,
 	OnError: (any, any) -> any,
 	MiscConfig: nil | { Headers: {} },
 	DoAnyways: nil | (any) -> any
-)
+): any
 	local ST = tick()
 	local FinalHeaders = {}
 

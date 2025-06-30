@@ -90,7 +90,7 @@ local function NewRemote(
 	Name: string, 
 	AuthRequired: boolean, 
 	PlayerVar: boolean, 
-	Cbk: (Player, ...any) -> any
+	Cbk: (Player?, ...any) -> any
 ): any
 	if PlayerVar then
 		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(Player: Player, ...)
