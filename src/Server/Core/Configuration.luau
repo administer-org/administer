@@ -23,6 +23,7 @@ return {
 
 		Extra = "RC2 (trg PRLS.pbta) 0d23e82",
 		String = "2.0.0-rc2",
+		GitRevision = "0d23e82",
 
 		NoExtraData = "2.0.0",
 		APIRevision = "2.0.0",
@@ -132,6 +133,19 @@ return {
 					["Step"] = 1
 				}
 			},
+			
+			["LiveUpdate"] = {
+				["DisplayName"] = "Live rank changes",
+				["Description"] = "If enabled, when a rank is made or edited, Administer will automatically check for new admins.",
+				["SettingType"] = "Boolean",
+				["SettingDisplayType"] = "Toggle",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					["Value"] = true,
+					["Default"] = true
+				}
+			},
 
 			["AllowProtectedEdits"] = {
 				["DisplayName"] = "Edit Protected Ranks",
@@ -144,6 +158,21 @@ return {
 					["Value"] = false,
 					["Default"] = false
 				}
+			},
+			
+			["LoadDelay"] = {
+				["Description"] = "Enables a 3s delay before loading any admins. Use this to solve apps not initializing.",
+				["SettingType"] = "Enum",
+				["SettingDisplayType"] = "Dropdown",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					["Value"] = "None",
+					["Default"] = "None",
+					"None",
+					"InStudio",
+					"All"
+				}
 			}
 		},
 
@@ -155,7 +184,8 @@ return {
 			},
 
 			["Language"] = {
-				["Description"] = "This option will override your default Roblox preference.",
+				["DisplayName"] = "Interface Language (BETA)",
+				["Description"] = "This option will override your default Roblox preference. This is a work in progress and will NOT be supported fully by Administer or apps yet.",
 				["SettingType"] = "Enum",
 				["InputDisplayType"] = "Dropdown",
 
@@ -186,19 +216,6 @@ return {
 				["Value"] = {
 					["Value"] = true,
 					["Default"] = true
-				}
-			},
-
-			["DisableUnofficialAppWarning"] = {
-				["DisplayName"] = "Disable unofficial app warning",
-				["Description"] = "Hides the warning which says if an app/theme is external. Useful for new people, otherwise just UI clutter.",
-				["SettingType"] = "Boolean",
-				["SettingDisplayType"] = "Toggle",
-				["RequiresRestart"] = false,
-
-				["Value"] = {
-					["Value"] = false,
-					["Default"] = false
 				}
 			},
 
@@ -262,23 +279,8 @@ return {
 				["Description"] = "Manage app settings."
 			},
 
-			["LoadDelay"] = {
-				["Description"] = "Enables a 3s delay before loading any admins. Use this to solve apps not initializing.",
-				["SettingType"] = "Enum",
-				["SettingDisplayType"] = "Dropdown",
-				["RequiresRestart"] = false,
-
-				["Value"] = {
-					"None",
-					"InStudio",
-					"All",
-					["Value"] = "None",
-					["Default"] = "None",
-				}
-			},
-
-			["FetchAppServers"] = {
-				["Description"] = "Disallows Administer from contacting any external app servers.",
+			["DisableAOS"] = {
+				["Description"] = "Prohibits AOS from being reached for the marketplace.",
 				["SettingType"] = "Boolean",
 				["SettingDisplayType"] = "Toggle",
 				["RequiresRestart"] = false,
@@ -290,7 +292,7 @@ return {
 			},
 
 			["LoadApps"] = {
-				["Description"] = "Controls the ability for the server to load apps.",
+				["Description"] = "Enables the ability for Administer to load apps.",
 				["SettingType"] = "Boolean",
 				["SettingDisplayType"] = "Toggle",
 				["RequiresRestart"] = true,
@@ -320,6 +322,18 @@ return {
 					["Default"] = true
 				}
 			},
+			
+			["AssistiveClose"] = {
+				["Description"] = "Enables a close button in the top left for desktop. Always enabled on mobile.",
+				["SettingType"] = "Boolean",
+				["SettingDisplayType"] = "Toggle",
+				["RequiresRestart"] = true,
+
+				["Value"] = {
+					["Value"] = true,
+					["Default"] = true
+				}
+			},
 
 			["MobileOpenGesture"] = {
 				["Description"] = "Controls how big the mobile open gesture is from the right side.",
@@ -333,7 +347,6 @@ return {
 					"regular",
 					"medium",
 					"large",
-					"extralarge",
 
 					["Value"] = "regular",
 					["Default"] = "regular"
