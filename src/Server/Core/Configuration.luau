@@ -1,14 +1,17 @@
+--!strict
+
 --// Administer
 --// pyxfluff 2024 - 2025
 
-local Locales = {} for _, Locale in script.Parent.Locales:GetChildren() do table.insert(Locales, Locale.Name) end
+local Types = require(script.Parent.Types)
+local Locales: {Default: string, Value: string, [number]: string} = {
+	--// Change the default locale here
+	--// Make sure it is supported by Administer! See ./Locales for the list.
+	Default = "en",
+	Value = "en"
+}; for _, Locale in script.Parent.Locales:GetChildren() do table.insert(Locales, Locale.Name) end
 
---// Change the default locale here
---// Make sure it is supported by Administer! See ./Locales for the list.
-Locales["Default"] = "en"
-Locales["Value"] = "en"
-
-return {
+local Settings: Types.Configuration = {
 	Name = "Administer",
 
 	VersData = {
@@ -35,7 +38,8 @@ return {
 		--// Hardcoded admins go here.
 		--// If you have no idea what a dictionary is then please just
 		--// use GUI-based rank configuration, you are going to make a syntax error.
-
+		--// If you see red lines anywhere here press Ctrl Z until they go away
+		
 		Groups = {
 			--// Change the ID in the table key here. Copy this entry to make more.
 			[0] = { --// Group ID
@@ -110,7 +114,7 @@ return {
 		["_SettingsMeta"] = {
 			["Name"] = "Administer"
 		},
-
+		
 		["Admins"] = {
 			["_CategoryOpts"] = {
 				["DisplayName"] = "Admins",
@@ -133,7 +137,7 @@ return {
 					["Step"] = 1
 				}
 			},
-			
+
 			["LiveUpdate"] = {
 				["DisplayName"] = "Live rank changes",
 				["Description"] = "If enabled, when a rank is made or edited, Administer will automatically check for new admins.",
@@ -159,7 +163,7 @@ return {
 					["Default"] = false
 				}
 			},
-			
+
 			["LoadDelay"] = {
 				["Description"] = "Enables a 3s delay before loading any admins. Use this to solve apps not initializing.",
 				["SettingType"] = "Enum",
@@ -187,9 +191,9 @@ return {
 				["DisplayName"] = "Interface Language (BETA)",
 				["Description"] = "This option will override your default Roblox preference. This is a work in progress and will NOT be supported fully by Administer or apps yet.",
 				["SettingType"] = "Enum",
-				["InputDisplayType"] = "Dropdown",
+				["SettingDisplayType"] = "Dropdown",
 
-				["Value"] = Locales
+				["Value"] = Locales :: Types.SettingValue
 			},
 
 			["AnimationSpeed"] = {
@@ -212,6 +216,7 @@ return {
 				["DisplayName"] = "Allow themes to run Lua",
 				["Description"] = "If enabled, all themes will be allowed to run external Luau code. This is useful for more advanced themes or other modifications.",
 				["SettingType"] = "boolean",
+				["SettingDisplayType"] = "Toggle",
 
 				["Value"] = {
 					["Value"] = true,
@@ -322,7 +327,7 @@ return {
 					["Default"] = true
 				}
 			},
-			
+
 			["AssistiveClose"] = {
 				["Description"] = "Enables a close button in the top left for desktop. Always enabled on mobile.",
 				["SettingType"] = "Boolean",
@@ -359,3 +364,5 @@ return {
 
 	Webhooks = {}
 }
+
+return Settings
