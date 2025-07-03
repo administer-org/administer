@@ -551,7 +551,7 @@ function Utils.CheckVersion()
 end
 
 function Utils.HasSeenTutorial(
-	Player: Player | number | { UserId: number }, 
+	Player: Player | number | string, 
 	TutorialName
 )
 	if typeof(Player) ~= "Instance" then

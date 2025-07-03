@@ -5,7 +5,7 @@ local SharedLibs = script.Libraries
 local Assets = script.Assets
 local Modules = script.Modules
 
-local Var = require(Modules.Variables)
+local Var       = require(Modules.Variables)
 
 local Admins    = require(Modules.Admins)
 local Apps      = require(Modules.Apps)
@@ -17,20 +17,41 @@ local t = Utilities.Translate
 
 Frontend.Close(true)
 
-Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
-Var.Remotes.CheckForUpdates:InvokeServer({ "org.admsoftware.Core" })
-
-task.spawn(Utilities.Heartbeat)
-
 if not pcall(function()
 		if script.Parent:GetAttribute("StartID") == nil then error() end
-		
+
 		Var.Remotes.Ping:InvokeServer()
 	end) then
-	Utilities.NewNotification("Administer", "rbxassetid://", "Administer has been incorrectly installed and may not continue loading.", "Startup failed", 999)
+	Utilities.NewNotification("Administer", "", "Administer has been incorrectly installed and may not continue loading.", "Startup failed", 999)
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
 
+
+local function DoUpdate()
+	Var.FinishedUpdate = false
+	
+	Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
+	Var.Remotes.CheckForUpdates:InvokeServer({ "org.admsoftware.Core" })
+	
+	Var.FinishedUpdate = true
+end
+
+local Thread = task.spawn(DoUpdate)
+task.delay(3, function()
+	if not Var.FinishedUpdate then
+		Var.DisableOnlineServices = true
+		
+		Utilities.NewNotification(
+			"Administer", 
+			Utilities.Icon "triangle-warning", 
+			"Update thread is frozen, please ensure AOS is responsive. Some services may be unavailable.", 
+			"Webservices Unresponsive", 
+			999
+		)
+	end
+end)
+
+task.spawn(Utilities.Heartbeat)
 
 local Debounce = false
 Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
@@ -93,7 +114,7 @@ Apps.AddAppDrawerButton({
 			ButtonID = "Information"
 		},
 		{
-			Name = Utilities.ToSentenceCase(t("Configuration.Apps.Content.Template.Settings.HeaderLabel")),
+			Name = Utilities.ToSentenceCase( t("Configuration.Apps.Content.Template.Settings.HeaderLabel") ),
 			Icon = Utilities.Icon "gear",
 			Click = function() end,
 			Frame = Var.MainFrame.Configuration.Settings,
@@ -128,6 +149,7 @@ end)
 Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
 Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
 Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
+
 Frontend.InitGestureBar()
 
 Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
@@ -156,38 +178,53 @@ task.defer(function()
 	Var.MainFrame.Home.Gradient2.ImageLabel.ImageColor3 = Color3.fromRGB(PromColor[1], PromColor[2], PromColor[3])
 end)
 
+if script.Parent:GetAttribute("NeedsSetup") then
+	Utilities.Logging.Print("Setup is not complete, entering lockdown mode!")
+	
+	Var.DoHeaderEffects = false
+	
+	Frontend.SwapAppBasic(Var.MainFrame.Welcome, {
+		Name = "Setup",
+		Icon = Utilities.Icon "sparkles"
+	})
+	
+	require(script.Modules.Helpers.FirstTimeSetup)()
+	
+	Frontend.Open()
+end
+
 --// Marketplace
 xpcall(Apps.Init, function(e)
-	Utilities.Logging.Print("[x] Failed to initialize the marketplace, this is likely due to insufficient permissions!")
-	Utilities.Logging.Print(e)
+	Utilities.Logging.Print("[x] Failed to initialize the marketplace, this is likely due to insufficient permissions!", e)
 end)
 
 
 xpcall(function()
+	pcall(Admins.Load)
+	
 	Admins.RunCreatorApp()
-	Admins.Load()
-
+	
 	Var.MainFrame.Configuration.Admins.Header.NewRank.Activator.MouseButton1Click:Connect(function()
-		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
+		Admins.OpenCreator()
 	end)
 
 	Var.MainFrame.Configuration.Admins.NewAdmin.Page5.NextPage.MouseButton1Click:Connect(function()
-		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
-
+		Admins.CloseCreator()
+		Admins.ClearEditState()
 		Admins.Load()
 	end)
 end, function(e)
-	error(e)
+	Utilities.Logging.Warn(`[thread Admins] {e}`)
 end)
 
 if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled then
-	Utilities.Logging.Print("Making adjustments to UI (Mobile)")
+	Utilities.Logging.Print("Mobile mode has been enabled!")
 	Var.Mobile = true
 
 	task.defer(function()
 		Utilities.NewNotification(
 			"Administer",
-			"rbxassetid://12500517462",
+			Utilities.Icon "iphone-notch",
 			"Mobile mode activated. Swipe inwards from the right edge of your screen to open Administer.",
 			"Mobile Beta",
 			25
@@ -203,10 +240,18 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 				Debounce = true
 			end
 		end)
+	
+	Var.MainFrame.Header.AssistiveClose.Visible = true
+	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 else
 	Var.Mobile = false
 
 	Var.MainFrame.Parent.MobileOpen:Destroy()
+	
+	if Utilities.GetSetting("AssistiveClose") then
+		Var.MainFrame.Header.AssistiveClose.Visible = true
+		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
+	end
 end
 
 local IsDonating = false
@@ -218,6 +263,22 @@ xpcall(function(...)
 	Info.VersionDetails.Version.Text = Var.Version.NoExtraData .. " " .. Var.Version.Extra
 
 	local function NewVersCard(Data)
+		if Data.IsFail then
+			local Card = Info.UpdateCenter.ScrollingFrame.Card:Clone()
+
+			Card.Parent = Info.UpdateCenter.ScrollingFrame
+			Card.Name = "Administer"
+
+			Card.Data.Text = `Unable to communicate with AOS.`
+			Card.ServiceName.Text = "Administer"
+			Card.Logo.Image = Utilities.Icon "administer"
+			Card.ServiceRDNN.Text = "org.admsoftware.Core"
+
+			Card.Visible = true
+			
+			return
+		end
+		
 		local Card = Info.UpdateCenter.ScrollingFrame.Card:Clone()
 
 		Card.Parent = Info.UpdateCenter.ScrollingFrame
@@ -232,8 +293,16 @@ xpcall(function(...)
 	end
 	
 	repeat
-		task.wait(.1)
 		Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
+
+		if Var.DisableOnlineServices then
+			Var.Version = {
+				IsUpToDate = true,
+				IsFail = true
+			}
+		end
+		
+		task.wait(1)
 	until Var.Version.IsUpToDate ~= nil
 	
 	NewVersCard(Var.Version)
@@ -278,19 +347,21 @@ end)
 
 script.Assets.LocalScript.Enabled = Utilities.GetSetting("EnableClickEffects")
 
-if Utilities.GetSetting("ChatCommand") == true then
-	Var.Services.Players.LocalPlayer.Chatted:Connect(function(m)
-		if m == "/adm" then Frontend.Open() end
-	end)
+if Utilities.GetSetting("ChatCommand") then
+	local Command = Instance.new("TextChatCommand")
 
-	xpcall(function()
-		local Command = Instance.new("TextChatCommand")
-
-		Command.PrimaryAlias = "/adm"
-		Command.SecondaryAlias = "/administer"
-		Command.Triggered:Connect(Frontend.Open)
-		Command.Parent = game.TextChatService.TextChatCommands
-	end, function()
-		Utilities.Logging.Print("TCS is disabled (or something else failed), ignoring custom command for TCS")
-	end)
+	Command.PrimaryAlias = "/adm"
+	Command.SecondaryAlias = "/administer"
+	Command.Triggered:Connect(Frontend.Open)
+	Command.Parent = game.TextChatService.TextChatCommands
 end
+
+Frontend.Toast({
+	Icon = Utilities.Icon "clock-past",
+	Text = "(debug) Client initialization complete",
+	Subtext = "Done in 0s",
+	Timeout = 7,
+	OnClick = function()
+		print("ok")
+	end
+})

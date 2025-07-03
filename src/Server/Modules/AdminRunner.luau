@@ -28,6 +28,8 @@ function AR.Bootstrap(Player: Player, AdminRankID: number): ()
 	end
 
 	NewPanel.Parent = Player.PlayerGui
+	
+	--// TODO
 
 	Util.NewNotification(
 		Player :: Player,
@@ -43,9 +45,7 @@ end
 
 function AR.CanUseApp(Identifier: Player | string, AppID: string)
 	local Rank
-	
-	print(typeof(Identifier))
-	
+
 	if typeof(Identifier) == "Instance" then
 		local Result = Util.IsAdmin(Identifier)
 
@@ -191,10 +191,11 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 	xpcall(function()
 		Var.Services.MessagingService:PublishAsync("Administer", { ["Action"] = "ForceAdminCheck" })
 	end, function(e): Types.Response
-		Util.Logging.Warn(`[X] Failed to publish MessagingService action: ForceAdminCheck! {e}`)
+		Util.Logging.Warn(`[X] Failed to publish MessagingService action ForceAdminCheck! {e}`)
+		
 		return {
 			false,
-			Util.t(nil, "admin.rankcreate.MessagingServiceFailed"),
+			Util.t(nil, "admin.rankcreate.MessagingServiceFailed")
 		}
 	end)
 
@@ -218,7 +219,9 @@ function AR.Ranks.GetAll()
 
 	repeat
 		Polls += 1
+		
 		task.wait(0.1)
+		
 		Util.Logging.Print("Rank check progress:", #Ranks / #Current.Names, Ranks, Current, Polls)
 	until #Ranks == #Current.Names or Polls == 10
 
@@ -232,7 +235,7 @@ end
 function AR.Socket(Msg)
 	local Data = Msg["Data"]
 
-	if Data["Message"] == "ForceAdminCheck" then
+	if Data["Action"] == "ForceAdminCheck" then
 		for i, Player in Var.Services.Players:GetPlayers() do
 			local AdminResult = Util.IsAdmin(Player)
 
@@ -240,6 +243,7 @@ function AR.Socket(Msg)
 				AR.PlayerAdded(Player)
 			elseif not AdminResult["IsAdmin"] and table.find(Var.Admins.InGame, Player) then
 				AR.Removing(Player)
+				
 				Player.PlayerGui:FindFirstChild("AdministerMainPanel"):Destroy()
 			end
 		end

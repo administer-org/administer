@@ -104,7 +104,7 @@ end
 function App.LoadLocal(
 	Path: number | Instance,
 	AppMeta: { InstallDate: number, InstallSource: string, AppID: number }
-): { any }
+): Types.Response
 	Utils.Logging.Print(
 		`[-] Loading app from source {string.lower(typeof(Path))}_{(typeof(Path) == "Instance" and Path:GetFullName() or Path)}`
 	)
@@ -119,7 +119,7 @@ function App.LoadLocal(
 	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
 		
-		return { false, "Refer to the console for more information" }
+		return
 	end
 
 	--// Construct UI here
@@ -159,8 +159,6 @@ function App.Initialize(): boolean
 	if DelaySetting == "InStudio" and Var.Services.RunService:IsStudio() or DelaySetting == "All" then
 		task.wait(3)
 	end
-	
-	print(script.Parent.Parent.Parent.LocalApps:GetChildren())
 
 	for i, App in script.Parent.Parent.Parent.LocalApps:GetChildren() do
 		table.insert(Apps, {
@@ -267,6 +265,7 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 		return { true, "OK" }
 	end, function(e): Types.Response
 		Utils.Logging.Warn(`[x] This does not seem to be an Administer app or the initial build failed.\n\n{e}`)
+		
 		return { false, "This app isn't valid, check the log." }
 	end)
 
@@ -310,6 +309,11 @@ function App.ServerAPI.GetList(
 		return HTTP.GetRoute(Server.ServerURL, `/api/directory?asset_type={Area}`, function(Apps, ResponseData): {}
 			for i, v in Apps do
 				v["Server"] = Server.ServerURL
+				v["ServerName"] = HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(D, _)
+					return D.instance_name
+				end, function(x)
+					return "Unknown"
+				end)
 
 				table.insert(FullList, v)
 			end
@@ -355,8 +359,10 @@ function App.ServerAPI.RegisterPrimary(URL: string): Types.Response
 		Utils.Logging.Print("Registered!", Data)
 		
 		for _, Server in Var.AppServers do
-			if Server["ServerURL"] == URL then
-				Server["IsPrimary"] = true
+			if Server.ServerURL == URL then
+				Server.IsPrimary = true
+			elseif Server.IsPrimary then
+				Server.IsPrimary = false
 			end
 		end
 		
@@ -547,6 +553,16 @@ function App.ServerAPI.Search(
 	end, function(...)
 		return ...
 	end)
+end
+
+function App.ServerAPI.GetPrimaryServer()
+	for _, Server in Var.AppServers do
+		if Server.IsPrimary then
+			return Server.ServerURL
+		end
+	end
+	
+	return Var.AppServers[1].ServerURL
 end
 
 function App.GetTotals()

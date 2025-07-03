@@ -65,7 +65,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 		Button:SetAttribute("ThreadType", "multi")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
-		
+
 		Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
 
 		Button.Activator.MouseButton1Click:Connect(function()
@@ -83,7 +83,7 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 			Clone.Icon.Image = Icon.Icon
 			Clone.Title.Text = Icon.Name
-			
+
 			Clone:SetAttribute("ButtonID", `{ButtonConfig.ButtonID}\\{Icon.ButtonID}`)
 
 			Clone.Activator.MouseButton1Click:Connect(function()
@@ -128,6 +128,9 @@ function Apps.Show(ServerURL, ID, Reason): string
 	elseif Data[2] == 404 then
 		Utilities.Logging.Warn(Data[2])
 		return "App not found."
+	elseif Data[2] == 500 then
+		Utilities.Logging.Warn(Data[2])
+		return "Internal Error"
 	end
 
 	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox
@@ -194,7 +197,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 			Frontend.Popup.new(
 				{
 					Name = Utilities.ToSentenceCase( Utilities.Translate("Configuration.Marketplace.Header.Head") ),
-					Icon = Utilities.Icon "grid", 
+					Icon = Utilities.Icon "grid"
 				}, {
 					Primary = Utilities.Icon "warning-filled",
 					SubIcon = Utilities.Icon "x"
@@ -211,6 +214,13 @@ function Apps.Show(ServerURL, ID, Reason): string
 					}
 				}
 			)
+		else
+			Frontend.Toast({
+				Icon = Utilities.Icon "check-plain",
+				Text = "Success!",
+				Subtext = "The app has loaded, but you may need to rejoin for the frontend to load.",
+				Timeout = 5
+			})
 		end
 
 		task.delay(2, function()
@@ -243,7 +253,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 			Frontend.Popup.new(
 				{
 					Name = Utilities.ToSentenceCase( Utilities.Translate("Configuration.Marketplace.Header.Head") ),
-					Icon = Utilities.Icon "grid", 
+					Icon = Utilities.Icon "grid"
 				}, {
 					Primary = Utilities.Icon "warning-filled",
 					SubIcon = Utilities.Icon "x"
@@ -256,7 +266,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 						Text = "OK",
 						Callback = function(Close)
 							Close()
-						end,
+						end
 					}
 				}
 			)
@@ -277,7 +287,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		DoVote(0)
 	end)
 
-	return "Get"
+	return true
 end
 
 function Apps.Clear(): ()
@@ -290,8 +300,12 @@ function Apps.Clear(): ()
 	end
 end
 
-function Apps.Search(Query: string, ServerURL: string): {}
-	local Result = Var.Remotes.AOSRichSearch:InvokeServer(ServerURL, Query)
+function Apps.Search(Query: string, ServerURL: string?): {}
+	local Result = Var.Remotes.AOSRichSearch:InvokeServer(
+		ServerURL or Var.Remotes.GetPrimaryServer:InvokeServer(), 
+		Query
+	)
+
 	local Final: { { Type: string, Value: any } } = {}
 
 	print(Result)
@@ -332,12 +346,21 @@ end
 
 local InProgress = false
 
-function Apps.LoadAppList(List: {} | nil): ()
+function Apps.LoadAppList(List: {}?): ()
 	local Market = Var.MainFrame.Configuration.Marketplace
+
+	if List == {} then return end
 
 	Utilities.Logging.Print("Refreshing app list...")
 
 	if InProgress then
+		Frontend.Toast({
+			Icon = Utilities.Icon "triangle-warning",
+			Text = "Error loading apps",
+			Subtext = "Rate limit exceeded, please slow down",
+			Timeout = 10
+		})
+		
 		Utilities.Logging.Warn("You're clicking too fast or your app servers are unresponsive! Please slow down.")
 
 		Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
@@ -364,13 +387,22 @@ function Apps.LoadAppList(List: {} | nil): ()
 			NewCard.Visible = true
 
 			NewCard.ObjName.Text = CardData.name
-			NewCard.Server.Text = `{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}\n\n{Utilities.ToSentenceCase(CardData.object_type)} by @{CardData.developer.Name} from {CardData.Server}`
+			NewCard.Server.Text = `{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}\n\n{Utilities.ToSentenceCase(CardData.object_type)} by @{CardData.developer.Name} from {CardData.ServerName}`
 
 			NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
 			NewCard.Stats.Rating.Label.Text = CardData.rating
 
 			Connections[`Download-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
-				Apps.Show(CardData.Server, CardData.id, CardData.Server)
+				local ShowResult = Apps.Show(CardData.Server, CardData.id, CardData.Server)
+				
+				if ShowResult ~= true then
+					Frontend.Toast({
+						Icon = Utilities.Icon "triangle-warning",
+						Text = "Failed to load app",
+						Subtext = ShowResult,
+						Timeout = 10
+					})
+				end
 			end)
 
 			Connections[`Show-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton2Click:Connect(function()
@@ -441,9 +473,10 @@ function Apps.LoadAppList(List: {} | nil): ()
 		local Selected = Featured[1]
 
 		TopCard.ObjName.Text = Selected.name
-		TopCard.Server.Text = `{Selected.object_type} by @{Selected.developer.Name} from {Selected.Server}`
+		TopCard.Server.Text = `{Utilities.ToSentenceCase(Selected.object_type)} by @{Selected.developer.Name} from {Selected.ServerName}`
 		TopCard.Stats.Installs.Label.Text = Utilities.ShortNumber(Selected.downloads)
 		TopCard.Stats.Rating.Label.Text = Selected.rating
+		TopCard.ImageLabel.Image = `rbxassetid://{Selected.image_id}`
 
 		TopCard.Stats.DownloadButton.MouseButton1Click:Connect(function()
 			Apps.Show(Selected.Server, Selected.id, Selected.Server)
@@ -457,11 +490,11 @@ function Apps.LoadAppList(List: {} | nil): ()
 					Subheader = "AOS Instance"
 				},
 				{
-					Primary = Utilities.Icon "question-circle",
-					SubIcon = Utilities.Icon "administer"
+					Primary = Utilities.Icon "grid",
+					SubIcon = Utilities.Icon "question-circle"
 				},
 				"Why is this here?",
-				`You're seeing this featured because it's server, {Selected.Server}, has reported its weighted score to be {Selected.weighted_score}, which is the highest among your installed servers.\nIf this is being done maliciously, remove the server.`,
+				`You're seeing this featured because it's server, {Selected.ServerName} ({Selected.Server}), has reported its weighted score to be {Selected.weighted_score}, which is the highest among your installed servers.\nIf this is being done maliciously, remove the server.`,
 				{
 					{
 						Text = "OK",
@@ -507,17 +540,67 @@ function Apps.LoadAppList(List: {} | nil): ()
 	InProgress = false
 end
 
-function Apps.InitSerarchbar() --// TODO
-	Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Input.FocusLost:Connect(
-		function(EnterPressed: boolean, InputThatCausedFocusLoss: InputObject)
+function Apps.InitSerarchbar()
+	local MP = Var.MainFrame.Configuration.Marketplace
+	MP.Sidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
+		MP.Sidebar.Searchbar.Title.Text = MP.Sidebar.Searchbar.Input.Text 	
+	end)
+
+	MP.Sidebar.Searchbar.Input.FocusLost:Connect(
+		function(EnterPressed: boolean, ...)
 			if not EnterPressed then return end
 
-			Var.MainFrame.Configuration.Marketplace.PartialSearch.Visible = false
-			Var.MainFrame.Configuration.Marketplace.MPFrozen.Visible = false
+			MP.MainMarketplace.MPFrozen.Visible = false
 
-			Apps.Search( --// TODO
-				Var.MainFrame.Configuration.MenuBar.New.FMarketplace.Input.Text
+			local Cards = {}
+			local ServerURL = Var.Remotes.GetPrimaryServer:InvokeServer()
+			local SearchResult = Apps.Search(
+				MP.Sidebar.Searchbar.Input.Text
 			)
+
+			print(SearchResult)
+
+			for _, Data in SearchResult.Data do
+				if Data.Type == "text" then
+					Frontend.Toast({
+						Icon = "search",
+						Text = "Information",
+						Subtext = Data.Value,
+						Timeout = 5
+					})
+				else
+					local data = Data.Value
+					local rating = data.Votes.Likes / (data.Votes.Likes + data.Votes.Dislikes)
+
+					table.insert(Cards, {
+						name = data.Name,
+						short_desc = data.ShortDescription,
+						downloads = data.Downloads,
+						rating = rating,
+						weighted_score = (data.Downloads * 0.6 + (rating * 0.9)) + data.Votes.Favorites,
+						developer = data.Developer,
+						last_update = data.Metadata.UpdatedAt,
+						id = data.Metadata.AdministerID,
+						object_type = data.Metadata.AssetType,
+						image_id = data.IconID,
+						Server = ServerURL
+					})
+				end
+			end
+
+			print(Cards, Cards == {}, #Cards == 0)
+
+			if #Cards == 0 then return end
+
+			MP.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+			Var.Marketplace.ActivePage = "CardGrid"
+			MP.MainMarketplace.CardGrid.Visible = true
+			
+			Cards = {
+				[ServerURL] = Cards
+			}
+
+			Apps.LoadAppList(Cards)
 		end
 	)
 end
@@ -528,6 +611,8 @@ function Apps.LoadLibrary()
 		if not AppItem:IsA("CanvasGroup") or AppItem.Name == "Template" or AppItem.Name == "ServerTemplate" then continue end
 		AppItem:Destroy()
 	end
+
+	Apps.Init(true)
 
 	local AppsList = Var.Remotes.GetInstalledApps:InvokeServer("Bootstrapped")
 
@@ -606,7 +691,7 @@ function Apps.LoadLibrary()
 								_Close()
 								Apps.LoadLibrary()
 							end	
-						end,
+						end
 					},
 					{
 						Text = Utilities.Translate("generic.Cancel"),
@@ -713,9 +798,14 @@ function Apps.LoadLibrary()
 	end
 end
 
-function Apps.Init()
+function Apps.Init(JustRefreshCounts)
 	local Sidebar = Var.MainFrame.Configuration.Marketplace.Sidebar
 	local ActiveApps = Var.Remotes.GetInstalledApps:InvokeServer("Combined")
+	local Counts = Var.Remotes.GetAppCounts:InvokeServer()
+
+	Sidebar.Buttons.XLibrary.Resources.Content.Apps.Text = `{Counts.Apps} apps, {Counts.Servers} servers`
+
+	if JustRefreshCounts then return end
 
 	for _, Button in Sidebar.Buttons:GetChildren() do
 		local Watcher = Instance.new("TextButton")
@@ -754,11 +844,111 @@ function Apps.Init()
 	Sidebar.Parent.MainMarketplace.XLibrary.AdministerLogo.Image = Utilities.Icon "administer" 
 	Sidebar.Parent.MainMarketplace.XLibrary.GameArt.Image = Var.Remotes.GetGameArt:InvokeServer()
 
-	local Counts = Var.Remotes.GetAppCounts:InvokeServer()
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.TextButton.MouseButton1Click:Connect(function()
+		Frontend.SwapAppBasic(
+			Var.MainFrame.Configuration.Admins,
+			{
+				Name = Utilities.Translate("Configuration.Admins.Container.Admins.Header.TLabel"),
+				Icon = Utilities.Icon "user-clip"
+			}
+		)
+	end)
 
-	Sidebar.Buttons.XLibrary.Resources.Content.Apps.Text = `{Counts.Apps} apps, {Counts.Servers} servers`
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.MouseButton1Click:Connect(function()
+		Frontend.Popup.new(
+			{
+				Icon = Utilities.Icon "administer",
+				Name = "Administer",
+				Subheader = "AOS Registration"
+			},
+			{
+				Primary = Utilities.Icon "network",
+				SubIcon = Utilities.Icon "chain"
+			},
 
-	--Apps.InitSerarchbar()
+			"Link custom server",
+			"Please enter your custom AOS server here with https:// and no trailing slash. It must be online and linked to your Mongo instance in order to be saved as primary.",
+
+			{
+				{
+					Text = "Cancel",
+					Icon = Utilities.Icon "no-entry",
+					Callback = function(Close)
+						Close()
+					end
+				},
+				{
+					Text = "Register",
+					Icon = Utilities.Icon "floppy-disk",
+					Callback = function(Close, TextInputs)
+						Close()
+
+						local ServerURL = TextInputs[1]
+						local Result = Var.Remotes.InstallServer:InvokeServer(ServerURL, game.Players.LocalPlayer.UserId)
+
+						print(Result)
+
+						if Result[1] then
+							Result = Var.Remotes.RegisterPrimaryAOS:InvokeServer(ServerURL)
+
+							Frontend.Popup.new(
+								{
+									Icon = Utilities.Icon "administer",
+									Name = "Administer",
+									Subheader = "AOS Registration"
+								},
+								{
+									Primary = Utilities.Icon "network",
+									SubIcon = Utilities.Icon(Result[1] and "check-plain" or "x")
+								},
+								Result[1] and "Success!" or "Something went wrong",
+								Result[1] and 
+									"This AOS instance has been saved and registered as primary." or 
+									"Sorry, but something went wrong while assigning your primary instance. Please make note of the error in your game's logs and report it to the server maintainer.",
+								{
+									{
+										Text = "OK",
+										Icon = Utilities.Icon "check-plain",
+										Callback = function(Close)
+											Close()
+										end
+									}
+								}
+							)
+						else
+							Frontend.Popup.new(
+								{
+									Icon = Utilities.Icon "administer",
+									Name = "Administer",
+									Subheader = "AOS Registration"
+								},
+								{
+									Primary = Utilities.Icon "network",
+									SubIcon = Utilities.Icon "question-circle"
+								},
+								"Invalid server",
+								`This is not a valid AOS instance or it is offline. {Result[2]}`,
+								{
+									{
+										Text = "OK",
+										Icon = Utilities.Icon "check-plain",
+										Callback = function(Close)
+											Close()
+										end
+									}
+								}
+							)
+						end
+					end
+				}
+			},
+			{{
+				HeaderText = "Server URL (https://aos-us-1.admsoftware.org)"
+			}}
+		)
+	end)
+
+	Apps.InitSerarchbar()
 end
 
 return Apps

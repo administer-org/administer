@@ -27,11 +27,13 @@ local Configuration  = require(Core.Configuration)
 local Types          = require(Core.Types)
 local Var            = require(Core.Variables)
 
+Var.InitClock["LoadModules"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] Modules OK in {Utils.RoundMS(os.clock() - Var.InitClock["RealInit"])}ms`)
 
 Var.InitClock.TempInit = os.clock()
 Var.Init()
 
+Var.InitClock["InitVars"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] Init() OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
 Var.InitClock.TempInit = os.clock()
@@ -75,9 +77,12 @@ end, function(e)
 	)
 end)
 
+Var.InitClock["LoadSettings"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Var.InitClock.TempInit = os.clock()
+
 AppsModule.Initialize()
 
+Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
 AdminRunner.Scan(false)
@@ -90,7 +95,7 @@ local function NewRemote(
 	Name: string, 
 	AuthRequired: boolean, 
 	PlayerVar: boolean, 
-	Cbk: (Player?, ...any) -> any
+	Cbk: (Player, ...any) -> any
 ): any
 	if PlayerVar then
 		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(Player: Player, ...)
@@ -203,6 +208,7 @@ NewRemote("AOSRichSearch", true, false, AppsModule.ServerAPI.Search)
 NewRemote("GetAOSInstances", true, false, AppsModule.ServerAPI.GetAOSInstances)
 NewRemote("RegisterPrimaryAOS", true, false, AppsModule.ServerAPI.RegisterPrimary)
 NewRemote("InstallServer", true, false, AppsModule.ServerAPI.New)
+NewRemote("GetPrimaryServer", true, false, AppsModule.ServerAPI.GetPrimaryServer)
 
 --// Admin routes
 NewRemote("GetRanks", true, false, AdminRunner.Ranks.GetAll)
@@ -222,14 +228,16 @@ NewRemote("SaveSettings", true, false, function(setting, userId)
 	return settingsToLoad.Save(userId)
 end)
 
+Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
 Utils.Logging.Print(
-	`\n-- Administer {Configuration.VersData.String} loaded! --`,
+	`\n-- Administer {Configuration.VersData.String} {Configuration.VersData.GitRevision} loaded! --`,
 	"\n		> Startup information:",
 	Var.InitClock,
-	"\n		> Env:",
+	"\n		> Environment:",
 	Var,
-	Var.EnableFreeAdmin and "\n		>[!] Free admin is enabled, you should probably disable it for a production game." or ""
+	Var.EnableFreeAdmin and "\n		> [!] Free admin is enabled, you should probably disable it for a production game." or "",
+	Var.IsFirstBoot and "\n		> [!] First boot mode is enabled!" or ""
 )
 Utils.Logging.Print(`[-] Running startup jobs!`)
 
@@ -243,7 +251,13 @@ xpcall(
 	end
 )
 
-HttpRunner.PostRoute(Var.DefaultAppServer, "/api/report-version", {
+HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...)
+	print(...)
+end, function(...)
+	print(...)
+end)
+
+HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
 	version = Configuration.VersData.NoExtraData,
 	branch = Var.CurrentBranch["BranchName"]
 }, function(...)

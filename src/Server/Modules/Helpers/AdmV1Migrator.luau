@@ -32,7 +32,7 @@ function Migrator.Migrate()
 			--// Replace it
 			Utilities.Logging.Print(`[-] Administer found a new version of {App.Name}, installing!`)
 
-			print(Apps.Install(AppAssociations[App.ID], `Administer Migrator (1.2.3 -> 2.0), AOS Gateway`, App.Name))
+			print(Apps.Install(AppAssociations[App.ID], `Administer Migrator, source: AOS Canary`, App.Name))
 
 			Apps.Uninstall(App.ID)
 
@@ -73,7 +73,7 @@ function Migrator.Migrate()
 			
 			if Name == "" then
 				Name = `AutoMigrate-{math.random(1,1000)}`
-				print(`Overwriting blank rank name! '' -> {Name}`)
+				print(`Overwriting blank rank name! '' -> '{Name}'`)
 				
 				local Info = Var.DataStores.AdminsDS:GetAsync("CurrentRanks") or Var.DefaultRankData
 

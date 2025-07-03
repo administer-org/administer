@@ -11,10 +11,11 @@ export type IconPack = {
 		AllowThemeDependencies: boolean
 	},
 
-	Logos: { Icon }
+	Logos: { [string]: string },
+	
+	[string]: string
 }
 
-type Icon = {}
 type AppID = string
 
 export type Response = { boolean | string }

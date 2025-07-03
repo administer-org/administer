@@ -203,6 +203,8 @@ function Admins.Load(): ()
 				)
 				
 				table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
+					if Var.RankCreatorOpen then return end
+					
 					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
 						Position = UDim2.fromScale(0.1, 0.036),
 						Size = UDim2.fromScale(0.858, 0.126)
@@ -228,31 +230,21 @@ function Admins.Load(): ()
 					Template.Configure.Image = Utilities.Icon "lock"
 					
 					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
-						Frontend.Popup.new(
-							{
-								Icon = Utilities.Icon "administer",
-								Name = "Rank Editor",
-								Subheader = "Access Denied"
-							},
-							{
-								Primary = Utilities.Icon "user-shield",
-								SubIcon = Utilities.Icon "triangle-warning"
-							},
-							"Insufficient Permissions",
-							"Editing protected ranks is prohibited because they are generally created by the system and are important for Administer's functionality. If this is incorrect and you need to edit the rank, please contact whoever installed Administer.",
-							{
-								{
-									Text = "OK",
-									Icon = Utilities.Icon "check-plain",
-									Callback = function(c) c() end
-								}
-							}
-						)
+						if Var.RankCreatorOpen then return end
+						
+						Frontend.Toast({
+							Icon = Utilities.Icon "triangle-warning",
+							Text = "Insufficient permissions",
+							Subtext = "Protected ranks may not be edited.",
+							Timeout = 5
+						})
 					end))
 				else
 					local Env = require(script.Parent.UI.AdminHelperEnv)
 					
 					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
+						if Var.RankCreatorOpen then return end
+						
 						Env.EditMode = true
 						Env.EditModeMembers = v.Members
 						Env.EditModeApps = v.Apps
@@ -362,10 +354,13 @@ function Admins.ClearEditState(Env)
 end
 
 function Admins.OpenCreator()
+	Var.RankCreatorOpen = true
+	
 	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
 end
 
 function Admins.CloseCreator()
+	Var.RankCreatorOpen = false
 	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
 	
 	task.delay(1, function()
@@ -450,27 +445,12 @@ function Admins.RunCreatorApp()
 
 	Frames.Page2.NextPage.MouseButton1Click:Connect(function()
 		if string.len(Frames.Page2.TextInput.Text) == 0 or string.len(Frames.Page2.TextInput.Text) > 50 then
-			Frontend.Popup.new(
-				{
-					Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
-					Name = "Administer",
-					Subheader = "Rank Creator"
-				}, {
-					Primary = Utilities.Icon "warning-filled",
-					SubIcon = Utilities.Icon "x"
-				},
-				"Invalid input",
-				"Rank name must be more than one character and less than 50.",
-				{
-					{
-						Text = "Ok",
-						Icon = Utilities.Icon "check-plain",
-						Callback = function(c)
-							c()
-						end
-					}
-				}
-			)
+			Frontend.Toast({
+				Icon = Utilities.Icon "x",
+				Text = "Invalid input",
+				Subtext = "Rank name must be more than one character and less than 50.",
+				Timeout = 5
+			})
 
 			return
 		end
@@ -479,29 +459,14 @@ function Admins.RunCreatorApp()
 
 		local ExistingRank = Var.Remotes.GetRank:InvokeServer(Frames.Page2.TextInput.Text)
 		if ExistingRank ~= nil and not Env.EditMode then
-			Frontend.Popup.new(
-				{
-					Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
-					Name = "Administer",
-					Subheader = "Rank Creator"
-				}, {
-					Primary = Utilities.Icon "warning-filled",
-					SubIcon = Utilities.Icon "x"
-				},
-				"Invalid input",
-				`You cannot make name for this rank {Frames.Page2.TextInput.Text} because it is already being used for a different rank.`,
-				{
-					{
-						Text = "Ok",
-						Icon = Utilities.Icon "check-plain",
-						Callback = function(c)
-							c()
-
-							SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://15084609272", false, 5)
-						end
-					}
-				}
-			)
+			Frontend.Toast({
+				Icon = Utilities.Icon "x",
+				Text = "Invalid input",
+				Subtext = `Rank names must be unique, {Frames.Page2.TextInput.Text} is already a rank`,
+				Timeout = 5
+			})
+			
+			SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://11102397100", false, 2)
 
 			return
 		end
@@ -640,55 +605,27 @@ function Admins.RunCreatorApp()
 		end
 
 		if MemberCount == 0 then
-			Frontend.Popup.new(
-				{
-					Icon = Utilities.Icon "administer",
-					Name = "Administer",
-					Subheader = "Rank Creator"
-				}, {
-					Primary = Utilities.Icon "warning-filled",
-					SubIcon = Utilities.Icon "x"
-				},
-				"Invalid input",
-				"You must have at least one member in this rank.",
-				{
-					{
-						Text = "Ok",
-						Icon = Utilities.Icon "check-plain",
-						Callback = function(c)
-							SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
-
-							c()
-						end
-					}
-				}
-			)
+			Frontend.Toast({
+				Icon = Utilities.Icon "x",
+				Text = "Not enough members",
+				Subtext = `Ranks must have at least one member in them.`,
+				Timeout = 5
+			})
+			
+			SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
 
 			return
 		elseif MemberCount > Env.MaxPeople then
-			Frontend.Popup.new(
-				{
-					Icon = Utilities.Icon "administer",
-					Name = "Administer",
-					Subheader = "Rank Creator"
-				}, {
-					Primary = Utilities.Icon "warning-filled",
-					SubIcon = Utilities.Icon "x"
-				},
-				"Invalid input",
-				`One rank may not have more than {Env.MaxPeople} people in it.`,
-				{
-					{
-						Text = "Ok",
-						Icon = Utilities.Icon "check-plain",
-						Callback = function(c)
-							SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
-
-							c()
-						end
-					}
-				}
-			)
+			Frontend.Toast({
+				Icon = Utilities.Icon "x",
+				Text = "Too many members",
+				Subtext = `You may have up to {Env.MaxPeople} members.`,
+				Timeout = 5
+			})
+			
+			SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
+			
+			return
 		end
 
 		local ShouldGoBack = false
@@ -820,11 +757,11 @@ function Admins.RunCreatorApp()
 								Var.RankCreatorApps[AppObj.ButtonID] = not Var.RankCreatorApps[AppObj.ButtonID]
 
 								TweenService:Create(NewApp.Title, TweenInfo.new(.4), { 
-									TextTransparency = Var.RankCreatorApps[NewApp] and 0 or .6
+									TextTransparency = Var.RankCreatorApps[AppObj.ButtonID] and 0 or .6
 								}):Play()
 
 								TweenService:Create(NewApp.Icon, TweenInfo.new(.4), { 
-									ImageTransparency = Var.RankCreatorApps[NewApp] and 0 or .6
+									ImageTransparency = Var.RankCreatorApps[AppObj.ButtonID] and 0 or .6
 								}):Play()
 							end
 						end

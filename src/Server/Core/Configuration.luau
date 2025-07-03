@@ -11,7 +11,9 @@ local Locales: {Default: string, Value: string, [number]: string} = {
 	Value = "en"
 }; for _, Locale in script.Parent.Locales:GetChildren() do table.insert(Locales, Locale.Name) end
 
-local Settings: Types.Configuration = {
+type SettingsType = Types.Configuration
+
+local Settings: SettingsType = {
 	Name = "Administer",
 
 	VersData = {
@@ -39,7 +41,7 @@ local Settings: Types.Configuration = {
 		--// If you have no idea what a dictionary is then please just
 		--// use GUI-based rank configuration, you are going to make a syntax error.
 		--// If you see red lines anywhere here press Ctrl Z until they go away
-		
+
 		Groups = {
 			--// Change the ID in the table key here. Copy this entry to make more.
 			[0] = { --// Group ID
@@ -114,7 +116,7 @@ local Settings: Types.Configuration = {
 		["_SettingsMeta"] = {
 			["Name"] = "Administer"
 		},
-		
+
 		["Admins"] = {
 			["_CategoryOpts"] = {
 				["DisplayName"] = "Admins",
@@ -355,6 +357,31 @@ local Settings: Types.Configuration = {
 
 					["Value"] = "regular",
 					["Default"] = "regular"
+				}
+			}
+		},
+
+		["General"] = {
+			["_CategoryOpts"] = {
+				["DisplayName"] = "General",
+				["Color"] = "#888",
+				["Description"] = "General Administer settings."
+			},
+
+			["Verbosity"] = {
+				["Description"] = "The amount of debugging prints Administer makes. To disable remote messages, set to `warning`.",
+				["SettingType"] = "Enum",
+				["SettingDisplayType"] = "Dropdown",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					"debug",
+					"log",
+					"warning",
+					"error",
+
+					["Value"] = "log",
+					["Default"] = "log"
 				}
 			}
 		}

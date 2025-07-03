@@ -435,9 +435,48 @@ function Frontend.Toast(Config: {
 	Icon: string,
 	Timeout: number,
 
-	OnClick: () -> ()	
+	OnClick: () -> ()?
 })
+	local Toast = Var.MainFrame.administer.Toast
+	local Close = nil
 	
+	Toast.Size = UDim2.fromScale(0.4, 0.74)
+	Toast.Position = UDim2.fromScale(.5, 1.1)
+	Toast.Timer.Size = UDim2.fromScale(1, 1)
+	
+	Toast.HeaderLabel.Text = Config.Text
+	Toast.MainText.Text = Config.Subtext
+	Toast.Icon.Image = Config.Icon
+	
+	Var.Services.TweenService:Create(Toast, TweenInfo.new(.6, Enum.EasingStyle.Quart), {
+		Position = UDim2.fromScale(.5, .879),
+		Size = UDim2.fromScale(0.443, 0.094)
+	}):Play()
+	
+	local Timer = Var.Services.TweenService:Create(Toast.Timer, TweenInfo.new(Config.Timeout), {
+		Size = UDim2.fromScale(0,1)
+	})
+	
+	Timer:Play()
+	
+	local ClickEvent = Toast.Click.MouseButton1Click:Connect(function()
+		Close()
+
+		xpcall(Config.OnClick(), Utilities.Logging.Print)
+	end)
+	
+	Close = function()
+		Var.Services.TweenService:Create(Toast, TweenInfo.new(.6, Enum.EasingStyle.Quart), {
+			Position = UDim2.fromScale(.5, 1.1),
+			Size = UDim2.fromScale(0.4, .74)
+		}):Play()
+		
+		ClickEvent:Disconnect()
+	end
+	
+	Timer.Completed:Connect(Close)
+	
+	return Close
 end
 
 Frontend.Popup.OriginalStates = {}
@@ -468,7 +507,7 @@ function Frontend.Popup.Open(): ()
 		end
 	end
 
-	local Popup = Var.MainFrame.MessageBox
+	local Popup = Var.MainFrame.administer.MessageBox
 
 	local PopupOriginalSize = Popup.Size
 	local SizeStr = string.split(tostring(Popup.Size), ",")
@@ -510,7 +549,7 @@ function Frontend.Popup.Close(): ()
 		end
 	end
 
-	local Box = Var.MainFrame.MessageBox
+	local Box = Var.MainFrame.administer.MessageBox
 	local PopupOriginalSize = Box.Size
 	local SizeStr = string.split(tostring(Box.Size), ",")
 	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
@@ -529,7 +568,7 @@ function Frontend.Popup.Close(): ()
 	Var.PopupOpen = false
 end
 
-local MessageBox = Var.MainFrame.MessageBox
+local MessageBox = Var.MainFrame.administer.MessageBox
 local ButtonOneOriginalPos = MessageBox.Button1.Position
 local PopupButtons = {}
 
