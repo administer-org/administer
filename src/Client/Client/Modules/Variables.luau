@@ -1,4 +1,4 @@
---// Administer (2.0.0)
+--// Administer
 
 --// pyxfluff (2024-2025)
 
