@@ -37,7 +37,7 @@ Move Administer to ServerScriptService. If you would like, this is where you can
 Enter the game and you should be greeted with the onboarding wizard, where you can configure your new Administer installation. Have fun!
 
 ## Custom commands & apps
-Please read [our documentation.](https://docs.administer.notpyx.me) You'll be able to find video and text tutorials on Administer APIs, basic concepts, and advanced modification of the system.
+Please read [our documentation.](https://docs.admsoftware.org) You'll be able to find video and text tutorials on Administer APIs, basic concepts, and advanced modification of the system.
 
 ## Contributions
 
@@ -49,7 +49,7 @@ If you're adding a new feature, you may want to open an issue before coding some
 
 ## Credits
 
-Administer is owned and maintained by [@pyxfluff](https://notpyx.me/github).
+Administer is owned and maintained by [@pyxfluff](http://github.com/pyxfluff).
 
 We utilize many other open-source resources such as:
 - UICons: FlatIcon
