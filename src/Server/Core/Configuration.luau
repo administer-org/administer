@@ -27,9 +27,9 @@ local Settings: SettingsType = {
 		Minor = 0,
 		Tweak = 0,
 
-		Extra = "RC2 (trg PRLS.pbta) 0d23e82",
+		Extra = "RC2 (trg PRLS.pbta) 9989f20",
 		String = "2.0.0-rc2",
-		GitRevision = "0d23e82",
+		GitRevision = "9989f20",
 
 		NoExtraData = "2.0.0",
 		APIRevision = "2.0.0",
