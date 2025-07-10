@@ -11,45 +11,22 @@ local Frontend = { Log = function(...) end }
 local Var = require(script.Parent.Variables)
 
 function Utilities.GetSetting(Setting: string): any
-	return ""
-	--[[
-	local SettingModule = Settings
-
-	if SettingModule == { false } then --// future proof
-		error(
-			"[Administer] [fault]: Oops, your settings did not authenticate properly. This is probably a bug with the ranking system. Please provide a detailed error report to the pyxfluff."
-		)
-	end
-
-	for _, v in SettingModule do
-		local Success, Result = pcall(function()
-			if v["Name"] == Setting then
-				return v["Value"]
-			else
-				return "CONT" --// send continue signal
-			end
-		end)
-
-		if not Success then
-			return `Corrupted setting (No "Name") .. {Result}`
-		elseif Result == "CONT" then
-			continue
-		else
-			return Result
-		end
-	end
-
-	return "Not found"
-    ]]
+	local setting = Var.Remotes.GetSetting:InvokeServer("Administer", Setting)
+	
+	return setting
 end
 
-function Utilities.StartSettingsCheck(): () end
+function Utilities.GetSettingChanged(Setting: string): RemoteEvent
+	local remote = Var.Remotes.GetRemote:InvokeServer("Administer", Setting)
+	
+	return remote
+end
 
 function Utilities.ShortNumber(Number: number): string
 	return math.floor(
 		((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3))
-			* 10 ^ (tonumber(Utilities.GetSetting("ShortNumberDecimals")) or 2)
-	) / 10 ^ (tonumber(Utilities.GetSetting("ShortNumberDecimals")) or 2) .. (({
+			* 10 ^ (Var.ShortNumberDecimals)
+	) / 10 ^ (Var.ShortNumberDecimals) .. (({
 		"k",
 		"M",
 		"B",
@@ -59,7 +36,7 @@ function Utilities.ShortNumber(Number: number): string
 		"Sx",
 		"Sp",
 		"Oc",
-		"N",
+		"N"
 	})[math.floor(math.log10(Number) / 3)] or "")
 end
 
@@ -87,7 +64,7 @@ function Utilities.FormatRelativeTime(Unix: number): string
 end
 
 Utilities.Logging.Print = function(...)
-	if Utilities.GetSetting("Verbose") then
+	if Var.Verbosity == "log" then
 		print("[Administer] [log]", ...)
 		Frontend.Log("log", ...)
 	end

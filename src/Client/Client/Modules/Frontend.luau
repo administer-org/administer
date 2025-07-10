@@ -59,8 +59,8 @@ end
 
 function Frontend.Open(WaitForCompletion): ()
 	if not Var.Panel then Var.Panel = Frontend.Render() end
-	--local AS = tonumber(Utilities.GetSetting("AnimationSpeed"))
-	local AS = 1
+
+	local AS = Var.AnimationSpeed
 	local X = 0.85
 	local Y = 0.7
 
@@ -122,7 +122,7 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	end)
 
 	local Duration = 0
-	if not Instant then Duration = (tonumber(Utilities.GetSetting("AnimationSpeed")) or 1) end
+	if not Instant then Duration = Var.AnimationSpeed end
 
 	local X: number = 0.85
 	local Y: number = 0.7
@@ -193,12 +193,7 @@ function Frontend.Drawer.Open(): ()
 	ShouldAnimate = true
 	Ready = true
 
-	xpcall(function()
-		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed") * 2) or 2
-	end, function(e)
-		--// This is a temporary fix
-		TimeToComplete = 2
-	end)
+	TimeToComplete = (Var.AnimationSpeed * 2) or 2
 
 	Container.Size = UDim2.new(1, 0, 1, 0)
 	Container.Position = UDim2.new(0, 0, 0, 0)
@@ -326,12 +321,7 @@ function Frontend.Drawer.Close(): ()
 
 	ShouldAnimate = false
 
-	xpcall(function()
-		TimeToComplete = tonumber(Utilities.GetSetting("AnimationSpeed")) or 1
-	end, function(e)
-		--// This is a temporary fix
-		TimeToComplete = 2
-	end)
+	TimeToComplete = Var.AnimationSpeed
 
 	Container.Parent.Parent = Var.MainFrame
 	Container.Parent.Size = UDim2.new(.75,0,1,0)
@@ -436,46 +426,46 @@ function Frontend.Toast(Config: {
 	Timeout: number,
 
 	OnClick: () -> ()?
-})
+	})
 	local Toast = Var.MainFrame.administer.Toast
 	local Close = nil
-	
+
 	Toast.Size = UDim2.fromScale(0.4, 0.74)
 	Toast.Position = UDim2.fromScale(.5, 1.1)
 	Toast.Timer.Size = UDim2.fromScale(1, 1)
-	
+
 	Toast.HeaderLabel.Text = Config.Text
 	Toast.MainText.Text = Config.Subtext
 	Toast.Icon.Image = Config.Icon
-	
+
 	Var.Services.TweenService:Create(Toast, TweenInfo.new(.6, Enum.EasingStyle.Quart), {
 		Position = UDim2.fromScale(.5, .879),
 		Size = UDim2.fromScale(0.443, 0.094)
 	}):Play()
-	
+
 	local Timer = Var.Services.TweenService:Create(Toast.Timer, TweenInfo.new(Config.Timeout), {
 		Size = UDim2.fromScale(0,1)
 	})
-	
+
 	Timer:Play()
-	
+
 	local ClickEvent = Toast.Click.MouseButton1Click:Connect(function()
 		Close()
 
 		xpcall(Config.OnClick(), Utilities.Logging.Print)
 	end)
-	
+
 	Close = function()
 		Var.Services.TweenService:Create(Toast, TweenInfo.new(.6, Enum.EasingStyle.Quart), {
 			Position = UDim2.fromScale(.5, 1.1),
 			Size = UDim2.fromScale(0.4, .74)
 		}):Play()
-		
+
 		ClickEvent:Disconnect()
 	end
-	
+
 	Timer.Completed:Connect(Close)
-	
+
 	return Close
 end
 
@@ -670,7 +660,7 @@ function Frontend.Popup.new(
 		MessageBox.Button1.Position = ButtonOneOriginalPos
 	end, function()
 		--// Allow for having only one button
-		
+
 		MessageBox.Button2.Visible = false
 		MessageBox.Button1.AnchorPoint = Vector2.new(.5, 0)
 		MessageBox.Button1.Position = UDim2.fromScale(.5, MessageBox.Button1.Position.Y.Scale) 
@@ -857,6 +847,73 @@ function Frontend.InitGestureBar()
 			end
 
 			--// Insurance soontm
+		end
+	end)
+end
+
+function Frontend.RegisterPanelKeybind()
+	local currentKeys, Debounce = {}, false
+
+	local openKeybind = Utilities.GetSetting("PanelKeybind")
+	local openChanged = Utilities.GetSettingChanged("PanelKeybind")
+	local ExpandKeybind = Utilities.GetSetting("PanelFullscreenKeybind")
+	local expandChanged = Utilities.GetSettingChanged("PanelFullscreenKeybind")
+	local loadedSettings: RemoteEvent = Var.Remotes:FindFirstChild("SettingsLoaded")
+	
+	loadedSettings.OnClientEvent:Connect(function()
+		openKeybind = Utilities.GetSetting("PanelKeybind")
+		ExpandKeybind = Utilities.GetSetting("PanelFullscreenKeybind")
+	end)
+	openChanged.OnClientEvent:Connect(function(newValue)
+		openKeybind = newValue
+	end)
+	expandChanged.OnClientEvent:Connect(function(newValue)
+		ExpandKeybind = newValue
+	end)
+
+	Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
+		if IsGameProc then return end
+
+		table.insert(currentKeys, KeyCode.KeyCode)
+	end)
+
+	Var.Services.UserInputService.InputEnded:Connect(function(KeyCode, IsGameProc)
+		if IsGameProc then return end
+
+		if KeyCode.KeyCode == currentKeys[1] then
+			local commaSeparated = {}
+
+			for i, v in currentKeys do
+				table.insert(commaSeparated, v.Name)
+			end
+
+
+			commaSeparated = table.concat(commaSeparated, ",")
+			currentKeys = {}
+
+			if commaSeparated == ExpandKeybind then 
+				if Debounce then return end
+				Debounce = true
+
+				if not Var.IsOpen then
+					Frontend.Open(true)
+				end
+
+				Frontend.ToggleFullscreen()
+
+				Debounce = false
+			elseif commaSeparated == openKeybind then
+				if Debounce then return end
+				Debounce = true
+
+				if Var.IsOpen then
+					Frontend.Close(false, true)
+				else
+					Frontend.Open(true)
+				end
+
+				Debounce = false
+			end
 		end
 	end)
 end

@@ -21,7 +21,7 @@ local function CacheSettings()
 	Var.AnimationSpeed = tonumber(Utilities.GetSetting("AnimationSpeed"))
 	Var.ShortNumberDecimals = tonumber(Utilities.GetSetting("ShortNumberDecimals"))
 	Var.Verbosity = Utilities.GetSetting("Verbosity")
-	
+
 	return true
 end
 
@@ -32,24 +32,24 @@ local success, errormsg = pcall(function()
 
 	--// Cache some settings
 	CacheSettings()
-	
+
 	Var.Remotes.SettingsLoaded.OnClientEvent:Connect(CacheSettings)
 end)
 
 if not success then
 	print(errormsg)
 	Utilities.NewNotification("Administer", "", "Administer has been incorrectly installed and may not continue loading.", "Startup failed", 999)
-	
+
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
 
 
 local function DoUpdate()
 	Var.FinishedUpdate = false
-	
+
 	Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
 	Var.Remotes.CheckForUpdates:InvokeServer({ "org.admsoftware.Core" })
-	
+
 	Var.FinishedUpdate = true
 end
 
@@ -57,7 +57,7 @@ local Thread = task.defer(DoUpdate)
 task.delay(5, function()
 	if not Var.FinishedUpdate then
 		Var.DisableOnlineServices = true
-		
+
 		Utilities.NewNotification(
 			"Administer", 
 			Utilities.Icon "triangle-warning", 
@@ -176,16 +176,16 @@ end)
 
 if script.Parent:GetAttribute("NeedsSetup") then
 	Utilities.Logging.Print("Setup is not complete, entering lockdown mode!")
-	
+
 	Var.DoHeaderEffects = false
-	
+
 	Frontend.SwapAppBasic(Var.MainFrame.Welcome, {
 		Name = "Setup",
 		Icon = Utilities.Icon "sparkles"
 	})
-	
+
 	require(script.Modules.Helpers.FirstTimeSetup)()
-	
+
 	Frontend.Open()
 end
 
@@ -199,9 +199,9 @@ xpcall(function()
 	task.defer(function()
 		pcall(Admins.Load)
 	end)
-	
+
 	Admins.RunCreatorApp()
-	
+
 	Var.MainFrame.Configuration.Admins.Header.NewRank.Activator.MouseButton1Click:Connect(function()
 		Admins.OpenCreator()
 	end)
@@ -238,14 +238,14 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 				Debounce = true
 			end
 		end)
-	
+
 	Var.MainFrame.Header.AssistiveClose.Visible = true
 	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 else
 	Var.Mobile = false
 
 	Var.MainFrame.Parent.MobileOpen:Destroy()
-	
+
 	if Utilities.GetSetting("AssistiveClose") == true then
 		Var.MainFrame.Header.AssistiveClose.Visible = true
 		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
@@ -275,10 +275,10 @@ xpcall(function(...)
 			Card.ServiceRDNN.Text = "org.admsoftware.Core"
 
 			Card.Visible = true
-			
+
 			return
 		end
-		
+
 		local Card = Info.UpdateCenter.ScrollingFrame.Card:Clone()
 
 		Card.Parent = Info.UpdateCenter.ScrollingFrame
@@ -291,7 +291,7 @@ xpcall(function(...)
 
 		Card.Visible = true
 	end
-	
+
 	repeat
 		Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
 
@@ -301,21 +301,23 @@ xpcall(function(...)
 				IsFail = true
 			}
 		end
-		
+
 		task.wait(1)
 	until Var.Version.IsUpToDate ~= nil
-	
+
 	NewVersCard(Var.Version)
-	
+
 	local Contributors = Var.Remotes.GetContributors:InvokeServer()
-	
+
 	for _, Contrib in Contributors do
 		local Card = Info.Credits.Users.Template:Clone()
-		
+
 		Card.Username.Text = Contrib.Name
 		Card.Task.Text = Contrib.Job
-		Card.ImageLabel.Image = game.Players:GetUserThumbnailAsync(Contrib.UserID, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size180x180)
-		
+		pcall(function() --// just incase a user gets banned and i cant remove them
+			Card.ImageLabel.Image = game.Players:GetUserThumbnailAsync(Contrib.UserID, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size180x180)
+		end)
+
 		Card.Parent = Info.Credits.Users
 		Card.Visible = true
 	end
