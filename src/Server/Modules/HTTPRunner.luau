@@ -80,7 +80,6 @@ function Http.GetRoute(
 
 	xpcall(function()
 		local function DoRequest()
-			print(AppServer)
 			Response = Var.Services.HttpService:RequestAsync({
 				Url = `{AppServer}{Route}`,
 				Method = "GET",
@@ -125,7 +124,6 @@ function Http.GetRoute(
 			Code = 200
 		})
 	else
-		print(Response)
 		if (IsAOS and not Options.DontLookForAlts) or ActiveFailoverDomain == AppServer and string.sub(tostring(Response.StatusCode), 1, 1) ~= "4" then
 			print("[Administer] You Primary AOS instance is currently offline, selecting another")
 

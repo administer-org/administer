@@ -52,6 +52,10 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 end
 
 function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Response
+	if Misc._ReturnConfig then
+		return Config
+	end
+	
 	--// Config checks
 	if not Config.Bootstrap then
 		return { false, "bootstrap function must not be nil" }
@@ -447,6 +451,16 @@ end
 
 function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
+		xpcall(function()
+			local RichConfig = require(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
+			
+			Data.CannotDownload = false
+			Data.RichConfig = RichConfig
+		end, function(e)
+			print(e)
+			Data.CannotDownload = true
+		end)
+		
 		return { true, Data }
 	end, function(...)
 		return { false, ... }

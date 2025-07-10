@@ -121,15 +121,19 @@ function Apps.Show(ServerURL, ID, Reason): string
 	if not Success then
 		Utilities.Logging.Warn(`Failed to fetch app {ID} from {ServerURL} - is the server active and responsive?`)
 		Utilities.Logging.Print(Data)
+		
 		return "The server didn't return an OK status code."
 	elseif Data["Error"] ~= nil then
 		Utilities.Logging.Warn(`App server lookup returned external error:`, Data["Error"])
+		
 		return "Something went wrong."
 	elseif Data[2] == 404 then
 		Utilities.Logging.Warn(Data[2])
+		
 		return "App not found."
 	elseif Data[2] == 500 then
 		Utilities.Logging.Warn(Data[2])
+		
 		return "Internal Error"
 	end
 
@@ -139,11 +143,11 @@ function Apps.Show(ServerURL, ID, Reason): string
 
 	AppInfoFrame.AppIcon.Image = `rbxassetid://{Data["IconID"]}`
 	AppInfoFrame.AppIconBG.Image = `rbxassetid://{Data["BlurredIcon"]}`
-
+	
 	AppInfoFrame.Metadata.Text = 
 		`{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaCreated.Label"), "{{ }}", Utilities.FormatRelativeTime(Data["Metadata"]["CreatedAt"]))}` .. 
 		`\n\n{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaUpdated.Label"), "{{ }}",  Utilities.FormatRelativeTime(Data["Metadata"]["UpdatedAt"]))}` ..
-		`\n\n{string.format(Utilities.Translate("appplatform.Supported"), Data["Metadata"]["AppAPIPreferredVersion"])}`
+		`\n\n{string.format(Utilities.Translate("appplatform.Supported"), Data.RichConfig.Dependencies.AppPlatform)}`
 	--if Reason == nil then Configuration.Marketplace.Install.MetaServer.Label
 	--	AppInfoFrame.MetaServer.Label.Text =
 	--		`Shown because <b>You're subscribed to {string.split(ServerURL, "/")[3]}</b>`
@@ -152,6 +156,29 @@ function Apps.Show(ServerURL, ID, Reason): string
 	--end
 	AppInfoFrame.Details.Downloads.Value.Text = Data["Downloads"]
 	AppInfoFrame.ImportantInfo.Others.ItemType.Image = Data["AppType"] == "Theme" and Utilities.Icon "pencil-paintbrush" or Utilities.Icon "plugin"
+	
+	local Modules = { Sensitive = {}, Insensitive = {} }
+	for _, Dependency in Data.RichConfig.Dependencies.AdministerModules do
+		if table.find({"AdminRunner", "Apps"}, Dependency.Name) ~= nil then
+			table.insert(Modules.Sensitive, Dependency.Name)
+		else
+			table.insert(Modules.Insensitive, Dependency.Name)
+		end 
+	end
+	
+	local CombinedSensitive, CombinedInsensitive = "", ""
+	for i, Module in Modules.Sensitive do
+		CombinedSensitive = CombinedSensitive .. i ~= #Modules.Sensitive and `{Module}, ` or `and {Module}`
+	end
+	
+	for i, Module in Modules.Insensitive do
+		CombinedInsensitive = CombinedInsensitive .. i ~= #Modules.Insensitive and `{Module}, ` or `and {Module}`
+	end
+	
+	AppInfoFrame.PrivacyUsage.Text = 
+		(CombinedSensitive ~= "" and `Uses sensitive Administer modules {CombinedSensitive}` or "Does not use sensitive Administer modules") .. "\n" .. 
+		(CombinedInsensitive ~= "" and `Uses insensitive Administer modules {CombinedInsensitive}` or "Does not use insensitive Administer modules") .. "\n" .. 
+		`Published by <b>{string.find(ServerURL, "admsoftware.org") ~= nil and "a trusted Administer AOS instance" or "a 3rd party AOS instance"}</b>`
 
 	AppInfoFrame.Details.Creator.Icon.Image = Var.Services.Players:GetUserThumbnailAsync(
 		Data["Developer"]["ID"],
@@ -163,7 +190,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		if Tag:GetAttribute("IsTag") then Tag:Destroy() end
 	end
 
-	for _, TagData in Data["Tags"] do
+	for _, TagData in Data.Tags do
 		local Tag = AppInfoFrame.Details.TagTemplate:Clone()
 
 		Tag.Value.Text = TagData
@@ -307,8 +334,6 @@ function Apps.Search(Query: string, ServerURL: string?): {}
 	)
 
 	local Final: { { Type: string, Value: any } } = {}
-
-	print(Result)
 
 	if Result.index == "no_results" then
 		return {
@@ -558,8 +583,6 @@ function Apps.InitSerarchbar()
 				MP.Sidebar.Searchbar.Input.Text
 			)
 
-			print(SearchResult)
-
 			for _, Data in SearchResult.Data do
 				if Data.Type == "text" then
 					Frontend.Toast({
@@ -587,8 +610,6 @@ function Apps.InitSerarchbar()
 					})
 				end
 			end
-
-			print(Cards, Cards == {}, #Cards == 0)
 
 			if #Cards == 0 then return end
 
@@ -949,6 +970,7 @@ function Apps.Init(JustRefreshCounts)
 	end)
 
 	Apps.InitSerarchbar()
+	task.defer(Apps.LoadAppList)
 end
 
 return Apps

@@ -17,12 +17,29 @@ local t = Utilities.Translate
 
 Frontend.Close(true)
 
-if not pcall(function()
-		if script.Parent:GetAttribute("StartID") == nil then error() end
+local function CacheSettings()
+	Var.AnimationSpeed = tonumber(Utilities.GetSetting("AnimationSpeed"))
+	Var.ShortNumberDecimals = tonumber(Utilities.GetSetting("ShortNumberDecimals"))
+	Var.Verbosity = Utilities.GetSetting("Verbosity")
+	
+	return true
+end
 
-		Var.Remotes.Ping:InvokeServer()
-	end) then
+local success, errormsg = pcall(function()
+	if script.Parent:GetAttribute("StartID") == nil then error() end
+
+	Var.Remotes.Ping:InvokeServer()
+
+	--// Cache some settings
+	CacheSettings()
+	
+	Var.Remotes.SettingsLoaded.OnClientEvent:Connect(CacheSettings)
+end)
+
+if not success then
+	print(errormsg)
 	Utilities.NewNotification("Administer", "", "Administer has been incorrectly installed and may not continue loading.", "Startup failed", 999)
+	
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
 
@@ -36,8 +53,8 @@ local function DoUpdate()
 	Var.FinishedUpdate = true
 end
 
-local Thread = task.spawn(DoUpdate)
-task.delay(3, function()
+local Thread = task.defer(DoUpdate)
+task.delay(5, function()
 	if not Var.FinishedUpdate then
 		Var.DisableOnlineServices = true
 		
@@ -51,40 +68,19 @@ task.delay(3, function()
 	end
 end)
 
-task.spawn(Utilities.Heartbeat)
+task.defer(Utilities.Heartbeat)
 
-local Debounce = false
-Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
-	if IsGameProc then return end
-
-	if KeyCode.KeyCode == Enum.KeyCode.F2 then
-		if Var.Services.UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-			if not Var.IsOpen then
-				if Debounce then return end
-				Debounce = true
-				
-				Frontend.Open(true)
-
-				Debounce = false	
-			end
-			
-			Frontend.ToggleFullscreen()
-			
-			return
-		end
-
-		if Debounce then return end
-		Debounce = true
-
-		if Var.IsOpen then
-			Frontend.Close(false, true)
-		else
-			Frontend.Open(true)
-		end
-
-		Debounce = false
-	end
+task.defer(function()
+	pcall(function()
+		require(Modules.ClientSettings)
+	end)
 end)
+
+local KeybindRegisterTimeframe = Utilities.GetSetting("KeybindRegisterTime")
+
+if KeybindRegisterTimeframe == "optimistic" then
+	Frontend.RegisterPanelKeybind()
+end
 
 Widgets.Initialize()
 Apps.AddAppDrawerButton({
@@ -195,12 +191,14 @@ end
 
 --// Marketplace
 xpcall(Apps.Init, function(e)
-	Utilities.Logging.Print("[x] Failed to initialize the marketplace, this is likely due to insufficient permissions!", e)
+	Utilities.Logging.Print("[x] [thread Apps] Failed to initialize the marketplace, this is likely due to insufficient permissions!", e)
 end)
 
-
+--// Admins
 xpcall(function()
-	pcall(Admins.Load)
+	task.defer(function()
+		pcall(Admins.Load)
+	end)
 	
 	Admins.RunCreatorApp()
 	
@@ -214,7 +212,7 @@ xpcall(function()
 		Admins.Load()
 	end)
 end, function(e)
-	Utilities.Logging.Warn(`[thread Admins] {e}`)
+	Utilities.Logging.Warn(`[x] [thread Admins] {e}`)
 end)
 
 if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled then
@@ -248,11 +246,13 @@ else
 
 	Var.MainFrame.Parent.MobileOpen:Destroy()
 	
-	if Utilities.GetSetting("AssistiveClose") then
+	if Utilities.GetSetting("AssistiveClose") == true then
 		Var.MainFrame.Header.AssistiveClose.Visible = true
 		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 	end
 end
+
+--// Load settings
 
 local IsDonating = false
 local Passes = {}
@@ -356,12 +356,6 @@ if Utilities.GetSetting("ChatCommand") then
 	Command.Parent = game.TextChatService.TextChatCommands
 end
 
-Frontend.Toast({
-	Icon = Utilities.Icon "clock-past",
-	Text = "(debug) Client initialization complete",
-	Subtext = "Done in 0s",
-	Timeout = 7,
-	OnClick = function()
-		print("ok")
-	end
-})
+if KeybindRegisterTimeframe == "safe" then
+	Frontend.RegisterPanelKeybind()
+end

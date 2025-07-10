@@ -25,12 +25,44 @@ local function saveDataStore(key: string, data: {}): boolean
 	return success
 end
 
-local function loadDataStore(key: string): {}
-	local success, data = pcall(function()
-		return HttpService:JSONDecode(SettingsDataStore:GetAsync(key))
+local function loadDataStore(key: string, template: {}?): {}
+	local success, rawData = pcall(function()
+		return SettingsDataStore:GetAsync(key)
 	end)
-	if success then return data else return {} end
+
+	if success and rawData then
+		local successDecode, data = pcall(function()
+			return HttpService:JSONDecode(rawData)
+		end)
+
+		if successDecode and typeof(data) == "table" then
+			if template then
+				local function mergeTemplate(dataTable, templateTable)
+					local result = {}
+					for key, value in pairs(templateTable) do
+						if typeof(value) == "table" then
+							result[key] = mergeTemplate(dataTable and dataTable[key] or {}, value)
+						else
+							result[key] = dataTable and dataTable[key] ~= nil and dataTable[key] or value
+						end
+					end
+					return result
+				end
+
+				return mergeTemplate(data, template)
+			else
+				return data
+			end
+		end
+	end
+
+	-- Return template if provided, otherwise empty
+	if template then
+		return template
+	end
+	return {}
 end
+
 
 local function settingFromString(settingName: string, settingsGroup: SettingsGroup, categoryName: string?, returnAsString: boolean?)
 	if categoryName then
@@ -50,19 +82,45 @@ local function categoryFromString(settingName: string, settingsGroup: SettingsGr
 	end
 end
 
-function SettingsAPI.new(setting)
+SettingsAPI.SettingsList = {}
+
+function SettingsAPI.GetController(name: string)
+	for i,v in pairs(SettingsAPI.SettingsList) do
+		local data = v.GetData()["_SettingsMeta"]
+		if data.Name == name then
+			return v
+		end
+	end
+
+	return nil
+end
+
+function SettingsAPI.new(rawSettings)
+	local remotes = {}
+	
+	local function cloneTable(list)
+		local newTable = {}
+		for i, v in list do
+			if typeof(v) == "table" then
+				newTable[i] = cloneTable(v)
+			else
+				newTable[i] = v
+			end
+		end
+
+		return newTable
+	end
+	local settingsGroup = cloneTable(rawSettings)
+
 	local isServer = RunService:IsServer()
 	local APIController = {}
-	local dataStoreKey = setting["_SettingsMeta"].Name
-	setting["_SettingsMeta"] = nil
+	local dataStoreKey = settingsGroup["_SettingsMeta"].Name
 	local changedSignal = Signal.new()
-	local settingsGroup
-	if next(setting) == nil then settingsGroup = loadDataStore("Presets") else settingsGroup = setting end
 
 	function APIController.Changed(names: {settingName: string}, callback) -- fires when either setting changes
 		for i, name in names do
 			changedSignal:Connect(name, function()
-				callback(setting)
+				callback(settingsGroup)
 			end)
 			return changedSignal
 		end
@@ -80,16 +138,44 @@ function SettingsAPI.new(setting)
 
 	function APIController.Get(names: any): any
 		if typeof(names) == "table" then
-		local returnTable = {}
-		for i, name in names do
-			local retrievedSetting: Setting = settingFromString(name, settingsGroup)
-			returnTable[name] = retrievedSetting["Value"]["Value"]
-		end
-		return returnTable
+			local returnTable = {}
+			for i, name in names do
+				local retrievedSetting: Setting = settingFromString(name, settingsGroup)
+				returnTable[name] = retrievedSetting["Value"]["Value"]
+			end
+			return returnTable
 		else
 			local retrievedSetting: Setting = settingFromString(names, settingsGroup)
 			return retrievedSetting["Value"]["Value"]
 		end
+	end
+	
+	function APIController.GetRemote(names: any)
+		if typeof(names) == "table" then
+			local returnTable = {}
+			for i, name in names do
+				local retrievedRemote = remotes[name]
+				if retrievedRemote == nil then
+					retrievedRemote = Instance.new("RemoteEvent")
+					remotes[name] = retrievedRemote
+				end
+				returnTable[name] = retrievedRemote
+			end
+			return returnTable
+		else
+			local retrievedRemote = remotes[names]
+			if retrievedRemote == nil then
+				retrievedRemote = Instance.new("RemoteEvent")
+				retrievedRemote.Parent = game.ReplicatedStorage:WaitForChild("Administer")
+				remotes[names] = retrievedRemote
+				return retrievedRemote
+			end
+			return retrievedRemote
+		end
+	end
+
+	function APIController.GetData(): any
+		return settingsGroup
 	end
 
 	function APIController.GetCategory(name: string)
@@ -99,15 +185,21 @@ function SettingsAPI.new(setting)
 
 	function APIController.Set(name: string, value: any?): boolean
 		if not value then value = "" end
+		
 		local success = pcall(function()
 			local setting: Setting = settingFromString(name, settingsGroup)
 			setting.Value.Value = value
-			local category = categoryFromString(name, settingsGroup)
-			local newSettingsGroup = settingsGroup
-			newSettingsGroup[category][name] = setting
-			settingsGroup = newSettingsGroup
 		end)
-		if success then changedSignal:Fire(name) end
+		
+		pcall(function()
+			if success then changedSignal:Fire(name) end
+		end)
+		
+		if remotes[name] then
+			local remote: RemoteEvent = remotes[name]
+			remote:FireAllClients(value)
+		end
+
 		return success
 	end
 
@@ -121,7 +213,7 @@ function SettingsAPI.new(setting)
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local saveRemote: RemoteFunction = remoteFolder:FindFirstChild("SaveSettings")
-			return saveRemote:InvokeServer(setting, UserId)
+			return saveRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId)
 		end
 	end
 
@@ -129,16 +221,23 @@ function SettingsAPI.new(setting)
 		if isServer then
 			if customSettings then settingsGroup = customSettings end
 			local success, err = pcall(function()
-				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId)
+				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId, rawSettings)
 			end)
+			if success then
+				local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
+				local loaded:RemoteEvent = remoteFolder:WaitForChild("SettingsLoaded")
+				loaded:FireAllClients()
+			end
 			return success
 		else
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local loadRemote: RemoteFunction = remoteFolder:FindFirstChild("LoadSettings")
-			return loadRemote:InvokeServer(setting, UserId, customSettings)
+			return loadRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId, customSettings)
 		end
 	end
+
+	table.insert(SettingsAPI.SettingsList, APIController)
 	return APIController
 end
 

@@ -25,7 +25,7 @@ end
 Utils.Logging = {
 	--Prints out a basic message.
 	Print = function(...)
-		if not Utils.GetSetting("Verbose") then return end
+		if Utils.GetSetting("Verbosity") ~= "log" then return end
 		print(`[{Config.Name}] [log]`, ...)
 	end,
 

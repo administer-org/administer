@@ -15,7 +15,7 @@ type Response = Types.Response
 --// Locals
 local LastAdminResult
 
-function AR.Bootstrap(Player: Player, AdminRankID: number): ()
+function AR.Bootstrap(Player: Player, AdminRankID: string): ()
 	local Rank = Var.DataStores.AdminsDS:GetAsync(AdminRankID)
 	local NewPanel = Var.Panel.Spawn(Rank, Player)
 
@@ -87,7 +87,7 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 			or Var.EnableFreeAdmin
 			or ForceAdmin
 		then
-			AR.Bootstrap(Player, 1)
+			AR.Bootstrap(Player, "Administrator")
 		end
 	end)
 

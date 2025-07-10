@@ -89,7 +89,7 @@ Variables.InitClock = {
 
 Variables.DefaultRank = {
 	RankID = 0,
-	Name = require(Variables.Locales[Config.Settings.Interface.Language.Value.Default])["admin.RankDefault"],
+	Name = "Administrator",
 	Protected = false,
 
 	Members = {},

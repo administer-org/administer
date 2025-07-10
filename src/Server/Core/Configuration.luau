@@ -4,12 +4,13 @@
 --// pyxfluff 2024 - 2025
 
 local Types = require(script.Parent.Types)
-local Locales: {Default: string, Value: string, [number]: string} = {
+local Locales: { Default: string, Value: string, Items: { string } } = {
 	--// Change the default locale here
 	--// Make sure it is supported by Administer! See ./Locales for the list.
 	Default = "en",
-	Value = "en"
-}; for _, Locale in script.Parent.Locales:GetChildren() do table.insert(Locales, Locale.Name) end
+	Value = "en",
+	Items = {}
+}; for _, Locale in script.Parent.Locales:GetChildren() do table.insert(Locales.Items, Locale.Name) end
 
 type SettingsType = Types.Configuration
 
@@ -64,6 +65,11 @@ local Settings: SettingsType = {
 			Job    = "project lead, AOS, frontend/backend"
 		},
 		{
+			UserID = 938429178,
+			Name   = "AjaxTiba",
+			Job    = "core features"
+		},
+		{
 			UserID = 3610087630,
 			Name   = "dogo8me2",
 			Job    = "core assistance, apps"
@@ -87,6 +93,16 @@ local Settings: SettingsType = {
 			UserID = 3239844753,
 			Name   = "CDot_NightHawk",
 			Job    = "hosting infrastructure"
+		},
+		{
+			UserID = 556692115,
+			Name   = "FabulousTrophies",
+			Job    = "product testing"
+		},
+		{
+			UserID = 462102164,
+			Name   = "MCJ_RB",
+			Job    = "product testing"
 		},
 		{
 			UserID = 1,
@@ -175,9 +191,11 @@ local Settings: SettingsType = {
 				["Value"] = {
 					["Value"] = "None",
 					["Default"] = "None",
-					"None",
-					"InStudio",
-					"All"
+					Items = {
+						"None",
+						"InStudio",
+						"All"
+					}
 				}
 			}
 		},
@@ -260,8 +278,21 @@ local Settings: SettingsType = {
 				["RequiresRestart"] = false,
 
 				["Value"] = {
-					["Value"] = "F2",
-					["Default"] = "F2"
+					["Value"] = Enum.KeyCode.F2.Name,
+					["Default"] = Enum.KeyCode.F2.Name
+				}
+			},
+
+			["PanelFullscreenKeybind"] = {
+				["DisplayName"] = "Panel Fullscreen Keybind",
+				["Description"] = "The key used to expand the panel to be fullscreen on keyboard-enabled devices.",
+				["SettingType"] = "KeyCode",
+				["SettingDisplayType"] = "KeybindSelector",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					["Value"] = "LeftShift,F2",
+					["Default"] = "LeftShift,F2"
 				}
 			},
 
@@ -349,11 +380,13 @@ local Settings: SettingsType = {
 				["RequiresRestart"] = false,
 
 				["Value"] = {
-					"disabled",
-					"small",
-					"regular",
-					"medium",
-					"large",
+					Items = {
+						"disabled",
+						"small",
+						"regular",
+						"medium",
+						"large"
+					},
 
 					["Value"] = "regular",
 					["Default"] = "regular"
@@ -369,19 +402,50 @@ local Settings: SettingsType = {
 			},
 
 			["Verbosity"] = {
-				["Description"] = "The amount of debugging prints Administer makes. To disable remote messages, set to `warning`.",
+				["Description"] = "The amount of debugging prints Administer makes. To disable remote logging (<-- Remote [1], --> Done (20ms)), set to `warning`.",
 				["SettingType"] = "Enum",
 				["SettingDisplayType"] = "Dropdown",
 				["RequiresRestart"] = false,
 
 				["Value"] = {
-					"debug",
-					"log",
-					"warning",
-					"error",
+					Items = {
+						"debug",
+						"log",
+						"warning",
+						"error"
+					},
 
 					["Value"] = "log",
 					["Default"] = "log"
+				}
+			},
+
+			["KeybindRegisterTime"] = {
+				["Description"] = "Changes how soon Administer will listen for the keybind to open the panel. Optimistic = Early but quick, some things may not be finished, Safe = registers when ready",
+				["SettingType"] = "Enum",
+				["SettingDisplayType"] = "Dropdown",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					Items = {
+						"optimistic",
+						"safe",
+					},
+
+					["Value"] = "optimistic",
+					["Default"] = "optimistic"
+				}
+			},
+
+			["ShortNumberDecimals"] = {
+				["Description"] = 'How many decimals to display after a short number (54.123k)',
+				["SettingType"] = "Integer",
+				["SettingDisplayType"] = "InputBox",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					["Value"] = 2,
+					["Default"] = 2
 				}
 			}
 		}

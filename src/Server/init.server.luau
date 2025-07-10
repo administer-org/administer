@@ -42,7 +42,8 @@ xpcall(function()
 
 	Utils.Logging.Print(`[✓] DataStoreService connection established in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
-	local Settings
+	local Settings = SettingsAPI.new(Configuration.Settings)
+	
 	if Migrator.CheckForV1() then
 		Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
 		Migrator.Migrate()
@@ -54,20 +55,13 @@ xpcall(function()
 	
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
-		Settings = SettingsAPI.new(Configuration.Settings) --// Initialize for the first time
-		Settings:Save()
+		Settings.Save()
 
 		--// This system is better than the old one because it allows the user
 		--// to uninstall AOS without causing the system to overwrite stuff
 		Var.DataStores.Settings:SetAsync("HasInit", true)
 	else
-
-	end
-
-	--// Now load settings
-	if not Settings then
-		Settings = SettingsAPI.new(Configuration.Settings)
-		--Settings:Load()
+		Settings.Load()
 	end
 
 end, function(e)
@@ -218,15 +212,56 @@ NewRemote("GetRank", true, false, function(Rankname)
 	return Var.DataStores.AdminsDS:GetAsync(Rankname)
 end)
 
-NewRemote("LoadSettings", true, false, function(setting, userId, customSettings: Types.SettingsGroup?)
-	local settingsToLoad = SettingsAPI.new(setting)
-	return settingsToLoad.Load(userId, customSettings)
+--// Settings
+NewRemote("LoadSettings", true, false, function(controllerName, userId, customSettings: Types.SettingsGroup?)
+	local settingController = SettingsAPI.GetController(controllerName)
+	if not settingController then
+		return false
+	end
+	return settingController.Load(userId, customSettings)
 end)
 
-NewRemote("SaveSettings", true, false, function(setting, userId)
-	local settingsToLoad = SettingsAPI.new(setting)
-	return settingsToLoad.Save(userId)
+NewRemote("SaveSettings", true, false, function(controllerName, userId)
+	local settingController = SettingsAPI.GetController(controllerName)
+	if not settingController then
+		return false
+	end
+	return settingController.Save(userId)
 end)
+
+NewRemote("ModifySetting", true, false, function(controllerName, name, value)
+	local settingController = SettingsAPI.GetController(controllerName)
+	if not settingController then
+		return false
+	end
+
+	return settingController.Set(name, value)
+end)
+
+NewRemote("GetSetting", true, false, function(controllerName : string, settingName : string)
+	local controller = SettingsAPI.GetController(controllerName)
+	local currentValue = controller.Get(settingName)
+	
+	return currentValue
+end)
+
+NewRemote("GetRemote", true, false, function(controllerName : string, settingName : string)
+	local controller = SettingsAPI.GetController(controllerName)
+	local remote = controller.GetRemote(settingName)
+	
+	return remote
+end)
+
+NewRemote("GetAllSettings", true, false, function()
+	local controllers = SettingsAPI.SettingsList
+	local allData = {}
+	for i, v in pairs(controllers) do
+		allData[i] = v.GetData()
+	end
+	return allData
+end)
+
+Utils.NewRemote("RemoteEvent", "SettingsLoaded", true, function() end)
 
 Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
@@ -243,6 +278,8 @@ Utils.Logging.Print(`[-] Running startup jobs!`)
 
 xpcall(
 	function()
+		if not Utils.GetSetting("LiveUpdate") then return end
+		
 		Var.Services.MessagingService:SubscribeAsync("Administer", AdminRunner.Socket)
 	end,
 
@@ -251,10 +288,8 @@ xpcall(
 	end
 )
 
-HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...)
-	print(...)
-end, function(...)
-	print(...)
+HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...) end, function(...)
+	Utils.Logging.Warn(...)
 end)
 
 HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
