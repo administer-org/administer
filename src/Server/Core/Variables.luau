@@ -11,7 +11,7 @@ local Config = require(script.Parent.Configuration)
 --// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
 Variables.Config                     = require(script.Parent.Configuration) --// Config file location
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin            = true --// Makes every user a superamdin. Not recommended for anything other than debugging.
+Variables.EnableFreeAdmin            = false --// Makes every user a superamdin. Not recommended for anything other than debugging.
 
 --Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
 Variables.DefaultAppServer           = "https://aos-canary.admsoftware.org" --// Must be an AOS app server instance.
@@ -136,14 +136,14 @@ Variables.Branches = {
 		ImageID = "rbxassetid://18770010888",
 		Name = "Administer Public Beta",
 		BranchName = "pub_beta",
-		IsActive = true
+		IsActive = false
 	},
 
 	Production = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
 		BranchName = "live",
-		IsActive = false
+		IsActive = true
 	}
 }
 
@@ -179,10 +179,8 @@ Variables.Panel.Spawn = function(Rank, Player)
 	
 	NewPanel:SetAttribute("_CurrentBranch", Variables.Services.HttpService:JSONEncode(Variables.CurrentBranch))
 	NewPanel:SetAttribute("StartID", Variables.Services.HttpService:GenerateGUID(false))
-	-- TODO
 	NewPanel:SetAttribute("NeedsSetup", Tutorials["FirstTimeSetup"] ~= true)
 	
-	NewPanel:SetAttribute("NeedsSetup", false)
 	return NewPanel
 end
 
