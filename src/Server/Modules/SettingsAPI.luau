@@ -3,7 +3,6 @@
 local SettingsAPI = {}
 
 local Types = require(script.Parent.Parent.Core.Types)
-local Utilities = require(script.Parent.Utilities)
 local Signal = require(script.Signal)
 
 local DataStoreService = game:GetService("DataStoreService")
@@ -39,7 +38,7 @@ local function loadDataStore(key: string, template: {}?): {}
 			if template then
 				local function mergeTemplate(dataTable, templateTable)
 					local result = {}
-					for key, value in pairs(templateTable) do
+					for key, value in templateTable do
 						if typeof(value) == "table" then
 							result[key] = mergeTemplate(dataTable and dataTable[key] or {}, value)
 						else
@@ -97,7 +96,7 @@ end
 
 function SettingsAPI.new(rawSettings)
 	local remotes = {}
-	
+
 	local function cloneTable(list)
 		local newTable = {}
 		for i, v in list do
@@ -146,10 +145,19 @@ function SettingsAPI.new(rawSettings)
 			return returnTable
 		else
 			local retrievedSetting: Setting = settingFromString(names, settingsGroup)
-			return retrievedSetting["Value"]["Value"]
+
+			local _, Value = xpcall(function()
+				return retrievedSetting["Value"]["Value"]
+			end, function(e)
+				--// the setting does not exist
+				warn(`[Administer] Setting {names} was not found!`)
+				return false	
+			end)
+
+			return Value
 		end
 	end
-	
+
 	function APIController.GetRemote(names: any)
 		if typeof(names) == "table" then
 			local returnTable = {}
@@ -185,16 +193,16 @@ function SettingsAPI.new(rawSettings)
 
 	function APIController.Set(name: string, value: any?): boolean
 		if not value then value = "" end
-		
+
 		local success = pcall(function()
 			local setting: Setting = settingFromString(name, settingsGroup)
 			setting.Value.Value = value
 		end)
-		
+
 		pcall(function()
 			if success then changedSignal:Fire(name) end
 		end)
-		
+
 		if remotes[name] then
 			local remote: RemoteEvent = remotes[name]
 			remote:FireAllClients(value)
@@ -225,8 +233,11 @@ function SettingsAPI.new(rawSettings)
 			end)
 			if success then
 				local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
-				local loaded:RemoteEvent = remoteFolder:WaitForChild("SettingsLoaded")
-				loaded:FireAllClients()
+				pcall(function() --// if this fails the server is not loaded yet
+					local loaded:RemoteEvent = remoteFolder:WaitForChild("SettingsLoaded", 0.5)
+					
+					loaded:FireAllClients()
+				end)
 			end
 			return success
 		else

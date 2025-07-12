@@ -8,29 +8,41 @@ local Utils = {
 
 --// Dependencies
 --// Do not add anything here you don't need, it will cause circular imports.
-local Root     = script:FindFirstAncestor("Loader")
-local Config   = require(Root.Core.Configuration)
-local Var      = require(Root.Core.Variables)
-local Locales  = Root.Core.Locales
-local Types    = require(Root.Core.Types)
-local HTTP     = require(Root.Modules.HTTPRunner)
+local Root        = script:FindFirstAncestor("Loader")
+
+local HTTP        = require(Root.Modules.HTTPRunner)
+local SettingsAPI = require(Root.Modules.SettingsAPI)
+
+local Locales     = Root.Core.Locales
+local Types       = require(Root.Core.Types)
+local Config      = require(Root.Core.Configuration)
+local Var         = require(Root.Core.Variables)
 
 local Settings = Config.Settings
 
 --Retrieves a setting from the Administer settings index. Setting must be valid Setting syntax (read docs)
-Utils.GetSetting = function(setting: Types.Setting, settings: Types.SettingsGroup, userId: number?): Types.SettingResponse
-	return ""
+Utils.GetSetting = function(setting: Types.Setting, UserID: number?): Types.SettingResponse
+	if Var.SettingsAPI == nil then
+		return "log" --// just make sure Utils.Logging works :pray:
+	end
+	
+	return Var.SettingsAPI.Get(setting)
 end
 
 Utils.Logging = {
 	--Prints out a basic message.
 	Print = function(...)
-		if Utils.GetSetting("Verbosity") ~= "log" then return end
+		if Utils.GetSetting("Verbosity") ~= "log" and Var.SettingsAPI ~= nil then return end
+		
 		print(`[{Config.Name}] [log]`, ...)
 	end,
 
 	--Creates a warning, with a traceback.
 	Warn = function(...)
+		if table.find({"log", "warning"}, Utils.GetSetting("Verbosity")) ~= nil then
+			return
+		end 
+		
 		warn(`[{Config.Name}] [warn]`, ..., debug.traceback(""))
 	end,
 
@@ -52,7 +64,7 @@ Utils.Logging = {
 
 --Checks if a provided player is an Administer admin.
 Utils.IsAdmin = function(Player: Player): Types.AdminCheck
-	if (Utils.GetSetting("SandboxMode") and game:GetService("RunService"):IsStudio()) or Var.EnableFreeAdmin then
+	if (Utils.GetSetting("sudo") and game:GetService("RunService"):IsStudio()) or Var.EnableFreeAdmin then
 		return {
 			IsAdmin  = true,
 			Reason   = Utils.t(Player, "admincheck.SUDO"),
@@ -552,11 +564,18 @@ end
 
 function Utils.HasSeenTutorial(
 	Player: Player | number | string, 
-	TutorialName
+	TutorialName: string,
+	IsGlobal: boolean
 )
 	if typeof(Player) ~= "Instance" then
 		Player = {
 			UserId = Player
+		}
+	end
+	
+	if IsGlobal then
+		Player = {
+			UserId = "Global"
 		}
 	end
 	
@@ -569,10 +588,16 @@ function Utils.HasSeenTutorial(
 	end
 end
 
-function Utils.TutorialSeen(Player, Tutorial)
+function Utils.TutorialSeen(Player, Tutorial, IsGlobal)
 	if typeof(Player) ~= "Instance" then
 		Player = {
 			UserId = Player
+		}
+	end
+	
+	if IsGlobal then
+		Player = {
+			UserId = "Global"
 		}
 	end
 	

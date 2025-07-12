@@ -43,15 +43,9 @@ function Migrator.Migrate()
 	end
 	
 	Apps.ServerAPI.UninstallServer("https://administer.notpyx.me", true)
-	Apps.ServerAPI.New("https://aos-canary.admsoftware.org", 1)
+	Apps.ServerAPI.New(Var.DefaultAppServer, 1)
 	
 	Apps.ServerAPI.RegisterPrimary(Var.DefaultAppServer)
-	
-	--// install the v2 reporter regardless bc yes 
-	Apps.ServerAPI.InstallFromServer(
-		Var.DefaultAppServer,
-		"org.admsoftware.Reporter"
-	)
 
 	local AdminKeys: DataStorePages = Var.DataStores.AdminsDS:ListKeysAsync()
 	--local AdminKeys = {
@@ -111,12 +105,14 @@ function Migrator.Migrate()
 				Var.DataStores.AdminsDS:SetAsync("CurrentRanks", Info)
 				continue
 			end
+			
+			local PossibleConflict = Var.DataStores.AdminsDS:GetAsync(Data.RankName) ~= nil
 
 			AdminRunner.Ranks.New({
 				AdmRankVersion = 3,
 				RankID = -1,
 
-				Name = Data.RankName,
+				Name = `{Data.RankName}{PossibleConflict and math.random(1, 100) or ""}`,
 				Protected = Data.Protected,
 				Members = Data.Members,
 

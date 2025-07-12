@@ -28,11 +28,11 @@ function AR.Bootstrap(Player: Player, AdminRankID: string): ()
 	end
 
 	NewPanel.Parent = Player.PlayerGui
-	
+
 	--// TODO
 
 	Util.NewNotification(
-		Player :: Player,
+		Player,
 		--string.format(Util.t(Player, "onboarding.Welcome"), Config.Name, Rank.Name, Util.GetSetting("Keybind")),
 		string.format(Util.t(Player, "onboarding.Welcome"), Config.Name, Rank.Name, "F2"), --// Will replace when we have settings again
 		string.format(Util.t(Player, "onboarding.Head"), Config.Name),
@@ -108,16 +108,11 @@ function AR.Scan(ForceAdmin: boolean): ()
 end
 
 function AR.Ranks.New(Data: Types.AdminRank): Response
-	if Var.DataStores.AdminsDS:GetAsync("HasMigratedToV2") == false then
-		return { false, Util.t(nil, "admin.rv2.Migrate") }
-	end
-
 	Util.Logging.Print("[-] Making a new admin rank...")
 	local Start = os.clock()
 
 	xpcall(function()
 		local ShouldStep = false
-		local OldRankData = nil
 		local NewRank = table.clone(Var.DefaultRank)
 		local Info = Var.DataStores.AdminsDS:GetAsync("CurrentRanks") or Var.DefaultRankData
 
@@ -125,8 +120,6 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 			Data.RankID = Info.Count + 1
 			ShouldStep = true
 		end
-
-		if Data.IsEdit then OldRankData = Var.DataStores.AdminsDS:GetAsync(`_Rank{Data.RankID}`) end
 
 		NewRank.Name = Data.Name
 		NewRank.Color = Data.Color
@@ -138,13 +131,41 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 
 		NewRank.Members = Data.Members
 		NewRank.Apps = Data.Apps
+		
+		print(Data.IsEdit, Data.EditOriginalName)
 
-		table.insert(NewRank.Modifications, {
-			Reason = Util.t(nil, "admin.rank.created"),
-			ActingAdmin = Data.ActingUser,
-			Actions = { "created this rank" }
-		})
-
+		if not Data.IsEditing then
+			table.insert(NewRank.Modifications, {
+				Reason = Util.t(nil, "admin.rank.created"),
+				ActingAdmin = Data.ActingUser,
+				Timestamp = os.time(),
+				Actions = { "created this rank" }
+			})
+		else
+			table.insert(NewRank.Modifications, {
+				Reason = "Edited this rank",
+				ActingAdmin = Data.ActingUser,
+				Timestamp = os.time(),
+				Actions = {  } --// TODO
+			})
+			
+			--// because we are editing, remove everybody in the rank but dont save
+			for ID, User in Info.AdminIDs do
+				if User.AdminRankID == Data.RankID then
+					Info.AdminIDs[ID] = nil
+				end
+			end
+			
+			for GroupID, GroupInfo in Info.GroupAdminIDs do
+				if GroupInfo.AdminRankID == Data.RankID then
+					Info.GroupAdminIDs[GroupID] = nil
+				end
+			end
+			
+			Var.DataStores.AdminsDS:RemoveAsync(Data.EditOriginalName)
+			table.remove(Info.Names, table.find(Info.Names, Data.EditOriginalName))
+		end
+		
 		Var.DataStores.AdminsDS:SetAsync(Data.Name, NewRank)
 
 		for i, v in Data.Members do
@@ -192,7 +213,7 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 		Var.Services.MessagingService:PublishAsync("Administer", { ["Action"] = "ForceAdminCheck" })
 	end, function(e): Types.Response
 		Util.Logging.Warn(`[X] Failed to publish MessagingService action ForceAdminCheck! {e}`)
-		
+
 		return {
 			false,
 			Util.t(nil, "admin.rankcreate.MessagingServiceFailed")
@@ -219,9 +240,9 @@ function AR.Ranks.GetAll()
 
 	repeat
 		Polls += 1
-		
+
 		task.wait(0.1)
-		
+
 		Util.Logging.Print("Rank check progress:", #Ranks / #Current.Names, Ranks, Current, Polls)
 	until #Ranks == #Current.Names or Polls == 10
 
@@ -243,7 +264,7 @@ function AR.Socket(Msg)
 				AR.PlayerAdded(Player)
 			elseif not AdminResult["IsAdmin"] and table.find(Var.Admins.InGame, Player) then
 				AR.Removing(Player)
-				
+
 				Player.PlayerGui:FindFirstChild("AdministerMainPanel"):Destroy()
 			end
 		end

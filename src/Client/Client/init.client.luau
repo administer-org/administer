@@ -76,6 +76,8 @@ task.defer(function()
 	end)
 end)
 
+Var.Remotes.SettingsLoaded.OnClientEvent:Wait()
+
 local KeybindRegisterTimeframe = Utilities.GetSetting("KeybindRegisterTime")
 
 if KeybindRegisterTimeframe == "optimistic" then
@@ -234,8 +236,6 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 		:Connect(function(SwipeDirection: Enum.SwipeDirection)
 			if SwipeDirection == Enum.SwipeDirection.Left then
 				Frontend.Open(true)
-
-				Debounce = true
 			end
 		end)
 

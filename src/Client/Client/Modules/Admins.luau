@@ -82,13 +82,13 @@ function Admins.Load(): ()
 					Card.AppName.Text = "Super Administrator"
 					Card.ImageLabel.Image = Utilities.Icon "user-shield"
 					Card.Parent = Template.Pages
-					
+
 					Tip.Size = UDim2.new(1,0,1,0)
 					Tip.BackgroundTransparency = 1
 					Tip.BorderSizePixel = 0
 					Tip.Parent = Card
 					Tip.Text = ""
-					
+
 					table.insert(Connections, Tip.MouseButton1Click:Connect(function()
 						Frontend.Popup.new(
 							{
@@ -201,20 +201,20 @@ function Admins.Load(): ()
 						or #UserNames == 2 and `<b>{UserNames[1]}</b> and <b>{UserNames[2]}</b> are members`
 						or `<b>{UserNames[1]}</b> is a member`
 				)
-				
+
 				table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
 					if Var.RankCreatorOpen then return end
-					
+
 					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
 						Position = UDim2.fromScale(0.1, 0.036),
 						Size = UDim2.fromScale(0.858, 0.126)
 					}):Play()
-					
+
 					Var.Services.TweenService:Create(Template.Configure, TweenInfo.new(.3), {
 						ImageTransparency = 0
 					}):Play()
 				end))
-				
+
 				table.insert(Connections, Template.EditTrigger.MouseLeave:Connect(function()
 					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
 						Position = UDim2.fromScale(0.025, 0.036),
@@ -225,13 +225,13 @@ function Admins.Load(): ()
 						ImageTransparency = 1
 					}):Play()
 				end))
-				
+
 				if v.Protected then
 					Template.Configure.Image = Utilities.Icon "lock"
-					
+
 					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
 						if Var.RankCreatorOpen then return end
-						
+
 						Frontend.Toast({
 							Icon = Utilities.Icon "triangle-warning",
 							Text = "Insufficient permissions",
@@ -241,16 +241,16 @@ function Admins.Load(): ()
 					end))
 				else
 					local Env = require(script.Parent.UI.AdminHelperEnv)
-					
+
 					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
 						if Var.RankCreatorOpen then return end
-						
+
 						Env.EditMode = true
 						Env.EditModeMembers = v.Members
 						Env.EditModeApps = v.Apps
 						Env.EditModeName = v.Name
 						Env.EditModeColor = v.Color
-						
+
 						Admins.OpenCreator()
 					end))
 				end
@@ -355,14 +355,14 @@ end
 
 function Admins.OpenCreator()
 	Var.RankCreatorOpen = true
-	
+
 	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
 end
 
 function Admins.CloseCreator()
 	Var.RankCreatorOpen = false
 	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
-	
+
 	task.delay(1, function()
 		if Page == 2 then
 			SwapPages(Frames.Page2, Frames.Page1, "rbxassetid://18151072839", false, 1)
@@ -424,7 +424,7 @@ function Admins.RunCreatorApp()
 					end)
 				end)
 			}
-			
+
 			Frames.Page2.TextInput.Text = Env.EditModeName
 			Frames.Page2.ColorInput.Text = Env.EditModeColor
 		else
@@ -465,7 +465,7 @@ function Admins.RunCreatorApp()
 				Subtext = `Rank names must be unique, {Frames.Page2.TextInput.Text} is already a rank`,
 				Timeout = 5
 			})
-			
+
 			SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://11102397100", false, 2)
 
 			return
@@ -611,7 +611,7 @@ function Admins.RunCreatorApp()
 				Subtext = `Ranks must have at least one member in them.`,
 				Timeout = 5
 			})
-			
+
 			SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
 
 			return
@@ -622,9 +622,9 @@ function Admins.RunCreatorApp()
 				Subtext = `You may have up to {Env.MaxPeople} members.`,
 				Timeout = 5
 			})
-			
+
 			SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false, 3)
-			
+
 			return
 		end
 
@@ -646,7 +646,8 @@ function Admins.RunCreatorApp()
 							Icon = Utilities.Icon "administer",
 							Name = "Administer",
 							Subheader = "Rank Creator"
-						}, {
+						}, 
+						{
 							Primary = Utilities.Icon "warning-filled",
 							SubIcon = Utilities.Icon "x"
 						},
@@ -689,7 +690,9 @@ function Admins.RunCreatorApp()
 			if Child.Name ~= "Template" and Child:IsA("Frame") then Child:Destroy() end
 		end
 
-		print(Var.CombinedButtonConfig)
+		print(Var.CombinedButtonConfig, Env.EditModeApps)
+
+		local CanNotEdit = {}
 
 		for _, AppObj in Var.CombinedButtonConfig do
 			if Var.RankCreatorApps == nil then
@@ -713,6 +716,25 @@ function Admins.RunCreatorApp()
 			end
 		end
 
+
+		if Env.EditModeApps ~= {} then
+			for AppID, CanUse in Env.EditModeApps do
+				if AppID == "CachedData" then
+					continue
+				end
+
+				--// TODO: Maybe we should do something better with CanNotEdit eventually like displaying a label.. but it works like this for now!
+				if not Var.RankCreatorApps[AppID] then
+					table.insert(CanNotEdit, AppID)
+				end
+				
+				Var.RankCreatorApps[AppID] = CanUse
+				
+
+				--print(AppID, CanUse)
+			end
+		end
+
 		for i, v: Instance in Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() do
 			if not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout", "Home" }, v.Name) then
 				if v:GetAttribute("ThreadType") == "multi" then
@@ -723,6 +745,23 @@ function Admins.RunCreatorApp()
 
 					for _, App in NewApp.SubCollection:GetChildren() do
 						if not App:IsA("Frame") then continue end
+
+						--// check just incase its edited
+						for _, AppObj in Var.CombinedButtonConfig do
+							for _, SubIcon in AppObj.SubIcons do
+								local ButtonID = `{AppObj.ButtonID}\\{SubIcon.ButtonID}`
+
+								if App:GetAttribute("ButtonID") == ButtonID and Var.RankCreatorApps[ButtonID] == false then
+									TweenService:Create(App.Title, TweenInfo.new(.4), { 
+										TextTransparency = Var.RankCreatorApps[ButtonID] and 0 or .6
+									}):Play()
+
+									TweenService:Create(App.Icon, TweenInfo.new(.4), { 
+										ImageTransparency = Var.RankCreatorApps[ButtonID] and 0 or .6
+									}):Play()
+								end
+							end
+						end
 
 						App:FindFirstChildWhichIsA("TextButton").MouseButton1Click:Connect(function()
 							for _, AppObj in Var.CombinedButtonConfig do
@@ -747,13 +786,27 @@ function Admins.RunCreatorApp()
 					end
 				else
 					local NewApp = v:Clone()
-
+					local ButtonID = NewApp:GetAttribute("ButtonID")
+					
 					NewApp.Parent = Frames.Page4.AppDrawer.AppHolder.Apps
 					NewApp.Size = UDim2.new(.911, 0, .13, 0)
 
+					--// same "is this edited?" logic..
+					for _, AppObj in Var.CombinedButtonConfig do
+						if AppObj.ButtonID == ButtonID and Var.RankCreatorApps[ButtonID] == false then
+							TweenService:Create(NewApp.Title, TweenInfo.new(.4), { 
+								TextTransparency = Var.RankCreatorApps[AppObj.ButtonID] and 0 or .6
+							}):Play()
+
+							TweenService:Create(NewApp.Icon, TweenInfo.new(.4), { 
+								ImageTransparency = Var.RankCreatorApps[AppObj.ButtonID] and 0 or .6
+							}):Play()
+						end
+					end
+
 					NewApp.Activator.MouseButton1Click:Connect(function()
 						for _, AppObj in Var.CombinedButtonConfig do
-							if AppObj.ButtonID == NewApp:GetAttribute("ButtonID") then
+							if AppObj.ButtonID == ButtonID then
 								Var.RankCreatorApps[AppObj.ButtonID] = not Var.RankCreatorApps[AppObj.ButtonID]
 
 								TweenService:Create(NewApp.Title, TweenInfo.new(.4), { 
@@ -768,19 +821,6 @@ function Admins.RunCreatorApp()
 					end)
 				end
 			end
-		end
-		
-		print(Env.EditModeApps)
-
-		for i, App in Env.EditModeApps :: { { DisplayName: string, Icon: string, Name: string } } do
-			if Frames.Page4.Apps.Apps:FindFirstChild(App.DisplayName) then continue end
-
-			--NewLegacyCard(
-			--	App.DisplayName,
-			--	App.Icon,
-			--	App.Name,
-			--	"You don't have the permissions to access this app, so we don't know anything else about it."
-			--)
 		end
 
 		SwapPages(Frames.Loading, Frames.Page4, "rbxassetid://14865439768", false, 4)
@@ -822,9 +862,9 @@ function Admins.RunCreatorApp()
 			Color = Frames.Page2.ColorInput.Text,
 
 			IsEditing = Env.EditMode,
-			EditingRankID = Env.EditModeRank,
+			EditOriginalName = Env.EditModeName,
 
-			CreationReason = "Created in the rank editor"
+			CreationReason = "Created in the Rank Creator"
 		}
 
 		local Result = Var.Remotes.NewRank:InvokeServer(FinalData)

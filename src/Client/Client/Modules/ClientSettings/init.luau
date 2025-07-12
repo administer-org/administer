@@ -13,7 +13,7 @@ for i,v in pairs(Settings) do
 	local controllerName = v._SettingsMeta.Name
 	local success = variables.Remotes.LoadSettings:InvokeServer(controllerName, game.Players.LocalPlayer.UserId)
 	if success then
-		warn("Failed to load data")
+		utilities.Logging.Warn(`Failed to laod some settings data`)
 	end
 end
 Settings = variables.Remotes.GetAllSettings:InvokeServer()
@@ -25,7 +25,7 @@ local elementModules = {
 	["KeybindSelector"] = require(script.ElementModules.KeybindSelector),
 	["Slider"] = require(script.ElementModules.Slider),
 	["Text"] = require(script.ElementModules.InputBox),
-	["Toggle"] = require(script.ElementModules.Toggle),
+	["Toggle"] = require(script.ElementModules.Toggle)
 }
 
 -- Main Module
@@ -41,7 +41,7 @@ clientSettings.SettingElements = {
 			toggle:SetValue(currentValue)
 			
 			return toggle.ValueChanged, toggle, "value"
-		end,
+		end
 	},
 	["InputBox"] = {
 		["Element"] = elements.TextTemplate,
@@ -52,7 +52,7 @@ clientSettings.SettingElements = {
 			input:SetValue(currentValue)
 			
 			return input.ValueChanged, input, "value"
-		end,
+		end
 	},
 	["KeybindSelector"] = {
 		["Element"] = elements.KeybindTemplate,
@@ -68,7 +68,7 @@ clientSettings.SettingElements = {
 			listener:SetValue(keybindsList)
 
 			return listener.ValueChanged, listener, "commaSeparatedValue"
-		end,
+		end
 	},
 	["Dropdown"] = {
 		["Element"] = elements.DropdownTemplate,
@@ -90,7 +90,7 @@ clientSettings.SettingElements = {
 			end)
 			
 			return dropdown.ValueChanged, dropdown, "value"
-		end,
+		end
 	},
 	["Slider"] = {
 		["Element"] = elements.SliderTemplate,
@@ -101,6 +101,7 @@ clientSettings.SettingElements = {
 			local step = settingInfo.Value.Step
 			local label = frame.Priorities.SelectedItem
 			local labelValue = math.round(currentValue * 100) / 100
+			
 			label.Text = labelValue
 			
 			local slider = elementModules.Slider.createSlider(frame.Priorities.Select, min, max, step, frame.Priorities.Bar.Fill, frame.Priorities.Bar.Head)
@@ -111,8 +112,8 @@ clientSettings.SettingElements = {
 			end)
 			
 			return slider.DragEnded, slider, "value"
-		end,
-	},
+		end
+	}
 }
 
 local main = variables.MainFrame
@@ -124,7 +125,8 @@ local layoutOrder = 0
 
 function clientSettings.LoadCategories(categories)
 	local highestOrder = 0
-	for index, settingData in pairs(categories) do
+	
+	for index, settingData in categories do
 		if index == "_SettingsMeta" then
 			local header = elements.Header:Clone()
 			header.Text = settingData.Name
@@ -148,6 +150,7 @@ function clientSettings.LoadCategories(categories)
 			selectedCategory = index
 		end)
 	end
+	
 	layoutOrder += 2
 end
 
@@ -164,6 +167,7 @@ function clientSettings.LoadSettings(settingData)
 		end
 		
 		local displayType = v["SettingDisplayType"]
+		
 		if clientSettings.SettingElements[displayType] then
 			local frame = clientSettings.SettingElements[displayType].Element:Clone()
 			frame.Parent = settingsFrame.Settings
@@ -173,9 +177,11 @@ function clientSettings.LoadSettings(settingData)
 			frame.SettingID.Text = i
 			
 			local signal : RBXScriptSignal, object, valueName = clientSettings.SettingElements[displayType].Init(frame, v)
+			
 			if not signal then
 				continue
 			end
+			
 			signal:Connect(function()
 				local value = object[valueName]
 				
@@ -184,17 +190,19 @@ function clientSettings.LoadSettings(settingData)
 				
 				if success then
 					success = variables.Remotes.SaveSettings:InvokeServer(selectedData, game.Players.LocalPlayer.UserId)
+					
 					if not success then
 						frontEnd.Toast({
 							Icon = utilities.Icon("x"),
 							Text = "Error",
 							Subtext = "Something went wrong saving changes",
-							Timeout = 3
+							Timeout = 5
 						})
+						
 						return
 					end
 					frontEnd.Toast({
-						Icon = utilities.Icon("check"),
+						Icon = utilities.Icon("check-plain"),
 						Text = "Success",
 						Subtext = "Changes applied!",
 						Timeout = 3
@@ -204,7 +212,7 @@ function clientSettings.LoadSettings(settingData)
 						Icon = utilities.Icon("x"),
 						Text = "Error",
 						Subtext = "Something went wrong applying changes",
-						Timeout = 3
+						Timeout = 5
 					})
 				end
 			end)
@@ -213,14 +221,14 @@ function clientSettings.LoadSettings(settingData)
 end
 
 function clientSettings.ClearSettings()
-	for _, frame in pairs(settingsFrame.Settings:GetChildren()) do
+	for _, frame in settingsFrame.Settings:GetChildren() do
 		if frame:IsA("Frame") then
 			frame:Destroy()
 		end
 	end
 end
 
-for i, v in pairs(Settings) do
+for i, v in Settings do
 	clientSettings.LoadCategories(v)
 	if v[selectedCategory] then
 		clientSettings.LoadSettings(v[selectedCategory])

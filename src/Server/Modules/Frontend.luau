@@ -44,7 +44,7 @@ function FrontendAPI.VersionCheck(Plr: Player): Types.Response
 			Var.Notification.Ding,
 			{}
 		)
-		
+
 		return {
 			false, Info
 		}
@@ -56,7 +56,7 @@ function FrontendAPI.UpdateHomePage(Player, Data)
 	if Data == nil then return {
 		Success = true,
 		Message = "Bad data sent by client."
-	} end
+		} end
 
 	local HomeInfo
 

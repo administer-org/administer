@@ -6,12 +6,13 @@ local Root = script:FindFirstAncestor("Loader")
 
 --// Modules
 local Admins = require(Root.Modules.AdminRunner)
-local Apps = require(Root.Modules.Apps)
-local Utils = require(Root.Modules.Utilities)
-local Var = require(Root.Core.Variables)
+local Apps   = require(Root.Modules.Apps)
+local Utils  = require(Root.Modules.Utilities)
+local Var    = require(Root.Core.Variables)
 
 return function(): ()
 	Utils.Logging.Print("[-] Performing first-time setup...")
+	
 	local Owner = Utils.GetGameOwner()
 
 	Var.IsFirstBoot = true
@@ -23,7 +24,7 @@ return function(): ()
 		Members = {
 			{
 				ID = Owner.ID,
-				MemberType = (Owner.MemberType) :: "Group" | "User",
+				MemberType = Owner.MemberType,
 				GroupRank = 255
 			}
 		},
@@ -32,7 +33,7 @@ return function(): ()
 			SuperAdmin = true
 		},
 
-		CreationReason = "Added by System for first-time setup.",
+		CreationReason = "Added by System for first-time setup",
 		ActingUser = 1,
 		
 		Color = "23ff74"
@@ -47,11 +48,10 @@ return function(): ()
 		Var.DefaultAppServer, --// Assuming this is (hopefully) AOS
 		"org.admsoftware.player-management.Main"
 	)
-	Apps.ServerAPI.InstallFromServer(
-		Var.DefaultAppServer,
-		"org.admsoftware.Reporter"
-	)
+	
+	--// Fixes first-time boot crash
+	Var.PrimaryAppServer = Var.DefaultAppServer
 
 	Utils.Logging.Print("[✓] Welcome to Administer!")
-	Utils.Logging.SWarn("[!] Is Administer making too many print messages? Turn off the `misc.Verbose` setting to silence prints!")
+	Utils.Logging.SWarn("[!] Is Administer making too many print messages? To silence prints, go to Settings and set General.Verbosity to `error`!")
 end

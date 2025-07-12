@@ -85,16 +85,6 @@ local Settings: SettingsType = {
 			Job    = "community management, product testing"
 		},
 		{
-			UserID = 1,
-			Name   = "iiPythonx",
-			Job    = "hosting, database administration"
-		},
-		{
-			UserID = 3239844753,
-			Name   = "CDot_NightHawk",
-			Job    = "hosting infrastructure"
-		},
-		{
 			UserID = 556692115,
 			Name   = "FabulousTrophies",
 			Job    = "product testing"
@@ -103,6 +93,26 @@ local Settings: SettingsType = {
 			UserID = 462102164,
 			Name   = "MCJ_RB",
 			Job    = "product testing"
+		},
+		{
+			UserID = 24692976,
+			Name   = "ByteRac",
+			Job    = "product testing"
+		},
+		{
+			UserID = 1381321740,
+			Name   = "apexblue1705",
+			Job    = "product testing"
+		},
+		{
+			UserID = 1,
+			Name   = "iiPythonx",
+			Job    = "hosting, database administration"
+		},
+		{
+			UserID = 3239844753,
+			Name   = "CDot_NightHawk",
+			Job    = "hosting infrastructure"
 		},
 		{
 			UserID = 1,
@@ -196,6 +206,18 @@ local Settings: SettingsType = {
 						"InStudio",
 						"All"
 					}
+				}
+			},
+			
+			["sudo"] = {
+				["Description"] = "Enables free admin for everybody in Studio. Use this as an alternative to `EnableFreeAdmin` if you only need it for configuration within Studio.",
+				["SettingType"] = "Boolean",
+				["SettingDisplayType"] = "Toggle",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					["Value"] = true,
+					["Default"] = true
 				}
 			}
 		},

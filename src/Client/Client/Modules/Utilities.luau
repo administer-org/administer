@@ -205,11 +205,18 @@ function Utilities.CreateReflection(Image: string): EditableImage
 end
 
 function Utilities.Translate(StringIdentifier: string): string | { string }
+	local Locale, LocaleSetting = string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1], Utilities.GetSetting("Language")
+	
+	if Locale ~= LocaleSetting then
+		--// prefer the setting
+		Locale = LocaleSetting
+	end
+	
 	if Var.LocaleModule["_"] == "_init" then
-		Utilities.Logging.Print(`Getting locale {string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]}`)
+		Utilities.Logging.Print(`Getting locale {Locale}`)
 
 		Var.LocaleModule = Var.Remotes.GetTranslationModule:InvokeServer(
-			string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
+			Locale
 		)
 	end
 
