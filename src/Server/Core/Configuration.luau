@@ -27,7 +27,7 @@ local Settings: SettingsType = {
 		Minor = 0,
 		Tweak = 0,
 
-		Extra = "RC2 (trg PRLS.pbta) eed222a",
+		Extra = "RC2 (trg PRLS.QA) eed222a",
 		String = "2.0.0-rc2",
 		GitRevision = "eed222a",
 
