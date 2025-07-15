@@ -41,15 +41,15 @@ function Migrator.Migrate()
 			Utilities.Logging.Print(`{App.Name} does not have a new replacement app!`)
 		end
 	end
-	
+
 	Apps.ServerAPI.UninstallServer("https://administer.notpyx.me", true)
-	
+
 	Apps.ServerAPI.New(Var.DefaultAppServer, 1)
 	Apps.ServerAPI.RegisterPrimary(Var.DefaultAppServer)
-	
+
 	--// Purge V1 HomeStore
 	local HomeKeys: DataStorePages = Var.DataStores.HomeDS:ListKeysAsync()
-	
+
 	while true do
 		for _, Key in HomeKeys:GetCurrentPage() do
 			local Name = Key.KeyName
@@ -72,13 +72,13 @@ function Migrator.Migrate()
 			else
 				Utilities.Logging.Print(`Hit {Key.KeyName}`)
 			end
-			
+
 			local Name = Key.KeyName
-			
+
 			if Name == "" then
 				Name = `AutoMigrate-{math.random(1,1000)}`
 				print(`Overwriting blank rank name! '' -> '{Name}'`)
-				
+
 				local Info = Var.DataStores.AdminsDS:GetAsync("CurrentRanks") or Var.DefaultRankData
 
 				table.remove(Info.Names, table.find(Info.Names, ""))
@@ -115,7 +115,7 @@ function Migrator.Migrate()
 				Var.DataStores.AdminsDS:SetAsync("CurrentRanks", Info)
 				continue
 			end
-			
+
 			local PossibleConflict = Var.DataStores.AdminsDS:GetAsync(Data.RankName) ~= nil
 
 			AdminRunner.Ranks.New({
@@ -141,10 +141,10 @@ function Migrator.Migrate()
 
 		AdminKeys:AdvanceToNextPageAsync()
 	end
-	
+
 	--// Delete Rank1 so CheckForV1() will be false
 	Var.DataStores.AdminsDS:RemoveAsync("_Rank1")
-	
+
 	Utilities.Logging.Print("[ok] Administer has migrated!")
 end
 

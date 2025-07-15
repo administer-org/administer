@@ -55,7 +55,7 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 	if Misc._ReturnConfig then
 		return Config
 	end
-	
+
 	--// Config checks
 	if not Config.Bootstrap then
 		return { false, "bootstrap function must not be nil" }
@@ -122,7 +122,7 @@ function App.LoadLocal(
 
 	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
-		
+
 		return
 	end
 
@@ -155,10 +155,13 @@ function App.Initialize(): boolean
 
 	Utils.Logging.Print("Bootstrapping apps...")
 
-	--if Utils.GetSetting("DisableApps") then
-	--	Utils.Logging.Print(`App Bootstrapping disabled due to configuration, please disable!`)
-	--	return false
-	--end
+	if Utils.GetSetting("LoadApps") == false then
+		Utils.Logging.Print(`App Bootstrapping disabled due to configuration, please disable!`)
+		
+		--// switch this to true just in case
+		Var.DidBootstrap = true
+		return false
+	end
 
 	if DelaySetting == "InStudio" and Var.Services.RunService:IsStudio() or DelaySetting == "All" then
 		task.wait(3)
@@ -181,7 +184,7 @@ function App.Initialize(): boolean
 				InstallSource = AppObj.InstallSource,
 				AppID = AppObj.ID
 			})
-			
+
 			i += 1
 		end)
 	end
@@ -269,7 +272,7 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 		return { true, "OK" }
 	end, function(e): Types.Response
 		Utils.Logging.Warn(`[x] This does not seem to be an Administer app or the initial build failed.\n\n{e}`)
-		
+
 		return { false, "This app isn't valid, check the log." }
 	end)
 
@@ -302,7 +305,7 @@ function App.ServerAPI.GetList(
 ): {}
 	local Combined = {}
 
-	if Utils.GetSetting("DisableAppServerFetch") == true then
+	if Utils.GetSetting("DisableAOS") == true then
 		Utils.Logging.Print("App server call ignored due to configuration.")
 		return {}
 	end
@@ -366,10 +369,10 @@ function App.ServerAPI.RegisterPrimary(
 		App.ServerAPI.UninstallServer(Var.DefaultAppServer, true)
 		App.ServerAPI.New(URL, 1)
 	end
-	
+
 	return HTTP.PostRoute(URL, "/api/register-home-node", {}, function(Data, Info)
 		Utils.Logging.Print("Registered!", Data)
-		
+
 		for _, Server in Var.AppServers do
 			if Server.ServerURL == URL then
 				Server.IsPrimary = true
@@ -377,9 +380,9 @@ function App.ServerAPI.RegisterPrimary(
 				Server.IsPrimary = false
 			end
 		end
-		
+
 		Var.DataStores.AppDB:SetAsync("AppServerList", Var.AppServers)
-		
+
 		Var.PrimaryAppServer = URL
 
 		return { true, "Done!" }
@@ -466,14 +469,14 @@ function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
 		xpcall(function()
 			local RichConfig = require(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
-			
+
 			Data.CannotDownload = false
 			Data.RichConfig = RichConfig
 		end, function(e)
 			print(e)
 			Data.CannotDownload = true
 		end)
-		
+
 		return { true, Data }
 	end, function(...)
 		return { false, ... }
@@ -558,7 +561,7 @@ function App.ServerAPI.GetAOSInstances(
 		if DoStatusChecks then
 			for _, URL in Content.instances do
 				local Result = DoStatusCheck(URL.url)
-				
+
 				for Key, Value in Result do
 					URL[Key] = Value
 				end
@@ -588,7 +591,7 @@ function App.ServerAPI.GetPrimaryServer()
 			return Server.ServerURL
 		end
 	end
-	
+
 	return Var.AppServers[1].ServerURL
 end
 

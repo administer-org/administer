@@ -164,6 +164,7 @@ function Admins.Load(): ()
 				Template.Visible = true
 
 				local UserNames = {}
+				local MoveTI = TweenInfo.new(Var.AnimationSpeed * .3)
 
 				for i = 1, 3 do
 					local User = v.Members[i]
@@ -206,23 +207,23 @@ function Admins.Load(): ()
 				table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
 					if Var.RankCreatorOpen then return end
 
-					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
+					Var.Services.TweenService:Create(Template.RankName, MoveTI, {
 						Position = UDim2.fromScale(0.1, 0.036),
 						Size = UDim2.fromScale(0.858, 0.126)
 					}):Play()
 
-					Var.Services.TweenService:Create(Template.Configure, TweenInfo.new(.3), {
+					Var.Services.TweenService:Create(Template.Configure, MoveTI, {
 						ImageTransparency = 0
 					}):Play()
 				end))
 
 				table.insert(Connections, Template.EditTrigger.MouseLeave:Connect(function()
-					Var.Services.TweenService:Create(Template.RankName, TweenInfo.new(.3), {
+					Var.Services.TweenService:Create(Template.RankName, MoveTI, {
 						Position = UDim2.fromScale(0.025, 0.036),
 						Size = UDim2.fromScale(0.955, 0.126)
 					}):Play()
 
-					Var.Services.TweenService:Create(Template.Configure, TweenInfo.new(.3), {
+					Var.Services.TweenService:Create(Template.Configure, MoveTI, {
 						ImageTransparency = 1
 					}):Play()
 				end))
@@ -269,7 +270,7 @@ local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 	if type(Spin) == "number" then PageNumber = Spin end
 
 	Page = PageNumber
-	local TTC = 0.4
+	local TTC = Var.AnimationSpeed * .4
 
 	local Tweem = TweenService:Create(
 		Page1,
@@ -355,16 +356,37 @@ function Admins.ClearEditState(Env)
 end
 
 function Admins.OpenCreator()
+	local NewAdmin = Var.MainFrame.Configuration.Admins.NewAdmin
+	local CompleteTime = Var.AnimationSpeed * .6
+	
+	NewAdmin.GroupTransparency = 1
+	NewAdmin.Size = UDim2.fromScale(0.6, 0.57) 
+	NewAdmin.Position = UDim2.fromScale(.5, .65)
+	
+	Var.Services.TweenService:Create(NewAdmin, TweenInfo.new(CompleteTime, Enum.EasingStyle.Quart), {
+		Size = UDim2.fromScale(.867, .847),
+		Position = UDim2.fromScale(.5, .5),
+		GroupTransparency = 0
+	}):Play()
+	
+	NewAdmin.Visible = true
 	Var.RankCreatorOpen = true
-
-	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = true
 end
 
 function Admins.CloseCreator()
-	Var.RankCreatorOpen = false
-	Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
+	local NewAdmin = Var.MainFrame.Configuration.Admins.NewAdmin
+	local CompleteTime = Var.AnimationSpeed * .5
 
-	task.delay(1, function()
+	Var.Services.TweenService:Create(NewAdmin, TweenInfo.new(CompleteTime, Enum.EasingStyle.Quart), {
+		Size = UDim2.fromScale(0.6, 0.57) ,
+			Position = UDim2.fromScale(.5, .65),
+		GroupTransparency = 1
+	}):Play()
+	
+	task.delay(CompleteTime, function()
+		Var.RankCreatorOpen = false
+		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
+		
 		if Page == 2 then
 			SwapPages(Frames.Page2, Frames.Page1, "rbxassetid://18151072839", false, 1)
 		elseif Page == 3 then
@@ -387,9 +409,6 @@ function Admins.RunCreatorApp()
 
 	Frames.BottomData.Controls.ALast.MouseButton1Click:Connect(function()
 		if not CanGoBack then return end
-
-		print(Page, Page <= 1)
-
 		if Page <= 1 then return end
 
 		Page -= 1

@@ -19,11 +19,14 @@ local Config      = require(Root.Core.Configuration)
 local Var         = require(Root.Core.Variables)
 
 local Settings = Config.Settings
+local SettingsCache = {}
 
 --Retrieves a setting from the Administer settings index. Setting must be valid Setting syntax (read docs)
 Utils.GetSetting = function(setting: Types.Setting, UserID: number?): Types.SettingResponse
 	if Var.SettingsAPI == nil then
 		return "log" --// just make sure Utils.Logging works :pray:
+	elseif setting == "Verbosity" then
+		return SettingsCache.Verbosity or Var.SettingsAPI.Get("Verbosity")
 	end
 	
 	return Var.SettingsAPI.Get(setting)
@@ -32,7 +35,7 @@ end
 Utils.Logging = {
 	--Prints out a basic message.
 	Print = function(...)
-		if Utils.GetSetting("Verbosity") ~= "log" and Var.SettingsAPI ~= nil then return end
+		if Utils.GetSetting("Verbosity") ~= "log" then return end
 		
 		print(`[{Config.Name}] [log]`, ...)
 	end,

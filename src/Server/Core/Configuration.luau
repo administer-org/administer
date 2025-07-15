@@ -27,9 +27,9 @@ local Settings: SettingsType = {
 		Minor = 0,
 		Tweak = 0,
 
-		Extra = "RC2 (trg PRLS.QA) eed222a",
-		String = "2.0.0-rc2",
-		GitRevision = "eed222a",
+		Extra = "a22da06",
+		String = "2.0.0",
+		GitRevision = "a22da06",
 
 		NoExtraData = "2.0.0",
 		APIRevision = "2.0.0",
@@ -326,8 +326,8 @@ local Settings: SettingsType = {
 				["RequiresRestart"] = true,
 
 				["Value"] = {
-					["Value"] = true,
-					["Default"] = true
+					["Value"] = false,
+					["Default"] = false
 				}
 			}
 		},
@@ -390,8 +390,8 @@ local Settings: SettingsType = {
 				["RequiresRestart"] = true,
 
 				["Value"] = {
-					["Value"] = true,
-					["Default"] = true
+					["Value"] = false,
+					["Default"] = false
 				}
 			},
 

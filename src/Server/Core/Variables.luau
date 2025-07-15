@@ -14,7 +14,7 @@ Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes
 Variables.EnableFreeAdmin            = false --// Makes every user a superamdin. Not recommended for anything other than debugging.
 
 --Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
-Variables.DefaultAppServer           = "https://aos-canary.admsoftware.org" --// Must be an AOS app server instance.
+Variables.DefaultAppServer           = "https://aos-us-1.admsoftware.org" --// Must be an AOS app server instance.
 Variables.ProxyURL                   = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format {{ domain }}/SUBDOMAIN/path
 Variables.Locales                    = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit            = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
@@ -136,14 +136,14 @@ Variables.Branches = {
 		ImageID = "rbxassetid://18770010888",
 		Name = "Administer Public Beta",
 		BranchName = "pub_beta",
-		IsActive = false
+		IsActive = true
 	},
 
-	Production = {
+	Stable = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
-		BranchName = "live",
-		IsActive = true
+		BranchName = "stable",
+		IsActive = false
 	}
 }
 

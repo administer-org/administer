@@ -41,7 +41,9 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button:SetAttribute("ThreadType", "single")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
 
-		Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
+		task.defer(function()
+			Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
+		end)
 
 		Button.Activator.MouseButton1Click:Connect(function()
 			task.defer(Frontend.Drawer.Close)
@@ -66,7 +68,9 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 		Button:SetAttribute("ThreadType", "multi")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
 
-		Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
+		task.defer(function()
+			Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
+		end)
 
 		Button.Activator.MouseButton1Click:Connect(function()
 			if ButtonConfig.MainButtonFrame == nil then return end
@@ -94,7 +98,11 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			end)
 
 			Clone.Parent = Button.SubCollection
-			Clone.Visible = Var.Remotes.CanUseApp:InvokeServer(Clone:GetAttribute("ButtonID"))
+			
+			task.defer(function()
+				Clone.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
+			end)
+			
 			Clone.Name = Icon.Frame.Name
 
 			Height += .23
@@ -393,12 +401,17 @@ function Apps.LoadAppList(List: {}?): ()
 		Var.Marketplace.ActivePage = "MPFrozen"
 
 		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Visible = true
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),"{{ }}", "debounce triggered, app server is unresponsive")
+		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),"{{ }}", "debounce triggered, app server is unresponsive. try again in 5-10 seconds")
 
 		return
 	end
 
 	InProgress = true
+	
+	task.delay(5, function()
+		--// prevent the UI from locking up
+		InProgress = false
+	end)
 
 	for Name, Connection in Connections do
 		Connection:Disconnect()
@@ -479,7 +492,7 @@ function Apps.LoadAppList(List: {}?): ()
 				--// This does not work, do not uncomment it, I do not know why.
 				--if pcall(function() Server[Index]["processed_in"] = Server[Index]["processed_in"] end) then continue end
 
-				if Server[Index] == nil then 
+				if Server[Index] == nil then
 					--// try again next time 
 					--Index -= 2 actually i think this will cause an infinite loop so ill jsut fix it if there are issues
 				else
@@ -567,7 +580,6 @@ function Apps.LoadAppList(List: {}?): ()
 end
 
 function Apps.InitSerarchbar()
-	print("searchbar init")
 	local MP = Var.MainFrame.Configuration.Marketplace
 	
 	MP.Sidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
@@ -862,9 +874,12 @@ function Apps.Init(JustRefreshCounts)
 			if Button.Name == "Themes" or Button.Name == "Apps" then
 				Var.Marketplace.ActivePage = "CardGrid"
 				Var.Marketplace.ActivePageType = Button.Name
+				
 				Apps.LoadAppList()
 			elseif Button.Name == "AAFeatured" then
 				Var.Marketplace.ActivePageType = "FEATURED"
+				
+				Apps.LoadAppList()
 			elseif Button.Name == "XLibrary" then
 				Apps.LoadLibrary()
 			end

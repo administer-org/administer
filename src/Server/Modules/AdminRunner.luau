@@ -210,6 +210,8 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 	end)
 
 	xpcall(function()
+		if not Util.GetSetting("LiveUpdate") then return end
+		
 		Var.Services.MessagingService:PublishAsync("Administer", { ["Action"] = "ForceAdminCheck" })
 	end, function(e): Types.Response
 		Util.Logging.Warn(`[X] Failed to publish MessagingService action ForceAdminCheck! {e}`)
