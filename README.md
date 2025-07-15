@@ -4,9 +4,9 @@
 
 # Simple & Open Administration
 
-[![administer-org - administer](https://img.shields.io/static/v1?label=administer-org&message=administer&color=blue&logo=github)](https://github.com/administer-org/administer "Go to GitHub repo") [![stars - administer](https://img.shields.io/github/stars/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![forks - administer](https://img.shields.io/github/forks/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![Continuous Build Status](https://github.com/administer-org/administer/actions/workflows/ci_build.yml/badge.svg)](https://github.com/administer-org/administer/releases)
+[![administer-org - administer](https://img.shields.io/static/v1?label=administer-org&message=administer&color=blue&logo=github)](https://github.com/administer-org/administer "Go to GitHub repo") [![stars - administer](https://img.shields.io/github/stars/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![forks - administer](https://img.shields.io/github/forks/administer-org/administer?style=social)](https://github.com/administer-org/administer)
 
-[![CI Build Tag](https://img.shields.io/github/tag/administer-org/administer?include_prereleases=&sort=semver&color=blue)](https://github.com/administer-org/administer/releases/) [![License](https://img.shields.io/badge/License-GNU--AGPL--3.0-blue)](#license) [![issues - administer](https://img.shields.io/github/issues/administer-org/administer)](https://github.com/administer-org/administer/issues) [![Hits-of-Code](https://hitsofcode.com/github/administer-org/administer?branch=main)](https://hitsofcode.com/github/administer-org/administer/view?branch=main)
+[![License](https://img.shields.io/badge/License-GNU--AGPL--3.0-blue)](#license) [![issues - administer](https://img.shields.io/github/issues/administer-org/administer)](https://github.com/administer-org/administer/issues) [![Hits-of-Code](https://hitsofcode.com/github/administer-org/administer?branch=main)](https://hitsofcode.com/github/administer-org/administer/view?branch=main)
 
 
 ### [Install from Roblox](https://create.roblox.com/store/asset/127698208806211/Administer) · [DevForum Topic](https://devforum.roblox.com/t/administer-modern-modular-free-admin-system-12/3179989) · [Development Trello](https://trello.com/b/GA5Kc0vB/administer) · [Documentation](https://docs.admsoftware.org)
@@ -21,7 +21,7 @@ Administer is a next-generation admin system for Roblox which features modularit
 ## Installation
 
 ### 1. Get the model
-You can find it in the [Releases](https://github.com/administer-org/administer/releases/) section or [on Roblox.](https://create.roblox.com/store/asset/127698208806211/Administer)
+You can get the latest release [on Roblox.](https://create.roblox.com/store/asset/127698208806211/Administer)
 
 ### 2. Make sure the game can run Administer properly:
 You **must** enable the following permissions in your game for Administer to function. Everything can be found in Game Security settings.
