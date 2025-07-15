@@ -43,16 +43,26 @@ function Migrator.Migrate()
 	end
 	
 	Apps.ServerAPI.UninstallServer("https://administer.notpyx.me", true)
-	Apps.ServerAPI.New(Var.DefaultAppServer, 1)
 	
+	Apps.ServerAPI.New(Var.DefaultAppServer, 1)
 	Apps.ServerAPI.RegisterPrimary(Var.DefaultAppServer)
+	
+	--// Purge V1 HomeStore
+	local HomeKeys: DataStorePages = Var.DataStores.HomeDS:ListKeysAsync()
+	
+	while true do
+		for _, Key in HomeKeys:GetCurrentPage() do
+			local Name = Key.KeyName
+
+			Var.DataStores.HomeDS:RemoveAsync(Name)
+		end
+
+		if HomeKeys.IsFinished then break end
+
+		HomeKeys:AdvanceToNextPageAsync()
+	end
 
 	local AdminKeys: DataStorePages = Var.DataStores.AdminsDS:ListKeysAsync()
-	--local AdminKeys = {
-	--	IsFinished = true
-	--}
-
-	--function AdminKeys:GetCurrentPage() return {} end
 
 	while true do
 		for _, Key in AdminKeys:GetCurrentPage() do
@@ -84,14 +94,14 @@ function Migrator.Migrate()
 					AdmRankVersion = 3,
 
 					Name = "Administrator",
-					Protected = Data.Protected,
+					Protected = true,
 					Members = Data.Members,
 
 					Apps = {
 						SuperAdmin = true
 					},
 
-					CreationReason = `Migrated by Administer 2.0.0 automatically ({Data.CreationReason}).`,
+					CreationReason = `Added by System for first-time setup`,
 					ActingUser = 1,
 
 					Color = "23ff74"

@@ -108,9 +108,11 @@ return function()
 			Icon = ""
 		}
 	}
+	
+	Frames.Page1.Body.Text = string.gsub(Frames.Page1.Body.Text, "pyxfluff", game.Players.LocalPlayer.Name)
 
 	Frames.Page1.NextPage.MouseButton1Click:Connect(function()
-		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true)
+		SwapPages(Frames.Page1, Frames.Loading, "", true)
 
 		local ImportableSystems = Var.Remotes.GetImports:InvokeServer()
 
@@ -143,12 +145,19 @@ return function()
 			NewDisplay.Parent = Frames.Page2.Select
 			NewDisplay.Visible = true
 		end
+		
+		Frontend.Toast({
+			Icon = Utilities.Icon "warning-triangle",
+			Text = "This feature is not ready for use yet",
+			Subtext = "Please do not report any errors.",
+			Timeout = 3
+		})
 
 		SwapPages(Frames.Loading, Frames.Page2, Utilities.Icon "route", false)
 	end)
 
 	Frames.Page2.NextPage.MouseButton1Click:Connect(function()
-		SwapPages(Frames.Page2, Frames.Loading, "rbxassetid://11102397100", true)
+		SwapPages(Frames.Page2, Frames.Loading, "", true)
 
 		for _, Connection in ConnectionsTable do
 			Connection:Disconnect()
@@ -187,7 +196,7 @@ return function()
 							Callback = function(Close)
 								DidRegister = true
 
-								local Result = Var.Remotes.RegisterPrimaryAOS:InvokeServer(Instance.url)
+								local Result = Var.Remotes.RegisterPrimaryAOS:InvokeServer(Instance.url, true)
 
 								print(Result)
 
@@ -327,7 +336,7 @@ return function()
 			)
 		end)
 
-		SwapPages(Frames.Loading, Frames.Page3, "rbxassetid://15082548595", false)
+		SwapPages(Frames.Loading, Frames.Page3, Utilities.Icon "network", false)
 	end)
 
 	Frames.Page3.NextPage.MouseButton1Click:Connect(function()
@@ -358,31 +367,30 @@ return function()
 			return
 		end
 
-		SwapPages(Frames.Page3, Frames.Loading, "rbxassetid://11102397100", true)
+		SwapPages(Frames.Page3, Frames.Loading, "", true)
 
 		--// load settings todo todo todo
 
-		SwapPages(Frames.Loading, Frames.Page4, "rbxassetid://14865439768", false)
+		SwapPages(Frames.Loading, Frames.Page4, Utilities.Icon "gear", false)
 	end)
 
 	Frames.Page4.NextPage.MouseButton1Click:Connect(function()	
-		SwapPages(Frames.Page4, Frames.Page5, "rbxassetid://11102397100", true)
+		SwapPages(Frames.Page4, Frames.Page5, Utilities.Icon "student", false)
 	end)
 	
 	Frames.Page5.TourConfirm.MouseButton1Click:Connect(function()
 		local tour = require(script.Tour)
 		tour.BeginTour()
 		
-		SwapPages(Frames.Page5, Frames.Page6, "rbxassetid://18151072839", false)
+		SwapPages(Frames.Page5, Frames.Page6, Utilities.Icon "rbxassetid://check-plain", false)
 	end)
 
 	Frames.Page5.Exit.MouseButton1Click:Connect(function()
-		SwapPages(Frames.Page5, Frames.Page6, "rbxassetid://18151072839", false)
+		SwapPages(Frames.Page5, Frames.Page6, Utilities.Icon "check-plain", false)
 	end)
 
 	Frames.Page6.Exit.MouseButton1Click:Connect(function()
-		Utilities.Logging.Print("This is where TutorialSeen would be fired, but for the sake of development it's not being called")
-		--print(Var.Remotes.TutorialSeen:InvokeServer("FirstTimeSetup"))
+		print(Var.Remotes.TutorialSeen:InvokeServer("FirstTimeSetup", true))
 
 		Var.DoHeaderEffects = true
 		Frontend.SwapAppBasic(Var.MainFrame.Home, {

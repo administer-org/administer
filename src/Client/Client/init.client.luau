@@ -85,55 +85,58 @@ if KeybindRegisterTimeframe == "optimistic" then
 end
 
 Widgets.Initialize()
-Apps.AddAppDrawerButton({
-	AppName = t("Apps.MainFrame.Home.Title"),
-	Description = t("Apps.MainFrame.Template.Desc"),
-	Icon = Utilities.Icon "home",
-	ButtonID = "AdmHomepage",
 
-	MainButtonClick = function() end,
-	MainButtonFrame = Var.MainFrame.Home,
+task.defer(function()
+	Apps.AddAppDrawerButton({
+		AppName = t("Apps.MainFrame.Home.Title"),
+		Description = t("Apps.MainFrame.Template.Desc"),
+		Icon = Utilities.Icon "home",
+		ButtonID = "AdmHomepage",
 
-	SubIcons = {}
-})
+		MainButtonClick = function() end,
+		MainButtonFrame = Var.MainFrame.Home,
 
-Apps.AddAppDrawerButton({
-	AppName = t("Apps.MainFrame.Config.Title"),
-	Description = t("Apps.MainFrame.Config.Desc"),
-	Icon = Utilities.Icon "media",
-	ButtonID = "AdmConfiguration",
+		SubIcons = {}
+	})
 
-	SubIcons = {
-		{
-			Name = t("Configuration.MenuBar.New.AInfoPage.HeaderLabel"),
-			Icon = Utilities.Icon "info",
-			Click = function() end,
-			Frame = Var.MainFrame.Configuration.InfoPage,
-			ButtonID = "Information"
-		},
-		{
-			Name = Utilities.ToSentenceCase( t("Configuration.Apps.Content.Template.Settings.HeaderLabel") ),
-			Icon = Utilities.Icon "gear",
-			Click = function() end,
-			Frame = Var.MainFrame.Configuration.Settings,
-			ButtonID = "Settings"
-		},
-		{
-			Name = Utilities.ToSentenceCase( t("Header.AppDrawer.HeaderLabel") ),
-			Icon = Utilities.Icon "grid",
-			Click = Apps.LoadAppList,
-			Frame = Var.MainFrame.Configuration.Marketplace,
-			ButtonID = "Marketplace"
-		},
-		{
-			Name = t("Configuration.Admins.Container.Admins.Header.TLabel"),
-			Icon = Utilities.Icon "user-clip",
-			Click = function() end,
-			Frame = Var.MainFrame.Configuration.Admins,
-			ButtonID = "AdminConfig"
+	Apps.AddAppDrawerButton({
+		AppName = t("Apps.MainFrame.Config.Title"),
+		Description = t("Apps.MainFrame.Config.Desc"),
+		Icon = Utilities.Icon "media",
+		ButtonID = "AdmConfiguration",
+
+		SubIcons = {
+			{
+				Name = t("Configuration.MenuBar.New.AInfoPage.HeaderLabel"),
+				Icon = Utilities.Icon "info",
+				Click = function() end,
+				Frame = Var.MainFrame.Configuration.InfoPage,
+				ButtonID = "Information"
+			},
+			{
+				Name = Utilities.ToSentenceCase( t("Configuration.Apps.Content.Template.Settings.HeaderLabel") ),
+				Icon = Utilities.Icon "gear",
+				Click = function() end,
+				Frame = Var.MainFrame.Configuration.Settings,
+				ButtonID = "Settings"
+			},
+			{
+				Name = Utilities.ToSentenceCase( t("Header.AppDrawer.HeaderLabel") ),
+				Icon = Utilities.Icon "grid",
+				Click = Apps.LoadAppList,
+				Frame = Var.MainFrame.Configuration.Marketplace,
+				ButtonID = "Marketplace"
+			},
+			{
+				Name = t("Configuration.Admins.Container.Admins.Header.TLabel"),
+				Icon = Utilities.Icon "user-clip",
+				Click = function() end,
+				Frame = Var.MainFrame.Configuration.Admins,
+				ButtonID = "AdminConfig"
+			}
 		}
-	}
-})
+	})
+end)
 
 --// Homepage, app drawer, header connections
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
@@ -192,8 +195,10 @@ if script.Parent:GetAttribute("NeedsSetup") then
 end
 
 --// Marketplace
-xpcall(Apps.Init, function(e)
-	Utilities.Logging.Print("[x] [thread Apps] Failed to initialize the marketplace, this is likely due to insufficient permissions!", e)
+task.defer(function()
+	xpcall(Apps.Init, function(e)
+		Utilities.Logging.Print("[x] [thread Apps] Failed to initialize the marketplace, this is likely due to insufficient permissions!", e)
+	end)
 end)
 
 --// Admins
@@ -206,12 +211,6 @@ xpcall(function()
 
 	Var.MainFrame.Configuration.Admins.Header.NewRank.Activator.MouseButton1Click:Connect(function()
 		Admins.OpenCreator()
-	end)
-
-	Var.MainFrame.Configuration.Admins.NewAdmin.Page5.NextPage.MouseButton1Click:Connect(function()
-		Admins.CloseCreator()
-		Admins.ClearEditState()
-		Admins.Load()
 	end)
 end, function(e)
 	Utilities.Logging.Warn(`[x] [thread Admins] {e}`)
@@ -246,18 +245,20 @@ else
 
 	Var.MainFrame.Parent.MobileOpen:Destroy()
 
+	print(Utilities.GetSetting("AssistiveClose"))
+
 	if Utilities.GetSetting("AssistiveClose") == true then
 		Var.MainFrame.Header.AssistiveClose.Visible = true
 		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 	end
 end
 
---// Load settings
-
 local IsDonating = false
 local Passes = {}
 
 xpcall(function(...)
+	repeat task.wait() until Var.MainFrame:FindFirstChild("Header")
+
 	local Info = Var.MainFrame.Configuration.InfoPage
 
 	Info.VersionDetails.Version.Text = Var.Version.NoExtraData .. " " .. Var.Version.Extra

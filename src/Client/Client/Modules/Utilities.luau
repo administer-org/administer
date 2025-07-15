@@ -44,7 +44,7 @@ function Utilities.FormatRelativeTime(Unix: number): string
 	local TimeDifference = os.time() - (Unix ~= nil and Unix or 0)
 
 	if TimeDifference < 60 then
-		return "Just Now"
+		return "Just now"
 	elseif TimeDifference < 3600 then
 		local Minutes = math.floor(TimeDifference / 60)
 		return `{Minutes} {Minutes == 1 and "minute" or "minutes"} ago`
@@ -86,13 +86,12 @@ function Utilities.NewNotification(
 	Body: string,
 	Heading: string,
 	Duration: number?,
-	Options: { any }?,
-	OpenTime: number?
+	Options: { any }?
 ): ()
 	local Panel = script.Parent.Parent.Parent
 
+	local OpenTime = Var.AnimationSpeed * 1.25
 	Options = Options or {}
-	OpenTime = OpenTime or 1.25
 
 	local Placeholder = Instance.new("Frame")
 	Placeholder.BackgroundTransparency = 1

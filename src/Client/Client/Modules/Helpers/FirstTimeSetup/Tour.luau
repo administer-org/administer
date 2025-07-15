@@ -156,10 +156,18 @@ function tour.BeginTour()
 	-- Editing a Widget
 	tour.Step(Var.MainFrame:WaitForChild("Home").Widget1.Editing.Next, [[You can change the displayed widget by clicking the next button.
 	<b>Click the Next Button to continue.</b>]])
+	
+	task.wait(2)
+	
 	tour.Step(Var.MainFrame:WaitForChild("Home").Widget1.Editing.Last, [[You can also go back to the previous widget.
 	<b>Click the Back Button to continue.</b>]])
+	
+	task.wait(2)
+	
 	tour.Step(Var.MainFrame:WaitForChild("Home").Widget1.Editing.Preview, [[Click the widget to select it.
 	<b>Click the widget to continue.</b>]])
+	
+	task.wait(1)
 
 	Frontend.Drawer.Open()
 
@@ -177,7 +185,7 @@ function tour.BeginTour()
 	<b>Click Install to continue</b>]])
 
 	repeat task.wait() until Var.MainFrame.administer.MessageBox.Visible or Var.MainFrame.administer.Toast.Visible
-	repeat task.wait() until not Var.MainFrame.administer.MessageBox.Visible or not Var.MainFrame.administer.Toast.Visible
+	repeat task.wait() until not Var.MainFrame.administer.MessageBox.Visible and not Var.MainFrame.administer.Toast.Visible
 
 	tour.Step(marketPlace.InstallBox.Details.Votes.Likes:WaitForChild("TextButton"), [[And you can click here to give the app a like.
 	<b>Press Like to continue</b>]])

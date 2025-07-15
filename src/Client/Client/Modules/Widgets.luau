@@ -9,7 +9,8 @@ local Widgets = {
 local Modules = script.Parent
 
 local Utilities = require(Modules.Utilities)
-local Var = require(Modules.Variables)
+local Frontend  = require(Modules.Frontend)
+local Var       = require(Modules.Variables)
 
 function Widgets.GetAvailableWidgets(): { Small: { {} }, Large: { {} } }
 	local Widgets: { Small: { {} }, Large: { {} } } = { Small = {}, Large = {} }
@@ -60,8 +61,21 @@ end
 function Widgets.Edit(
 	ContainingUI
 ): ()
+	if ContainingUI:GetAttribute("IsEditing") then
+		Frontend.Toast({
+			Icon = Utilities.Icon "triangle-warning",
+			Text = "Something went wrong",
+			Subtext = "Please finish editing before you try again.",
+			Timeout = 5
+		})	
+
+		return
+	else
+		ContainingUI:SetAttribute("IsEditing", true)
+	end
+
 	local Editing = ContainingUI.Editing
-	local AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2
+	local AnimSpeed = Var.AnimationSpeed * 1.2
 	local Selected = ""
 	local SelectedTable = {}
 	local Tweens: { Tween } = {}
@@ -149,6 +163,7 @@ function Widgets.Edit(
 		for _, v in HoverFX do
 			v:Disconnect()
 		end
+
 		Editing.Preview.Select.Visible = false
 
 		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 0.4
@@ -228,13 +243,14 @@ function Widgets.Edit(
 		end
 
 		Editing.Visible = false
+		ContainingUI:SetAttribute("IsEditing", false)
 	end)
 
 	--// start finding other widgets to use
 	local Widgets = Widgets.GetAvailableWidgets()["Large"]
 	local Count = 0 --// 0 by default because ideally they have one already?
 	local Buttons = {}
-	
+
 	local function ClickNext()
 		ShouldHover = false
 		Count += 1
@@ -246,7 +262,7 @@ function Widgets.Edit(
 			return ClickNext()
 		end
 
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 3
+		AnimSpeed = Var.AnimationSpeed * 3
 		Tweens = {
 			Var.Services.TweenService:Create(
 				Editing.Preview,
@@ -286,7 +302,7 @@ function Widgets.Edit(
 		Editing.WidgetName.Position = UDim2.new(1, 0, 0.647, 0)
 		Editing.WidgetName.Text = Widget["Name"]
 		Editing.AppName.Text = Widget["AppName"]
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2.45
+		AnimSpeed = Var.AnimationSpeed * 2.45
 		SelectedTable = Widget
 
 		Tweens = {
@@ -327,7 +343,7 @@ function Widgets.Edit(
 
 		if Count > #Widgets then Count = 1 end
 
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2
+		AnimSpeed = Var.AnimationSpeed * 2
 		Tweens = {
 			Var.Services.TweenService:Create(
 				Editing.Preview,
@@ -367,7 +383,7 @@ function Widgets.Edit(
 		Editing.WidgetName.Position = UDim2.new(-0.7, 0, 0.647, 0)
 		Editing.WidgetName.Text = Widget["Name"]
 		Editing.AppName.Text = Widget["AppName"]
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 2.45
+		AnimSpeed = Var.AnimationSpeed * 2.45
 		SelectedTable = Widget
 
 		Tweens = {
@@ -411,7 +427,7 @@ function Widgets.Initialize()
 					UI.SideData.Banner.Text = Widget["Name"]
 					UI.SideData.BannerIcon.Image = Widget["Icon"]
 				end, function() end)
-				
+
 				Widget["BaseUIFrame"].Parent = UI.Content
 				Widget["BaseUIFrame"].Visible = true
 				Widget["OnRender"](Var.Services.Players.LocalPlayer, Widget["BaseUIFrame"])

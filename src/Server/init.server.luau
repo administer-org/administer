@@ -43,16 +43,16 @@ xpcall(function()
 	Utils.Logging.Print(`[✓] DataStoreService connection established in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
 	local Settings = SettingsAPI.new(Configuration.Settings)
-	
+
 	if Migrator.CheckForV1() then
 		Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
 		Migrator.Migrate()
-		
+
 		Var.IsFirstBoot = false
 	else
 		Utils.Logging.Print("V1 Installation not found!")
 	end
-	
+
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
 		Settings.Save(1)
@@ -62,7 +62,7 @@ xpcall(function()
 		Var.DataStores.Settings:SetAsync("HasInit", true)
 	else
 		Settings.Load(1)
-		
+
 		Var.SettingsAPI = SettingsAPI.GetController("Administer")
 	end
 
@@ -76,13 +76,15 @@ end)
 Var.InitClock["LoadSettings"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Var.InitClock.TempInit = os.clock()
 
-AppsModule.Initialize()
+task.defer(function()
+	AppsModule.Initialize()
 
-Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
-Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
+	AdminRunner.Scan(false)
+	Var.Services.Players.PlayerAdded:Connect(AdminRunner.PlayerAdded)
 
-AdminRunner.Scan(false)
-Var.Services.Players.PlayerAdded:Connect(AdminRunner.PlayerAdded)
+	Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
+	Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
+end)
 
 Utils.Logging.Print("[-] Mounting frontend API..")
 Var.InitClock.TempInit = os.clock()
@@ -92,7 +94,7 @@ local function NewRemote(
 	AuthRequired: boolean, 
 	PlayerVar: boolean, 
 	Cbk: (Player, ...any) -> any
-): any
+): RemoteFunction | RemoteEvent
 	if PlayerVar then
 		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(Player: Player, ...)
 			return Cbk(Player, ...)
@@ -243,14 +245,14 @@ end)
 NewRemote("GetSetting", true, false, function(controllerName : string, settingName : string)
 	local controller = SettingsAPI.GetController(controllerName)
 	local currentValue = controller.Get(settingName)
-	
+
 	return currentValue
 end)
 
 NewRemote("GetRemote", true, false, function(controllerName : string, settingName : string)
 	local controller = SettingsAPI.GetController(controllerName)
 	local remote = controller.GetRemote(settingName)
-	
+
 	return remote
 end)
 
@@ -269,6 +271,12 @@ Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempIni
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
 Utils.Logging.Print(
 	`\n-- Administer {Configuration.VersData.String} {Configuration.VersData.GitRevision} loaded! --`,
+	"\n		> Ready in ",
+	Utils.RoundMS(os.clock() - Var.InitClock.RealInit).."ms",
+	"\n		> Apps thread: ",
+	Var.DidBootstrap and "done" or "proc",
+	"\n		> Using AOS: ",
+	Var.PrimaryAppServer,
 	"\n		> Startup information:",
 	Var.InitClock,
 	"\n		> Environment:",
@@ -281,7 +289,7 @@ Utils.Logging.Print(`[-] Running startup jobs!`)
 xpcall(
 	function()
 		if not Utils.GetSetting("LiveUpdate") then return end
-		
+
 		Var.Services.MessagingService:SubscribeAsync("Administer", AdminRunner.Socket)
 	end,
 
@@ -301,7 +309,7 @@ HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
 	return { ... }
 end, function(...)
 	Utils.Logging.SWarn(...)
-	
+
 	return { ... }
 end)
 

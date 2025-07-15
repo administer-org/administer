@@ -38,7 +38,7 @@ export type AdminRank = {
 		}
 	},
 
-	AllowedApps: {
+	Apps: {
 		SuperAdmin: boolean?,
 
 		[AppID]: {

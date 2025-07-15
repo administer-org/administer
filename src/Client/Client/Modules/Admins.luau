@@ -154,7 +154,7 @@ function Admins.Load(): ()
 				end
 
 				xpcall(function()
-					Template.ColorBG.BackgroundColor3 = Color3.fromHex(`#{v.Color}`)
+					Template.ColorBG.BackgroundColor3 = Color3.fromHex(v.Color)
 				end, function()
 					--// Invalid hex code
 					Template.ColorBG.BackgroundColor3 = Color3.new(0.239, 0.643, 1)
@@ -170,29 +170,30 @@ function Admins.Load(): ()
 
 					if User == nil then break end
 					if User.MemberType == "User" then
-						Template.ProfilePictures[i].Visible = true
-						Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
-							User.ID,
-							Enum.ThumbnailType.HeadShot,
-							Enum.ThumbnailSize.Size100x100
-						)
+						pcall(function()
+							Template.ProfilePictures[i].Visible = true
+							Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
+								User.ID,
+								Enum.ThumbnailType.HeadShot,
+								Enum.ThumbnailSize.Size100x100
+							)
 
-						table.insert(UserNames, Var.Services.Players:GetNameFromUserIdAsync(User.ID))
+							table.insert(UserNames, Var.Services.Players:GetNameFromUserIdAsync(User.ID))
+						end)
 					else
-						local _, GroupInfo = pcall(function()
+						local Success, GroupInfo = pcall(function()
 							return game:GetService("GroupService"):GetGroupInfoAsync(User.ID)
 						end)
 
-						xpcall(function()
+						if Success then
 							Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
 							Template.ProfilePictures[i].Visible = true
 
 							Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
-						end, function()
-							--// do nothing? idk if i do i - 1 itll cause a loop so FIXME..?
-						end)
 
-						table.insert(UserNames, GroupInfo.Name)
+							table.insert(UserNames, GroupInfo.Name)
+						end
+
 					end
 				end
 
@@ -462,11 +463,11 @@ function Admins.RunCreatorApp()
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
 				Text = "Invalid input",
-				Subtext = `Rank names must be unique, {Frames.Page2.TextInput.Text} is already a rank`,
+				Subtext = `Rank names must be unique, {Frames.Page2.TextInput.Text} already exists`,
 				Timeout = 5
 			})
 
-			SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://11102397100", false, 2)
+			SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://11102397100", false)
 
 			return
 		end
@@ -573,13 +574,8 @@ function Admins.RunCreatorApp()
 		end
 
 		ConnectionsTable = {
-			Frames.Page3.AddPane.AddGroup.Click.MouseButton1Click:Connect(function()
-				NewGroupCard()
-			end),
-
-			Frames.Page3.AddPane.AddUser.Click.MouseButton1Click:Connect(function()
-				NewUserCard()
-			end)
+			Frames.Page3.AddPane.AddGroup.Click.MouseButton1Click:Connect(NewGroupCard),
+			Frames.Page3.AddPane.AddUser.Click.MouseButton1Click:Connect(NewUserCard)
 		}
 
 		for i, User in Env.EditModeMembers :: { { MemberType: string, ID: number, GroupRank: number? } } do
@@ -619,7 +615,7 @@ function Admins.RunCreatorApp()
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
 				Text = "Too many members",
-				Subtext = `You may have up to {Env.MaxPeople} members.`,
+				Subtext = `You may only have up to {Env.MaxPeople} members.`,
 				Timeout = 5
 			})
 
@@ -675,7 +671,6 @@ function Admins.RunCreatorApp()
 
 			repeat task.wait() until Toggled
 			Toggled = false
-
 		end
 
 		if ShouldGoBack then return end
@@ -689,8 +684,6 @@ function Admins.RunCreatorApp()
 		for i, Child in Frames.Page4.Apps.Apps:GetChildren() do
 			if Child.Name ~= "Template" and Child:IsA("Frame") then Child:Destroy() end
 		end
-
-		print(Var.CombinedButtonConfig, Env.EditModeApps)
 
 		local CanNotEdit = {}
 
@@ -727,15 +720,17 @@ function Admins.RunCreatorApp()
 				if not Var.RankCreatorApps[AppID] then
 					table.insert(CanNotEdit, AppID)
 				end
-				
+
 				Var.RankCreatorApps[AppID] = CanUse
-				
+
 
 				--print(AppID, CanUse)
 			end
 		end
 
 		for i, v: Instance in Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() do
+			if Env.HasPopulatedApps then break end --// maybe a better place for this?
+			
 			if not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout", "Home" }, v.Name) then
 				if v:GetAttribute("ThreadType") == "multi" then
 					local NewApp = v:Clone()
@@ -787,7 +782,7 @@ function Admins.RunCreatorApp()
 				else
 					local NewApp = v:Clone()
 					local ButtonID = NewApp:GetAttribute("ButtonID")
-					
+
 					NewApp.Parent = Frames.Page4.AppDrawer.AppHolder.Apps
 					NewApp.Size = UDim2.new(.911, 0, .13, 0)
 
@@ -824,11 +819,14 @@ function Admins.RunCreatorApp()
 		end
 
 		SwapPages(Frames.Loading, Frames.Page4, "rbxassetid://14865439768", false, 4)
+		Env.HasPopulatedApps = true
 	end)
+	
 
 	Frames.Page4.NextPage.MouseButton1Click:Connect(function()
 		CanGoBack = false
-		-- Start packaging the data
+
+		--// Start packaging the data
 		SwapPages(Frames.Page4, Frames.Loading, "rbxassetid://11102397100", true, 4)
 
 		local Members, AllowedPages = {}, {}
@@ -853,7 +851,7 @@ function Admins.RunCreatorApp()
 
 		FinalData = {
 			Name = Var.Remotes.FilterString:InvokeServer(Frames.Page2.TextInput.Text)[2],
-			Protected = false, -- may be configurable soon
+			Protected = false, --// may be configurable soon
 			Members = Members,
 
 			Apps = Var.RankCreatorApps,
@@ -870,16 +868,21 @@ function Admins.RunCreatorApp()
 		local Result = Var.Remotes.NewRank:InvokeServer(FinalData)
 		if Result[1] then
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
+			Frames.Page5.Header.Text = Env.Strings.FinHeaderSucc
+			Frames.Page5.Body.Text = Env.Strings.FinBodyNew
 		else
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
-			Frames.Page5.Header.Text = require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError
+			Frames.Page5.Header.Text = Env.Strings.FinHeaderError
 			Frames.Page5.Body.Text =
-				string.format(require(script.Parent.UI.AdminHelperEnv).Strings.FinHeaderError, Result[2])
+				string.format(Env.Strings.FinBodyNewError, Result[2])
 		end
 	end)
 
 	Frames.Page5.NextPage.MouseButton1Click:Connect(function()
+		Admins.Load()
 		Admins.CloseCreator()
+		Admins.ClearEditState(Env)
+
 		SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
 
 		Frames.BottomData.RankTitle.Text = "Creating a rank"

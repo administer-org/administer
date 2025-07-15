@@ -68,6 +68,10 @@ function Http.GetRoute(
 	OnError, 
 	Options: {Timeout: number, DontLookForAlts: boolean}
 ): Types.Response
+	if AppServer == nil or AppServer == "" then
+		AppServer = Var.PrimaryAppServer ~= "" and Var.PrimaryAppServer ~= nil and Var.PrimaryAppServer or Var.DefaultAppServer 
+	end
+	
 	local ST = tick()
 	local Response
 	local IsAOS = string.match(AppServer, "^https://aos%-.+%.admsoftware%.org$") ~= nil
@@ -126,6 +130,7 @@ function Http.GetRoute(
 	else
 		if (IsAOS and not Options.DontLookForAlts) or ActiveFailoverDomain == AppServer and string.sub(tostring(Response.StatusCode), 1, 1) ~= "4" then
 			print("[Administer] You Primary AOS instance is currently offline, selecting another")
+			print(Response)
 
 			table.insert(KnownOfflineInstances, AppServer)
 

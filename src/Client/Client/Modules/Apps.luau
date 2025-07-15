@@ -277,6 +277,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		local Response = Var.Remotes.Vote:InvokeServer(ServerURL, ID, 1)
 
 		if Response.StatusCode == 400 then
+			print(Response.Body)
 			Frontend.Popup.new(
 				{
 					Name = Utilities.ToSentenceCase( Utilities.Translate("Configuration.Marketplace.Header.Head") ),
@@ -566,7 +567,9 @@ function Apps.LoadAppList(List: {}?): ()
 end
 
 function Apps.InitSerarchbar()
+	print("searchbar init")
 	local MP = Var.MainFrame.Configuration.Marketplace
+	
 	MP.Sidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
 		MP.Sidebar.Searchbar.Title.Text = MP.Sidebar.Searchbar.Input.Text 	
 	end)
@@ -626,7 +629,13 @@ function Apps.InitSerarchbar()
 	)
 end
 
+local IsLibraryLoading = false
+
 function Apps.LoadLibrary()
+	if IsLibraryLoading then return end
+	
+	IsLibraryLoading = true
+	
 	local AppsMenu = Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary
 	for i, AppItem: Instance in AppsMenu.Content:GetChildren() do
 		if not AppItem:IsA("CanvasGroup") or AppItem.Name == "Template" or AppItem.Name == "ServerTemplate" then continue end
@@ -660,7 +669,7 @@ function Apps.LoadLibrary()
 			)
 		end
 
-		NewTemplate.Buttons.LongText.Title.Text = `Initialized in {App.BuildTime * 1000}ms`
+		NewTemplate.Buttons.LongText.Title.Text = `{math.round(App.BuildTime * 1000)}ms`
 
 		NewTemplate.Parent = AppsMenu.Content
 		NewTemplate.Visible = true
@@ -710,6 +719,7 @@ function Apps.LoadLibrary()
 								)
 							else
 								_Close()
+								
 								Apps.LoadLibrary()
 							end	
 						end
@@ -734,25 +744,25 @@ function Apps.LoadLibrary()
 		xpcall(function()
 			NewTemplate.ServerName.Text = Server.Name
 			NewTemplate.Name = Server.Name
-			NewTemplate.Metadata.Text = `{Server.Banner.text}\n\nAOS v{Server.AOSVers}\n\n{Server.IsDev and "Development mode \n\n"}{Server.URL}`
+			NewTemplate.Metadata.Text = `{Server.Banner.text}\n\nAOS v{Server.AOSVers}\n\n{Server.IsDev and "Development mode \n\n" or ""}{Server.URL}`
 			NewTemplate.InstallDate.Text = `Installed {Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
 				Server.ServerInstall
 			) or "locally"}`
 
 			NewTemplate.BackgroundImage.BackgroundColor3 = Color3.fromHex(Server.Banner.color)
-			NewTemplate.Buttons.LongText.Title.Text = `{Server.PingTime}ms · Running since {Utilities.FormatRelativeTime(os.time() - Server.Uptime)}`
+			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · Running since {Utilities.FormatRelativeTime(os.time() - Server.Uptime)}`
 
 		end, function()
 			--// must be an error
 			NewTemplate.ServerName.Text = Server.URL
 			NewTemplate.Name = Server.URL
-			NewTemplate.Metadata.Text = `This server seems to be experiencing an outage.`
+			NewTemplate.Metadata.Text = `This server seems to be experiencing an outage. Try installing another in the meantime.`
 			NewTemplate.InstallDate.Text = `Installed {Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
 				Server.ServerInstall
 			) or "locally"}`
 
 			NewTemplate.Buttons.LongText.Icon.BackgroundColor3 = Color3.fromRGB(255, 108, 110)
-			NewTemplate.Buttons.LongText.Title.Text = `{Server.PingTime}ms · HTTP {Server.Code}`	
+			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · Error {Server.Code}`	
 		end)
 
 		NewTemplate.Parent = AppsMenu.Content
@@ -817,6 +827,8 @@ function Apps.LoadLibrary()
 			)
 		end)
 	end
+	
+	IsLibraryLoading = false
 end
 
 function Apps.Init(JustRefreshCounts)

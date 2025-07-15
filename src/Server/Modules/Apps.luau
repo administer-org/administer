@@ -358,7 +358,15 @@ function App.ServerAPI.New(URL: string, ActingUser: number?): Types.Response
 	end)
 end
 
-function App.ServerAPI.RegisterPrimary(URL: string): Types.Response
+function App.ServerAPI.RegisterPrimary(
+	URL: string, 
+	OverwriteExisting: boolean?
+): Types.Response
+	if OverwriteExisting then
+		App.ServerAPI.UninstallServer(Var.DefaultAppServer, true)
+		App.ServerAPI.New(URL, 1)
+	end
+	
 	return HTTP.PostRoute(URL, "/api/register-home-node", {}, function(Data, Info)
 		Utils.Logging.Print("Registered!", Data)
 		
@@ -371,6 +379,8 @@ function App.ServerAPI.RegisterPrimary(URL: string): Types.Response
 		end
 		
 		Var.DataStores.AppDB:SetAsync("AppServerList", Var.AppServers)
+		
+		Var.PrimaryAppServer = URL
 
 		return { true, "Done!" }
 	end, function(...)
@@ -407,7 +417,10 @@ function App.ServerAPI.GetServerStatuses(): Types.Response
 					InstalledBy   = Server.Creator,
 					ServerInstall = Server.Time
 				}
-			end))
+			end, {
+				DontLookForAlts = true,
+				Timeout = 15
+			}))
 		end, function()
 			return {
 				URL           = Server.ServerURL,

@@ -3,18 +3,20 @@ return {
 	MaxPeople = 50,
 
 	EditModeMembers = {},
-	EditModePages = {},
 	EditModeApps = {},
 	EditModeName = "",
+	EditModeColor = "",
 	EditModeReason = "",
 	EditModeIsProtected = false,
 	EditModeRank = 0,
+	
+	HasPopulatedApps = false,
 
 	Strings = {
 		["_locale"] = "en_US",
 
 		["WelcHeaderNew"] = "Welcome to the Rank Creator",
-		["WelcHeaderEdit"] = "Edit %s...",
+		["WelcHeaderEdit"] = "Welcome to the Rank Editor",
 
 		["WelcBodyNew"] = "The Rank Creator allows you to create new admin ranks and specify their permitted apps and users. New users you add will be given access to Administer instantly even if already in-game.\n\nYou'll only be able to add apps which you personally have access to. Only people with the permission will be able to enabled the option to permit all apps.",
 		["WelcBodyEdit"] = "Any changes you make here will be saved to the index and will be logged to the rank to ensure safety of your game.\n\nPlease note the same rules apply with all access. Protected ranks may not be edited directly via UI.",
@@ -44,6 +46,6 @@ return {
 		["CannotGoBack"] = "You can't do that right now.",
 
 		["RanksV2MigrationNudgeHdr"] = "Rank Deprecation Warning",
-		["RanksV2MigrationNudgeBody"] = "Your game is currently using an old version of Administer ranks and it will need to update. By clicking yes, all ranks will be removed and you will need to remake them. This process may only be done in Studio to ensure you don't get locked out of Administer when the process is complete.",
-	},
+		["RanksV2MigrationNudgeBody"] = "Your game is currently using an old version of Administer ranks and it will need to update. By clicking yes, all ranks will be removed and you will need to remake them. This process may only be done in Studio to ensure you don't get locked out of Administer when the process is complete."
+	}
 }
