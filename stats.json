@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "French",
-    "code": "fr",
+    "name": "German",
+    "code": "de",
   },
   "project": {
     "name": "Administer",
@@ -12,12 +12,12 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/fr.json",
+    "name": "locales/de.json",
   },
   "stats": {
     "total": "216",
-    "translated": "173",
-    "translated_percent": "80.0",
+    "translated": "169",
+    "translated_percent": "78.2",
     "fuzzy": "19",
     "fuzzy_percent": "8.7",
     "readonly": "0",
