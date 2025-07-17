@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Chinese (Simplified Han script)",
-    "code": "zh-CN",
+    "name": "Dutch",
+    "code": "nl",
   },
   "project": {
     "name": "Administer",
@@ -12,12 +12,12 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/zh-CN.json",
+    "name": "locales/nl.json",
   },
   "stats": {
     "total": "216",
-    "translated": "169",
-    "translated_percent": "78.2",
+    "translated": "173",
+    "translated_percent": "80.0",
     "fuzzy": "19",
     "fuzzy_percent": "8.7",
     "readonly": "0",
