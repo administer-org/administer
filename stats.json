@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Vietnamese",
-    "code": "vi",
+    "name": "Chinese (Simplified Han script)",
+    "code": "zh-CN",
   },
   "project": {
     "name": "Administer",
@@ -12,14 +12,14 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/vi.json",
+    "name": "locales/zh-CN.json",
   },
   "stats": {
     "total": "216",
-    "translated": "162",
-    "translated_percent": "75.0",
-    "fuzzy": "18",
-    "fuzzy_percent": "8.3",
+    "translated": "169",
+    "translated_percent": "78.2",
+    "fuzzy": "19",
+    "fuzzy_percent": "8.7",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"
