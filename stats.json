@@ -1,0 +1,27 @@
+{
+  "language": {
+    "name": "English (United Kingdom)",
+    "code": "en_GB",
+  },
+  "project": {
+    "name": "Administer",
+    "slug": "administer",
+  },
+  "component": {
+    "name": "Core",
+    "slug": "core",
+  },
+  "file": {
+    "name": "locales/en_GB.json",
+  },
+  "stats": {
+    "total": "0",
+    "translated": "0",
+    "translated_percent": "100.0",
+    "fuzzy": "0",
+    "fuzzy_percent": "0.0",
+    "readonly": "0",
+    "comments": "0",
+    "suggestions": "0"
+  }
+}
