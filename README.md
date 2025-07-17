@@ -4,7 +4,7 @@
 
 # Simple & Open Administration
 
-[![administer-org - administer](https://img.shields.io/static/v1?label=administer-org&message=administer&color=blue&logo=github)](https://github.com/administer-org/administer "Go to GitHub repo") [![stars - administer](https://img.shields.io/github/stars/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![forks - administer](https://img.shields.io/github/forks/administer-org/administer?style=social)](https://github.com/administer-org/administer)
+[![administer-org - administer](https://img.shields.io/static/v1?label=administer-org&message=administer&color=blue&logo=github)](https://github.com/administer-org/administer "Go to GitHub repo") [![stars - administer](https://img.shields.io/github/stars/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![forks - administer](https://img.shields.io/github/forks/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![translation status](https://translate.admsoftware.org/widget/administer/svg-badge.svg?native=1)](https://translate.admsoftware.org)
 
 [![License](https://img.shields.io/badge/License-GNU--AGPL--3.0-blue)](#license) [![issues - administer](https://img.shields.io/github/issues/administer-org/administer)](https://github.com/administer-org/administer/issues) [![Hits-of-Code](https://hitsofcode.com/github/administer-org/administer?branch=main)](https://hitsofcode.com/github/administer-org/administer/view?branch=main)
 
