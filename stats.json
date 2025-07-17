@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Portuguese (Portugal)",
-    "code": "pt-PT",
+    "name": "Chinese (Simplified Han script)",
+    "code": "zh-CN",
   },
   "project": {
     "name": "Administer",
@@ -12,7 +12,7 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/pt-PT.json",
+    "name": "locales/zh-CN.json",
   },
   "stats": {
     "total": "216",
