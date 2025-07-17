@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Vietnamese",
-    "code": "vi",
+    "name": "Dutch",
+    "code": "nl",
   },
   "project": {
     "name": "Administer",
@@ -12,12 +12,12 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/vi.json",
+    "name": "locales/nl.json",
   },
   "stats": {
     "total": "216",
-    "translated": "162",
-    "translated_percent": "75.0",
+    "translated": "174",
+    "translated_percent": "80.5",
     "fuzzy": "18",
     "fuzzy_percent": "8.3",
     "readonly": "0",
