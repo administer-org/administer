@@ -249,5 +249,7 @@
     "reltime.Months": "",
     "reltime.Year": "",
     "reltime.Years": "",
-    "reltime.Format": ""
+    "reltime.Format": "",
+    "Configuration.Admins.Ranks.Protected": "",
+    "Configuration.Admins.Ranks.Unprotected": ""
 }
