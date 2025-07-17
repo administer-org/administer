@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Slovenian",
-    "code": "sl",
+    "name": "Portuguese (Portugal)",
+    "code": "pt-PT",
   },
   "project": {
     "name": "Administer",
@@ -12,14 +12,14 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/sl.json",
+    "name": "locales/pt-PT.json",
   },
   "stats": {
-    "total": "0",
-    "translated": "0",
-    "translated_percent": "100.0",
-    "fuzzy": "0",
-    "fuzzy_percent": "0.0",
+    "total": "216",
+    "translated": "169",
+    "translated_percent": "78.2",
+    "fuzzy": "19",
+    "fuzzy_percent": "8.7",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"
