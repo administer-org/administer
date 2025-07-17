@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Portuguese (Brazil)",
-    "code": "pt-BR",
+    "name": "Portuguese (Portugal)",
+    "code": "pt-PT",
   },
   "project": {
     "name": "Administer",
@@ -12,7 +12,7 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/pt-BR.json",
+    "name": "locales/pt-PT.json",
   },
   "stats": {
     "total": "216",
@@ -22,6 +22,6 @@
     "fuzzy_percent": "8.7",
     "readonly": "0",
     "comments": "0",
-    "suggestions": "1"
+    "suggestions": "0"
   }
 }
