@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Ukrainian",
-    "code": "uk",
+    "name": "German",
+    "code": "de",
   },
   "project": {
     "name": "Administer",
@@ -12,16 +12,16 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/uk.json",
+    "name": "locales/de.json",
   },
   "stats": {
-    "total": "216",
-    "translated": "0",
-    "translated_percent": "0.0",
-    "fuzzy": "0",
-    "fuzzy_percent": "0.0",
+    "total": "257",
+    "translated": "161",
+    "translated_percent": "62.6",
+    "fuzzy": "21",
+    "fuzzy_percent": "8.1",
     "readonly": "0",
     "comments": "0",
-    "suggestions": "0"
+    "suggestions": "20"
   }
 }
