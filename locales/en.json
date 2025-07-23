@@ -168,7 +168,7 @@
     "apps.sensitivity.DoesNotUse": "Does not use %s modules",
     "apps.installed.Body": "The app has loaded, but you may need to rejoin for the frontend to load.",
     "apps.search.NoResults": "Sorry, but we couldn't find any results for that",
-    "apps.search.FoundMatch": "We thing you meant %s (%s% confidence), results for it may be included.",
+    "apps.search.FoundMatch": "We think you meant %s (%s% confidence), results for it may be included.",
     "apps.load.Fail": "Error loading apps",
     "apps.load.Ratelimit": "Rate limit exceeded, please slow down",
     "apps.score.Detail": "Why is this here?",
