@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Chinese (Simplified Han script)",
-    "code": "zh-CN",
+    "name": "Russian",
+    "code": "ru",
   },
   "project": {
     "name": "Administer",
@@ -12,14 +12,14 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/zh-CN.json",
+    "name": "locales/ru.json",
   },
   "stats": {
     "total": "257",
-    "translated": "161",
-    "translated_percent": "62.6",
-    "fuzzy": "21",
-    "fuzzy_percent": "8.1",
+    "translated": "205",
+    "translated_percent": "79.7",
+    "fuzzy": "9",
+    "fuzzy_percent": "3.5",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"
