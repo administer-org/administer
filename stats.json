@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Finnish",
-    "code": "fi",
+    "name": "Italian",
+    "code": "it",
   },
   "project": {
     "name": "Administer",
@@ -12,7 +12,7 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/fi.json",
+    "name": "locales/it.json",
   },
   "stats": {
     "total": "216",
