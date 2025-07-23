@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Chinese (Simplified Han script)",
-    "code": "zh-CN",
+    "name": "English (United Kingdom)",
+    "code": "en_GB",
   },
   "project": {
     "name": "Administer",
@@ -12,14 +12,14 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/zh-CN.json",
+    "name": "locales/en_GB.json",
   },
   "stats": {
     "total": "216",
-    "translated": "169",
-    "translated_percent": "78.2",
-    "fuzzy": "19",
-    "fuzzy_percent": "8.7",
+    "translated": "0",
+    "translated_percent": "0.0",
+    "fuzzy": "0",
+    "fuzzy_percent": "0.0",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"
