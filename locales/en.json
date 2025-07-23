@@ -177,6 +177,7 @@
     "apps.aos.Uninstall": "Uninstalling app servers may have unintended side effects. Please make sure you have at least one server installed.",
     "apps.aos.install.Deatail": "Link custom server",
     "apps.aos.install.Body": "Please enter your custom AOS server here with https:// and no trailing slash. It must be online and linked to your Mongo instance in order to be saved as primary.",
+    "apps.library.Detail": "%s apps, %s servers",
     "mobile.body": "Mobile mode activated. Swipe inwards from the right edge of your screen to open Administer.",
     "mobile.detail": "Mobile mode",
     "error.NoPing": "Administer server ping failed, it seems your client may be incorrectly installed or the server si not executing properly. Please reinstall from source.",
