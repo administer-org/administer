@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "English (United Kingdom)",
-    "code": "en_GB",
+    "name": "Polish",
+    "code": "pl",
   },
   "project": {
     "name": "Administer",
@@ -12,7 +12,7 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/en_GB.json",
+    "name": "locales/pl.json",
   },
   "stats": {
     "total": "216",
