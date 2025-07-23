@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Portuguese (Portugal)",
-    "code": "pt-PT",
+    "name": "Vietnamese",
+    "code": "vi",
   },
   "project": {
     "name": "Administer",
@@ -12,14 +12,14 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/pt-PT.json",
+    "name": "locales/vi.json",
   },
   "stats": {
     "total": "257",
-    "translated": "161",
-    "translated_percent": "62.6",
-    "fuzzy": "21",
-    "fuzzy_percent": "8.1",
+    "translated": "154",
+    "translated_percent": "59.9",
+    "fuzzy": "20",
+    "fuzzy_percent": "7.7",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"
