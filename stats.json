@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "German",
-    "code": "de",
+    "name": "Spanish",
+    "code": "es",
   },
   "project": {
     "name": "Administer",
@@ -12,16 +12,16 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/de.json",
+    "name": "locales/es.json",
   },
   "stats": {
     "total": "257",
-    "translated": "161",
-    "translated_percent": "62.6",
+    "translated": "165",
+    "translated_percent": "64.2",
     "fuzzy": "21",
     "fuzzy_percent": "8.1",
     "readonly": "0",
     "comments": "0",
-    "suggestions": "20"
+    "suggestions": "0"
   }
 }
