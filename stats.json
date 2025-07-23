@@ -16,10 +16,10 @@
   },
   "stats": {
     "total": "257",
-    "translated": "205",
-    "translated_percent": "79.7",
-    "fuzzy": "9",
-    "fuzzy_percent": "3.5",
+    "translated": "206",
+    "translated_percent": "80.1",
+    "fuzzy": "8",
+    "fuzzy_percent": "3.1",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"

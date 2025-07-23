@@ -91,7 +91,7 @@
     "Configuration.Settings.Options.DetailsCard.AppName": "Управлять {{ }}",
     "Configuration.Settings.Options.DetailsCard.AppShortDesc": "%s настройки. Последнее сохранение — %s в %s пользователем @%s",
     "Header.AppDrawer.HeaderLabel": "ПРИЛОЖЕНИЯ",
-    "Header.Mark.HeaderLabel": "<b>Administer</b> · Главная",
+    "Header.Mark.HeaderLabel": "<b>%s</b> · %s",
     "Header.Minimize.HeaderLabel": "ВЫХОД",
     "Home.Welcome": "<stroke color: \"rgb(0,0,0)\" transparency: \"0.85\" thickness: \".4\">Administer загружается...</stroke>",
     "Home.Widget1.Editing.Last": "Последнее",
