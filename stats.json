@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Korean",
-    "code": "ko",
+    "name": "Dutch",
+    "code": "nl",
   },
   "project": {
     "name": "Administer",
@@ -12,12 +12,12 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/ko.json",
+    "name": "locales/nl.json",
   },
   "stats": {
     "total": "257",
-    "translated": "156",
-    "translated_percent": "60.7",
+    "translated": "166",
+    "translated_percent": "64.5",
     "fuzzy": "20",
     "fuzzy_percent": "7.7",
     "readonly": "0",
