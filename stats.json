@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Polish",
-    "code": "pl",
+    "name": "Russian",
+    "code": "ru",
   },
   "project": {
     "name": "Administer",
@@ -12,12 +12,12 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/pl.json",
+    "name": "locales/ru.json",
   },
   "stats": {
     "total": "216",
-    "translated": "0",
-    "translated_percent": "0.0",
+    "translated": "192",
+    "translated_percent": "88.8",
     "fuzzy": "0",
     "fuzzy_percent": "0.0",
     "readonly": "0",
