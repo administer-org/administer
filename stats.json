@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "Russian",
-    "code": "ru",
+    "name": "Slovenian",
+    "code": "sl",
   },
   "project": {
     "name": "Administer",
@@ -12,12 +12,12 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/ru.json",
+    "name": "locales/sl.json",
   },
   "stats": {
     "total": "216",
-    "translated": "192",
-    "translated_percent": "88.8",
+    "translated": "0",
+    "translated_percent": "0.0",
     "fuzzy": "0",
     "fuzzy_percent": "0.0",
     "readonly": "0",
