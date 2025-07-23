@@ -1,7 +1,7 @@
 {
   "language": {
-    "name": "French",
-    "code": "fr",
+    "name": "Korean",
+    "code": "ko",
   },
   "project": {
     "name": "Administer",
@@ -12,14 +12,14 @@
     "slug": "core",
   },
   "file": {
-    "name": "locales/fr.json",
+    "name": "locales/ko.json",
   },
   "stats": {
     "total": "257",
-    "translated": "165",
-    "translated_percent": "64.2",
-    "fuzzy": "21",
-    "fuzzy_percent": "8.1",
+    "translated": "156",
+    "translated_percent": "60.7",
+    "fuzzy": "20",
+    "fuzzy_percent": "7.7",
     "readonly": "0",
     "comments": "0",
     "suggestions": "0"
