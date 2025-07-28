@@ -262,7 +262,7 @@
     "admin.ranks.Others": "%s otros...",
     "admin.ranks.members.one": "es un miembro",
     "admin.ranks.members.two": "son miembros",
-    "admin.ranks.members.more": "%d otros son miembros",
+    "admin.ranks.members.more": "%s otros son miembros",
     "admin.ranks.protected.Detail": "Permisos insuficientes",
     "admin.ranks.protected.Body": "Los rangos protegidos no pueden editarse.",
     "admin.rankcreator.failed.Detail": "¡Uy! Eso no tenía que pasar",
