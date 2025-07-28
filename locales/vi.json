@@ -305,5 +305,6 @@
     "apps.aos.install.Body": "Xin nhập máy chủ AOS của bạn tại đây, bắt đầu bằng https:// và KHÔNG kết thúc bằng dấu gạch chéo. Nó phải đang online và được liên kết với Mongo để lưu làm bản chính.",
     "apps.sensitivity.DoesNotUse": "không sử dụng các mô-đun %s",
     "apps.sensitivity.Context": "Sử dụng mô-dun Administer %s %s",
-    "apps.sensitivity.Insensitive": "không nhạy cảm"
+    "apps.sensitivity.Insensitive": "không nhạy cảm",
+    "apps.aos.install.Detail": "Link custom server"
 }
