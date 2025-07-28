@@ -180,7 +180,7 @@
     "apps.library.Detail": "%s apps, %s servers",
     "mobile.body": "Mobile mode activated. Swipe inwards from the right edge of your screen to open Administer.",
     "mobile.detail": "Mobile mode",
-    "error.NoPing": "Administer server ping failed, it seems your client may be incorrectly installed or the server si not executing properly. Please reinstall from source.",
+    "error.NoPing": "Administer server ping failed, it seems your client may be incorrectly installed or the server is not executing properly. Please reinstall from source.",
     "error.StartupFailed": "Startup Failed",
     "error.LostDep": "Failed to boot client, missing required dependency (%s), please reinstall or roll back any recent changes",
     "error.LostDep.ClientFacingError": "Startup aborted, please make sure Administer is correctly installed. (failed dependency: %s)",
