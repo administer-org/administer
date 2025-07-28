@@ -302,5 +302,6 @@
     "apps.aos.install.Deatail": "Vincular servidor personalizado",
     "apps.aos.install.Body": "Por favor, introduz aqui o teu servidor AOS personalizado com https:// e sem barra final. Deve estar online e ligado à tua instância Mongo para poder ser guardado como principal.",
     "mobile.body": "Modo móvel ativado. Desliza para dentro a partir da borda direita do ecrã para abrir o Administer.",
-    "mobile.detail": "Modo móvel"
+    "mobile.detail": "Modo móvel",
+    "apps.aos.install.Detail": "Ligar servidor de costume"
 }
