@@ -300,5 +300,6 @@
     "mobile.body": "Modo móvil activado. Desliza el dedo hacia dentro desde el borde derecho de la pantalla para abrir Administrar.",
     "apps.search.NoResults": "Lo siento, pero no hemos encontrado ningún resultado para eso",
     "apps.load.Ratelimit": "Se ha superado el límite de frequencia, por favor, reduzca la velocidad",
-    "mobile.detail": "Modo móvil"
+    "mobile.detail": "Modo móvil",
+    "apps.aos.install.Detail": "Vincular servidor personalizado"
 }
