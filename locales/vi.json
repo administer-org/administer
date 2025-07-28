@@ -281,7 +281,7 @@
     "admin.rankcreator.errors.members.NotEnough": "Các cấp bậc phải chứa ít nhất một thành viên.",
     "admin.rankcreator.errors.members.TooMany": "Bạn chỉ có được tối đa %s thành viên.",
     "admin.ranks.superadmin.Detail": "Siêu Quản trị viên",
-    "admin.ranks.members.more": "%d người khác là thành viên",
+    "admin.ranks.members.more": "%s người khác là thành viên",
     "admin.ranks.protected.Detail": "Chưa được cấp phép đầy đủ",
     "admin.ranks.protected.Body": "Bạn không thể chỉnh sửa các cập bậc đang được bảo vệ.",
     "generic.NotFound": "Không tìm thấy",
