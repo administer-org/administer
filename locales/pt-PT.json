@@ -265,7 +265,7 @@
     "admin.ranks.Others": "%s outros...",
     "admin.ranks.members.one": "é um membro",
     "admin.ranks.members.two": "são membros",
-    "admin.ranks.members.more": "%d outros são membros",
+    "admin.ranks.members.more": "%s outros são membros",
     "admin.ranks.protected.Detail": "Permissões insuficientes",
     "admin.ranks.protected.Body": "Os cargos protegidos não podem ser editados.",
     "admin.rankcreator.errors.name.Len": "O nome do cargo deve ter mais de um caractere e menos de 50",
