@@ -204,7 +204,7 @@
     "setting.Interface.DisableUnofficialAppWarning.DisplayName": "Disable unofficial app warning",
     "setting.Interface.DisableUnofficialAppWarning.Description": "Hides the warning which says if a plugin is external. Useful for new people, otherwise just UI clutter.",
     "setting.Interface.EnableEditableImages.DisplayName": "Enable EditableImages",
-    "setting.Interface.EnableEditableImages.Description": "Enables EditableImage features such as app card backgrounds, app card reflectios, and other blurring effects. Does not disable \"image glow\". Currently nonfunctional outside of Studio due to Roblox limitations.",
+    "setting.Interface.EnableEditableImages.Description": "Enables EditableImage features such as app card backgrounds, app card reflections, and other blurring effects. Does not disable \"image glow\". Currently nonfunctional outside of Studio due to Roblox limitations.",
     "setting.Interface.HomepageGreeting.DisplayName": "Homepage Greeting",
     "setting.Interface.HomepageGreeting.Description": "This is the text that displays after the \"Good morning, username!\" text on the homepage.",
     "setting.Interface.HomepageGreeting.Value": "Welcome to Administer!",
