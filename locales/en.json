@@ -52,6 +52,7 @@
     "Configuration.InfoPage.Donate.Message": "Administer is on a mission to develop the best resource and additions to it for free. We've been going for a long time and our work continues to be free. Please donate if Administer adds value to your game or staff team! <b>Your game gets 10% back! Donations are divided among Administer staff.</b>",
     "Configuration.InfoPage.Donate.title": "Donations",
     "Configuration.InfoPage.VersionDetails.Update": "Check",
+    "Configuration.InfoPage.License": "Administer is created by Administer Software, a team of developers modernizing the Roblox administration experience. \nAll of our public works are proudly free software under the GNU AGPL 3.0 license. \nUse, redistribution, and modification of Administer, first-party marketplace apps, and web services are governed under these terms.\nTo obtain a copy of these terms, please visit the GitHub repository. To see the privacy policy for AOS, please visit the link in the DevForum post.\n\nAdminister Software %s",
     "Configuration.Marketplace.Header.Head": "Marketplace",
     "Configuration.Marketplace.Header.Plugins": "Apps",
     "Configuration.Marketplace.Header.Themes": "Themes",
