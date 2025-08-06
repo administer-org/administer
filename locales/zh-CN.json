@@ -10,7 +10,7 @@
     "Configuration.Admins.Container.Admins.Content.Template.Info": "管理员（等级 1）",
     "Configuration.Admins.Container.Admins.Content.Template.Metadata": "由 @username 添加 <b>0 周前</b>",
     "Configuration.Admins.Container.Admins.Header.TLabel": "管理员",
-    "Configuration.Admins.Container.Ranks.Content.Template.Info": "等级 %n • %n 页 • {{ 已保护 | 未保护 }}",
+    "Configuration.Admins.Container.Ranks.Content.Template.Info": "等级 %s • %s 页 • {{ 已保护 | 未保护 }}",
     "Configuration.Admins.Container.Ranks.Header.TLabel": "等级",
     "Configuration.Admins.EditRank.Apps.Content.Template.AppName": "配置",
     "Configuration.Admins.EditRank.Apps.Header.TLabel": "应用",

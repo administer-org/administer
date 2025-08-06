@@ -10,7 +10,7 @@
     "Configuration.Admins.Container.Admins.Content.Template.Info": "Beheerder (Rang 1)",
     "Configuration.Admins.Container.Admins.Content.Template.Metadata": "Toegevoegd door @username <b>0 weken geleden</b>",
     "Configuration.Admins.Container.Admins.Header.TLabel": "Beheerders",
-    "Configuration.Admins.Container.Ranks.Content.Template.Info": "Rang %n • %s • Gemaakt door @%s • %s",
+    "Configuration.Admins.Container.Ranks.Content.Template.Info": "Rang %s • %s • Gemaakt door @%s • %s",
     "Configuration.Admins.Container.Ranks.Header.TLabel": "Rangen",
     "Configuration.Admins.EditRank.Apps.Content.Template.AppName": "Configuratie",
     "Configuration.Admins.EditRank.Apps.Header.TLabel": "Apps",

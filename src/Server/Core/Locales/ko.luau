@@ -10,7 +10,7 @@ return {
   ["Configuration.Admins.Container.Admins.Content.Template.Info"] = "관리자 (1 등급)",
   ["Configuration.Admins.Container.Admins.Content.Template.Metadata"] = "@username님이 <b>0 주 전에</b> 추가함",
   ["Configuration.Admins.Container.Admins.Header.TLabel"] = "관리자들",
-  ["Configuration.Admins.Container.Ranks.Content.Template.Info"] = "%n 등급 • %n 페이지 • {{ 보호됨 | 보호되지 않음 }}",
+  ["Configuration.Admins.Container.Ranks.Content.Template.Info"] = "%s 등급 • %s 페이지 • {{ 보호됨 | 보호되지 않음 }}",
   ["Configuration.Admins.Container.Ranks.Header.TLabel"] = "등급들",
   ["Configuration.Admins.EditRank.Apps.Content.Template.AppName"] = "설정",
   ["Configuration.Admins.EditRank.Apps.Header.TLabel"] = "앱",

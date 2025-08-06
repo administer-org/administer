@@ -10,7 +10,7 @@
     "Configuration.Admins.Container.Admins.Content.Template.Info": "Administrator (Rang 1)",
     "Configuration.Admins.Container.Admins.Content.Template.Metadata": "Hinzugefügt von @username <b>vor 0 Wochen</b>",
     "Configuration.Admins.Container.Admins.Header.TLabel": "Administratoren",
-    "Configuration.Admins.Container.Ranks.Content.Template.Info": "Rang %n • %n Seiten • {{ Geschützt | Nicht geschützt }}",
+    "Configuration.Admins.Container.Ranks.Content.Template.Info": "Rang %s • %s Seiten • {{ Geschützt | Nicht geschützt }}",
     "Configuration.Admins.Container.Ranks.Header.TLabel": "Ränge",
     "Configuration.Admins.EditRank.Apps.Content.Template.AppName": "Konfiguration",
     "Configuration.Admins.EditRank.Apps.Header.TLabel": "Apps",
