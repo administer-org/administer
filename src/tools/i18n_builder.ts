@@ -5,15 +5,15 @@ function luaToJson(lua: string): any {
         .replace(/^return\s*/, '')
         .trim()
         .replace(/--.*/g, '');
-        
+
     jsonString = jsonString
         .replace(/,(?=\s*[}\]])/g, '')
         .replace(/(['"])((?:\\.|(?!\1).)*?)\1/g, (match, quote, content) => {
-        const escapedContent = content
-            .replace(/\\/g, '\\\\')
-            .replace(/"/g, '\\"');
-        return `"${escapedContent}"`;
-    });
+            const escapedContent = content
+                .replace(/\\/g, '\\\\')
+                .replace(/"/g, '\\"');
+            return `"${escapedContent}"`;
+        });
 
     jsonString = jsonString
         .replace(/([{,]\s*)([a-zA-Z_]\w*)\s*=/g, '$1"$2" =')
@@ -28,44 +28,57 @@ function luaToJson(lua: string): any {
     }
 }
 
-function jsonToLua(jsonObj: { [key: string]: any }): string {
-    return `return {\n${Object.entries(jsonObj)
-        .map(([key, value]) => `["${key}"] = ${Array.isArray(value) ? `[${value.map(item => `"${item}"`).join(', ')}]` : typeof value === 'string' ? `"${value}"` : value}`)
-        .join(',\n')}\n}`;
+function serializeToLua(value: any, indent = 0): string {
+    const indentStr = '  '.repeat(indent);
+
+    if (typeof value === 'string') {
+        return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+    }
+
+    if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+    }
+
+    if (Array.isArray(value)) {
+        return `{ ${value.map(v => serializeToLua(v, indent)).join(', ')} }`;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+        const entries = Object.entries(value).map(
+            ([k, v]) =>
+                `${indentStr}  ["${k}"] = ${serializeToLua(v, indent + 1)}`
+        );
+        return `{\n${entries.join(',\n')}\n${indentStr}}`;
+    }
+
+    return 'nil';
 }
 
-async function convertLuaFileToJson(luaContent: string): Promise<JSON> {
+function jsonToLua(jsonObj: { [key: string]: any }): string {
+    return `return ${serializeToLua(jsonObj)}`;
+}
+
+async function convertLuaFileToJson(luaContent: string): Promise<any> {
     try {
         if (!luaContent) throw new Error('Lua file is empty or could not be read.');
         const jsonObj = luaToJson(luaContent);
-
-        if (Object.keys(jsonObj).length === 0) {
-            throw new Error('Converted Lua object is empty.');
-        }
-
-        console.log(`Success!`);
         return jsonObj;
     } catch (err) {
         console.error('Error converting Lua file to JSON:', err);
-        return  JSON.parse({"failed": true, "code": err})
+        return { failed: true, error: String(err) };
     }
 }
 
 async function convertJsonFileToLua(jsonFilePath: string, luaFilePath: string): Promise<void> {
     try {
         const jsonContent = await fs.readFile(jsonFilePath, 'utf-8');
-
-        if (!jsonContent) throw new Error('JSON file is empty or could not be read.');
-
         const jsonObj = JSON.parse(jsonContent);
         const luaContent = jsonToLua(jsonObj);
-        await fs.writeFile(luaFilePath, luaContent);
-
-        console.log(`Successfully converted JSON to Lua and saved to ${luaFilePath}`);
+        await fs.writeFile(luaFilePath, luaContent, 'utf-8');
+        console.log(`Wrote ${luaFilePath}`);
     } catch (err) {
-        console.error('Error converting JSON file to Lua:', err);
+        console.error(`[x] Failed to convert ${jsonFilePath}:`, err);
     }
 }
 
-export { luaToJson, jsonToLua, convertLuaFileToJson, convertJsonFileToLua };
-
+export { luaToJson, jsonToLua, convertLuaFileToJson, convertJsonFileToLua }
