@@ -24,8 +24,7 @@ return {
   ["Configuration.Admins.EditRank.RankID"] = "Cargo 0 · Criado por <user>",
   ["Configuration.Admins.NewAdmin.BottomData.RankTitle"] = "Criando um cargo",
   ["Configuration.Admins.NewAdmin.BottomData.StepLabel"] = "Passo %s/%s",
-  ["Configuration.Admins.NewAdmin.Page1.Body"] = "O Criador de Cargos permite você criar novos cargos de administração e especificar os seus aplicativos e usuários permitidos. Os novos usuários que adicionar terão acesso à administração instantaneamente, mesmo que já estejam no jogo. 
-Você só poderá adicionar aplicativos aos quais tenha acesso pessoalmente. Só as pessoas com a permissão poderão ativar a opção de permitir todos os aplicativos.",
+  ["Configuration.Admins.NewAdmin.Page1.Body"] = "O Criador de Cargos permite você criar novos cargos de administração e especificar os seus aplicativos e usuários permitidos. Os novos usuários que adicionar terão acesso à administração instantaneamente, mesmo que já estejam no jogo. \nVocê só poderá adicionar aplicativos aos quais tenha acesso pessoalmente. Só as pessoas com a permissão poderão ativar a opção de permitir todos os aplicativos.",
   ["Configuration.Admins.NewAdmin.Page1.Header"] = "Bem-vindo ao Criador de Cargos",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Continuar",
   ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Escolha o nome do cargo. Será filtrado, deve ser único e ter menos de 50 caracteres.",
@@ -258,11 +257,8 @@ Você só poderá adicionar aplicativos aos quais tenha acesso pessoalmente. Só
   ["reltime.Format"] = "%s %s",
   ["generic.Success"] = "Sucesso!",
   ["apps.library.Detail"] = "%s aplicativos, %s servidores",
-  ["admin.rankcreator.corrupt.Body"] = "O Administer detectou um erro na configuração do cargo. Isso provavelmente se deve a um processo de configuração incompleto e impedirá o carregamento do Administer fora do Studio. Por favor, reinicialize o Administer.
-%s",
-  ["admin.rankcreator.errors.filter.Body"] = "Falha ao conectar ao serviço de filtragem do Roblox. Isso provavelmente não é um problema do seu jogo, tente novamente mais tarde.
-
-%s",
+  ["admin.rankcreator.corrupt.Body"] = "O Administer detectou um erro na configuração do cargo. Isso provavelmente se deve a um processo de configuração incompleto e impedirá o carregamento do Administer fora do Studio. Por favor, reinicialize o Administer.\n%s",
+  ["admin.rankcreator.errors.filter.Body"] = "Falha ao conectar ao serviço de filtragem do Roblox. Isso provavelmente não é um problema do seu jogo, tente novamente mais tarde.\n\n%s",
   ["admin.rankcreator.errors.members.NoInput"] = "Um ou mais dos seus membros não possuem um ID de usuário atribuído. Todos os usuários devem ter um ID.",
   ["updater.failedcomm"] = "Incapaz de comunicar com o AOS.",
   ["reltime.Minute"] = "há um minuto",
@@ -300,8 +296,7 @@ Você só poderá adicionar aplicativos aos quais tenha acesso pessoalmente. Só
   ["apps.load.Fail"] = "Erro ao carregar aplicativos",
   ["apps.load.Ratelimit"] = "Limite de requisições excedido, por favor diminua o ritmo",
   ["apps.score.Detail"] = "Por que isso está aqui?",
-  ["apps.score.Body"] = "Você está vendo este destaque porque o servidor, %s ({}), reportou sua pontuação ponderada como %s, que é a mais alta entre seus servidores instalados.
-Se isso estiver sendo feito de forma maliciosa, remova o servidor.",
+  ["apps.score.Body"] = "Você está vendo este destaque porque o servidor, %s ({}), reportou sua pontuação ponderada como %s, que é a mais alta entre seus servidores instalados.\nSe isso estiver sendo feito de forma maliciosa, remova o servidor.",
   ["apps.aos.Out"] = "Este servidor parece estar passando por uma interrupção. Tente baixar outro enquanto isso.",
   ["apps.aos.Uninstall"] = "Desinstalar servidores de aplicativos pode causar efeitos colaterais indesejados. Por favor, certifique-se de que você tenha pelo menos um servidor instalado.",
   ["apps.aos.install.Deatail"] = "Vincular servidor personalizado",

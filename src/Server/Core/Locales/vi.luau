@@ -24,8 +24,7 @@ return {
   ["Configuration.Admins.EditRank.RankID"] = "Cấp 0 · Được tạo bởi <user>",
   ["Configuration.Admins.NewAdmin.BottomData.RankTitle"] = "Tạo thêm cấp bậc",
   ["Configuration.Admins.NewAdmin.BottomData.StepLabel"] = "Bước %s/%s",
-  ["Configuration.Admins.NewAdmin.Page1.Body"] = "'Trình tạo cấp bậc' cho phép bạn tạo thêm các bậc quản trị mới và giao quyền cụ thể cho họ một số ứng dụng và người dùng. Người dùng mới được bạn thêm vào sẽ được cấp quyền truy cập vào Administer ngay tức thì kể cả khi người đó đang ở trong trò chơi.
-Bạn sẽ chỉ có thể thêm các ứng dụng mà cá nhân bạn đã được cấp quyền truy cập. Chỉ những người có quyền mới có thể cấp phép cho tất cả các ứng dụng.",
+  ["Configuration.Admins.NewAdmin.Page1.Body"] = "'Trình tạo cấp bậc' cho phép bạn tạo thêm các bậc quản trị mới và giao quyền cụ thể cho họ một số ứng dụng và người dùng. Người dùng mới được bạn thêm vào sẽ được cấp quyền truy cập vào Administer ngay tức thì kể cả khi người đó đang ở trong trò chơi.\nBạn sẽ chỉ có thể thêm các ứng dụng mà cá nhân bạn đã được cấp quyền truy cập. Chỉ những người có quyền mới có thể cấp phép cho tất cả các ứng dụng.",
   ["Configuration.Admins.NewAdmin.Page1.Header"] = "Chào mừng đến với trình Tạo Cấp Bậc",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Tiếp Tục",
   ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Hãy chọn tên cho thứ hạng. Tên các cấp bậc sẽ bị lọc. Chúng không được trùng nhau, và chứa dưới 50 ký tự.",
@@ -261,8 +260,7 @@ Bạn sẽ chỉ có thể thêm các ứng dụng mà cá nhân bạn đã đư
   ["reltime.Format"] = "%s %s",
   ["admin.ranks.superadmin.Body"] = "Do người dùng này là Siêu Quản trị viên, nên họ sẽ có quyền truy cấp đến mọi Ứng Dụng (đã được hoặc sẽ được tải xuống), và có thể quản lý, kiểm định khả năng vận hành của hệ thống.",
   ["admin.rankcreator.corrupt.Detail"] = "Tùy Chỉnh Của Cấp Bậc Không Hợp Lệ",
-  ["admin.rankcreator.corrupt.Body"] = "Administer đã phát hiện lỗi trong cấu hình cấp bậc. Lỗi này rất có thể là do thiết lập chưa hoàn chỉnh và sẽ khiến Administer không tải được từ Studio. Vui lòng khởi tạo lại Administer.
-%s",
+  ["admin.rankcreator.corrupt.Body"] = "Administer đã phát hiện lỗi trong cấu hình cấp bậc. Lỗi này rất có thể là do thiết lập chưa hoàn chỉnh và sẽ khiến Administer không tải được từ Studio. Vui lòng khởi tạo lại Administer.\n%s",
   ["admin.rankcreator.errors.members.NoInput"] = "Phát hiện thành viên chưa có mã định danh (UserID). Mọi người dùng phải có mã ID.",
   ["mobile.body"] = "Chế độ điện thoại đã khởi động. Vuốt từ bên phải màn hình vào để mở trình Administer.",
   ["mobile.detail"] = "Chế độ điện thoại",
@@ -277,9 +275,7 @@ Bạn sẽ chỉ có thể thêm các ứng dụng mà cá nhân bạn đã đư
   ["admin.ranks.members.one"] = "là một thành viên",
   ["admin.ranks.members.two"] = "là thành viên",
   ["admin.rankcreator.failed.Detail"] = "Ối! Có trục trặc xảy ra",
-  ["admin.rankcreator.errors.filter.Body"] = "Không thể kết nối với bộ lọc tin nhắn của Roblox. Có thể lỗi này không phải vì do trò chơi của bạn, xin thử lại sau.
-
-%s",
+  ["admin.rankcreator.errors.filter.Body"] = "Không thể kết nối với bộ lọc tin nhắn của Roblox. Có thể lỗi này không phải vì do trò chơi của bạn, xin thử lại sau.\n\n%s",
   ["admin.rankcreator.errors.name.Len"] = "Tên của cấp bậc phải chứa từ hơn 1 đến dưới 50 ký tự",
   ["admin.rankcreator.errors.name.Unique"] = "Tên các cấp bậc không được trùng lặp nau, tên %s đã được đặt",
   ["admin.rankcreator.errors.members.NotEnough"] = "Các cấp bậc phải chứa ít nhất một thành viên.",
@@ -302,8 +298,7 @@ Bạn sẽ chỉ có thể thêm các ứng dụng mà cá nhân bạn đã đư
   ["apps.search.FoundMatch"] = "Chúng tôi nghĩ ý của bạn là %s (hoặc %s%), các kết quả tìm kiếm có thể được bao gồm.",
   ["apps.load.Fail"] = "Lỗi tải ứng dụng",
   ["apps.load.Ratelimit"] = "Quá tải! Xin gửi yêu cầu chậm lại",
-  ["apps.score.Body"] = "Bạn thấy mục này vì máy chủ %s ({}) của nó đã báo cáo trọng số là %s, cao nhất trong số các máy chủ bạn đã cài đặt.
-Nếu việc này được thực hiện với mục đích xấu, hãy xóa máy chủ.",
+  ["apps.score.Body"] = "Bạn thấy mục này vì máy chủ %s ({}) của nó đã báo cáo trọng số là %s, cao nhất trong số các máy chủ bạn đã cài đặt.\nNếu việc này được thực hiện với mục đích xấu, hãy xóa máy chủ.",
   ["apps.aos.Out"] = "Máy chủ có vẻ đang không khả dụng. Trong lúc đợi hãy thử cài đặt cái khác.",
   ["apps.aos.Uninstall"] = "Việc gỡ cài đặt các máy chủ ứng dụng có thể tạo ra tác dụng phụ. Xin hãy để lại ít nhất một máy chủ đã được cài đặt.",
   ["apps.aos.install.Deatail"] = "Kết nối với máy chủ tùy chỉnh",

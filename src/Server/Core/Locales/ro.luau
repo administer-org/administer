@@ -90,8 +90,7 @@ return {
   ["admin.InOverride"] = "Acest utilizator se află în modulul de override, ca atare, nu avem informații.",
   ["Apps.MainFrame.Config.Desc"] = "Configurează Administer, administratorii și instalează aplicații noi.",
   ["Configuration.Admins.Container.Ranks.Header.TLabel"] = "Ranguri",
-  ["Configuration.Admins.NewAdmin.Page1.Body"] = "Creatorul de rang vă permite să creați noi ranguri de administrare și să specificați aplicațiile și utilizatorii permise. Utilizatorii noi pe care îi adăugați li se va oferi acces la administrare instantaneu, chiar dacă deja în joc.
-Veți putea adăuga doar aplicații la care aveți acces personal. Doar persoanele cu permisiunea vor putea permite opțiunea de a permite toate aplicațiile.",
+  ["Configuration.Admins.NewAdmin.Page1.Body"] = "Creatorul de rang vă permite să creați noi ranguri de administrare și să specificați aplicațiile și utilizatorii permise. Utilizatorii noi pe care îi adăugați li se va oferi acces la administrare instantaneu, chiar dacă deja în joc.\nVeți putea adăuga doar aplicații la care aveți acces personal. Doar persoanele cu permisiunea vor putea permite opțiunea de a permite toate aplicațiile.",
   ["Configuration.Apps.Content.Template.Local.HeaderLabel"] = "Aplicațiile locale nu pot fi modificate.",
   ["Configuration.Apps.Header.Desc"] = "Consultați aplicațiile pe care le -ați instalat aici și activați -le/dezactivați. Dacă au setări, le puteți edita și aici.",
   ["Configuration.InfoPage.Donate.Message"] = "Administer este într -o misiune de a dezvolta cele mai bune resurse și completări la aceasta gratuit. Mergem de mult timp și munca noastră continuă să fie gratuită. Vă rugăm să donați dacă Administer adaugă valoare jocului dvs. sau echipei de personal! <b>Jocul tău primește 10% înapoi! Donațiile sunt împărțite între personalul de Administer. <b>",
@@ -114,14 +113,11 @@ Veți putea adăuga doar aplicații la care aveți acces personal. Doar persoane
   ["apps.Disable"] = "Îl puteți reactiva din meniul „Aplicații dezactivate”. Este posibil ca aplicația să poată continua să funcționeze pentru această sesiune, dar nu va fi pornită în niciun servere noi.",
   ["apps.installed.Body"] = "Aplicația s-a încărcat, dar este posibil să fie nevoie să vă reintrați pentru ca frontend-ul să se încarce.",
   ["setting.Interface.DisableUnofficialAppWarning.Description"] = "Ascunde avertismentul care spune dacă un plugin este extern. Util pentru oameni noi, în caz contrar, doar aglomerarea UI.",
-  ["apps.score.Body"] = "Vedeți acest lucru prezentat pentru că este server, %s ({}), a raportat că scorul ponderat este %s, care este cel mai mare dintre serverele instalate.
-Dacă acest lucru se face rău, eliminați serverul.",
+  ["apps.score.Body"] = "Vedeți acest lucru prezentat pentru că este server, %s ({}), a raportat că scorul ponderat este %s, care este cel mai mare dintre serverele instalate.\nDacă acest lucru se face rău, eliminați serverul.",
   ["error.LostDep.ClientFacingError"] = "Startup anulat, vă rugăm să vă asigurați că Adminster este instalată corect. (Dependență eșuată: %s)",
-  ["donations.DonationProcessed"] = "Donația dvs. vă ajută să dați înapoi comunității open -source și vă va asigura: \\n - O mulțime de actualizări în viitor \\n - Finanțare pentru dezvoltare pentru mai multe aplicații \\n - App Server care găzduiește
-Donația dvs. înseamnă mult pentru noi! Asigurați -vă că ne arată acest lucru pentru a revendica avantajele donatorului.",
+  ["donations.DonationProcessed"] = "Donația dvs. vă ajută să dați înapoi comunității open -source și vă va asigura: \\n - O mulțime de actualizări în viitor \\n - Finanțare pentru dezvoltare pentru mai multe aplicații \\n - App Server care găzduiește\nDonația dvs. înseamnă mult pentru noi! Asigurați -vă că ne arată acest lucru pentru a revendica avantajele donatorului.",
   ["admin.rankcreator.corrupt.Detail"] = "Configurare de rang necorespunzătoare detectată",
-  ["admin.rankcreator.corrupt.Body"] = "Administer a detectat o eroare în configurația rangului. Acest lucru se datorează cel mai probabil unui proces de configurare incomplet și va duce la Administer să nu se încarce din studio. Vă rugăm să renițializați Administer.
-%s",
+  ["admin.rankcreator.corrupt.Body"] = "Administer a detectat o eroare în configurația rangului. Acest lucru se datorează cel mai probabil unui proces de configurare incomplet și va duce la Administer să nu se încarce din studio. Vă rugăm să renițializați Administer.\n%s",
   ["admin.ranks.superadmin.Detail"] = "Super Administrator",
   ["admin.ranks.superadmin.Body"] = "Deoarece acest utilizator este un super administrator, va putea accesa orice aplicație (instalată în prezent și instalată în viitor), gestionează + funcționalitatea sistemului de audit și vor utiliza funcționalități restrânse.",
   ["admin.ranks.Others"] = "%s alții...",
@@ -131,9 +127,7 @@ Donația dvs. înseamnă mult pentru noi! Asigurați -vă că ne arată acest lu
   ["admin.ranks.protected.Detail"] = "Permisiuni insuficiente",
   ["admin.ranks.protected.Body"] = "Este posibil ca rangurile protejate să nu fie editate.",
   ["admin.rankcreator.failed.Detail"] = "Ups! Asta nu este menit să se întâmple",
-  ["admin.rankcreator.errors.filter.Body"] = "Nu a reușit să vă conectați la serviciul de filtrare al Roblox. Probabil că aceasta nu este o problemă cu jocul tău, încearcă din nou mai târziu.
-
-%s",
+  ["admin.rankcreator.errors.filter.Body"] = "Nu a reușit să vă conectați la serviciul de filtrare al Roblox. Probabil că aceasta nu este o problemă cu jocul tău, încearcă din nou mai târziu.\n\n%s",
   ["admin.rankcreator.errors.members.NotEnough"] = "Rangurile trebuie să aibă cel puțin un membru în ele.",
   ["admin.rankcreator.errors.name.Len"] = "Numele de rang trebuie să fie mai mult de un caracter și mai puțin de 50",
   ["admin.rankcreator.errors.name.Unique"] = "Numele de rang trebuie să fie unic, %s există deja",

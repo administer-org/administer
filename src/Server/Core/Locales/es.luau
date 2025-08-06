@@ -24,8 +24,7 @@ return {
   ["Configuration.Admins.EditRank.RankID"] = "Rango 0 · Creado por <user>",
   ["Configuration.Admins.NewAdmin.BottomData.RankTitle"] = "Creando uno rango",
   ["Configuration.Admins.NewAdmin.BottomData.StepLabel"] = "Paso %s/%s",
-  ["Configuration.Admins.NewAdmin.Page1.Body"] = "El Creador de Rangos te permite a crear nuevos rangos de administrador y especificar sus aplicaciones y usuarios permitidos. Los nuevos usuarios que añadas tendrán acceso a Administer al instante aunque ya esten dentro del juego.
-Sólo podrás añadir apps a las que tengas acceso personalmente. Sólo las personas con el permiso podrán habilitar la opción de permitir todas las aplicaciones.",
+  ["Configuration.Admins.NewAdmin.Page1.Body"] = "El Creador de Rangos te permite a crear nuevos rangos de administrador y especificar sus aplicaciones y usuarios permitidos. Los nuevos usuarios que añadas tendrán acceso a Administer al instante aunque ya esten dentro del juego.\nSólo podrás añadir apps a las que tengas acceso personalmente. Sólo las personas con el permiso podrán habilitar la opción de permitir todas las aplicaciones.",
   ["Configuration.Admins.NewAdmin.Page1.Header"] = "Bienvenidos al Creador de Rangos",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Continuar",
   ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Elige el nombre del rango. Se filtrará, debe ser único y tener menos de 50 caracteres.",
@@ -256,11 +255,8 @@ Sólo podrás añadir apps a las que tengas acceso personalmente. Sólo las pers
   ["reltime.Week"] = "hace una semana",
   ["generic.Success"] = "¡Éxito!",
   ["admin.rankcreator.corrupt.Detail"] = "Se ha detectado una configuración incorrecta del rango",
-  ["admin.rankcreator.errors.filter.Body"] = "No se ha podido conectar con el servicio de filtrado de Roblox. Esto probablemente no es un problema con tu juego, inténtalo más tarde.
-
-%s",
-  ["admin.rankcreator.corrupt.Body"] = "Administer ha detectado un error en la configuración del rango. Esto se debe probablemente a un proceso de configuración incompleto y hará que Administer no se cargue desde Studio. Por favor, reinicie Administer.
-%s",
+  ["admin.rankcreator.errors.filter.Body"] = "No se ha podido conectar con el servicio de filtrado de Roblox. Esto probablemente no es un problema con tu juego, inténtalo más tarde.\n\n%s",
+  ["admin.rankcreator.corrupt.Body"] = "Administer ha detectado un error en la configuración del rango. Esto se debe probablemente a un proceso de configuración incompleto y hará que Administer no se cargue desde Studio. Por favor, reinicie Administer.\n%s",
   ["admin.ranks.superadmin.Detail"] = "Administrador Superior",
   ["admin.ranks.superadmin.Body"] = "Como este usuario es un Administrador Superior, podrá acceder a cualquier aplicación (instalada actualmente y en el futuro), gestionar y auditar las funciones del sistema y utilizar funciones restringidas.",
   ["admin.ranks.Others"] = "%s otros...",
@@ -296,8 +292,7 @@ Sólo podrás añadir apps a las que tengas acceso personalmente. Sólo las pers
   ["apps.search.FoundMatch"] = "Creemos que te referías a %s (%s% de confianza), es posible que se incluyan resultados para ello.",
   ["apps.load.Fail"] = "Error al cargar aplicaciones",
   ["apps.score.Detail"] = "¿Por qué está esto aquí?",
-  ["apps.score.Body"] = "Estás viendo esto porque el servidor %s ({}), ha informado de que su puntuación ponderada es %s, que es la más alta entre los servidores que tienes instalados.
-Si esto se está haciendo de forma maliciosa, elimina el servidor.",
+  ["apps.score.Body"] = "Estás viendo esto porque el servidor %s ({}), ha informado de que su puntuación ponderada es %s, que es la más alta entre los servidores que tienes instalados.\nSi esto se está haciendo de forma maliciosa, elimina el servidor.",
   ["apps.aos.Out"] = "Este servidor parece estar experimentando una interrupción. Intenta instalar otro mientras tanto.",
   ["apps.aos.Uninstall"] = "La desinstalación de servidores de aplicaciones puede tener efectos secundarios no deseados. Asegúrese de tener al menos un servidor instalado.",
   ["apps.aos.install.Deatail"] = "Enlazar servidor personalizado",

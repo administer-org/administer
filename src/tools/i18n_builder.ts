@@ -32,7 +32,12 @@ function serializeToLua(value: any, indent = 0): string {
     const indentStr = '  '.repeat(indent);
 
     if (typeof value === 'string') {
-        return `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+        const escaped = value
+            .replace(/\\/g, '\\\\')
+            .replace(/"/g, '\\"')
+            .replace(/\r\n|\r|\n/g, '\\n'); 
+
+        return `"${escaped}"`;
     }
 
     if (typeof value === 'number' || typeof value === 'boolean') {

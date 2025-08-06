@@ -19,8 +19,7 @@ return {
   ["Configuration.Admins.NewAdmin.BottomData.RankTitle"] = "Creating a ranking",
   ["Configuration.Admins.NewAdmin.Page1.Header"] = "Welcome to the Ranking Creator",
   ["Configuration.Admins.NewAdmin.BottomData.StepLabel"] = "Step %s/%s",
-  ["Configuration.Admins.NewAdmin.Page1.Body"] = "The Ranking Creator allows you to create new administrative rankings and specify their permitted apps and users. New users you add will be given access to Administer instantly even if already inside the game.
-You'll only be able to add applications which you personally have access to. Only people with the permission will be able to enable the option to permit all apps.",
+  ["Configuration.Admins.NewAdmin.Page1.Body"] = "The Ranking Creator allows you to create new administrative rankings and specify their permitted apps and users. New users you add will be given access to Administer instantly even if already inside the game.\nYou'll only be able to add applications which you personally have access to. Only people with the permission will be able to enable the option to permit all apps.",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Continue",
   ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Choose the ranking's name. It is gonna be filtered, it must be unique and has to be under 50 characters.",
   ["Configuration.Admins.NewAdmin.Page2.LogoWordmark"] = "Name",
@@ -139,8 +138,7 @@ You'll only be able to add applications which you personally have access to. Onl
   ["updater.Failed.Body"] = "Update thread is frozen, please ensure AOS is responsive. Some services may be unavailable",
   ["updater.Failed.Header"] = "Version check failed",
   ["donations.Done"] = "Thank you for your support, %s! Your donation helps ensure future Administer updates for years to come ^^",
-  ["donations.DonationProcessed"] = "Your donation helps give back to the open-source community and will ensure: \\n - lots of updates in the future \\n - development funding for more applications \\n - application server hosting.
-Your donation means a lot to us! Make sure to show us this to claim your donor perks.",
+  ["donations.DonationProcessed"] = "Your donation helps give back to the open-source community and will ensure: \\n - lots of updates in the future \\n - development funding for more applications \\n - application server hosting.\nYour donation means a lot to us! Make sure to show us this to claim your donor perks.",
   ["donations.BadProxy"] = "The proxy may be offline or experiencing issues.",
   ["updater.outofdate.Body"] = "%s is out of date. Please update your module.",
   ["updater.outofdate.Header"] = "Version check complete",
@@ -224,11 +222,8 @@ Your donation means a lot to us! Make sure to show us this to claim your donor p
   ["apps.library.Detail"] = "%s applications, %s servers",
   ["mobile.body"] = "Mobile mode activated. Swipe inwards from the right edge of your screen to open Administer.",
   ["admin.rankcreator.errors.members.NoInput"] = "One or more of your members do not have a UserID assigned. All users must have an ID.",
-  ["admin.rankcreator.corrupt.Body"] = "Administer has detected an error in the ranking configuration. This is most likely due to an incomplete setup process and will result in Administer not loading out of Studio. Please re-initalize Administer.
-%s",
-  ["admin.rankcreator.errors.filter.Body"] = "Failed to connect to Roblox's filtering services. This likely isn't an issue with your game, try again later.
-
-%s",
+  ["admin.rankcreator.corrupt.Body"] = "Administer has detected an error in the ranking configuration. This is most likely due to an incomplete setup process and will result in Administer not loading out of Studio. Please re-initalize Administer.\n%s",
+  ["admin.rankcreator.errors.filter.Body"] = "Failed to connect to Roblox's filtering services. This likely isn't an issue with your game, try again later.\n\n%s",
   ["apps.sensitivity.Context"] = "Uses %s Administer modules %s",
   ["admin.rankcreator.corrupt.Detail"] = "Improper Ranking Configuration Detected",
   ["admin.ranks.superadmin.Detail"] = "Super Administrator",
@@ -260,8 +255,7 @@ Your donation means a lot to us! Make sure to show us this to claim your donor p
   ["apps.load.Fail"] = "Error loading applications",
   ["apps.load.Ratelimit"] = "Rate limit exceeded, please slow down",
   ["apps.score.Detail"] = "Why is this here?",
-  ["apps.score.Body"] = "You're seeing this featured because it's server, %s ({}), has reported its weighted score to be %s, which is the highest among your installed servers.
-If this is being done maliciously, remove the server.",
+  ["apps.score.Body"] = "You're seeing this featured because it's server, %s ({}), has reported its weighted score to be %s, which is the highest among your installed servers.\nIf this is being done maliciously, remove the server.",
   ["apps.aos.Out"] = "This server seems to be experiencing an outage. Try installing another in the meantime.",
   ["apps.aos.Uninstall"] = "Uninstalling application servers may have unintended side effects. Please make sure you have at least one server installed.",
   ["apps.aos.install.Body"] = "Please enter your custom AOS server here with https:// and no trailing slash. It must be online and linked to your Mongo instance in order to be saved as primary.",

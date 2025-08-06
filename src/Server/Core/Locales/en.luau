@@ -24,8 +24,7 @@ return {
   ["Configuration.Admins.EditRank.People.Header.TLabel"] = "Members",
   ["Configuration.Admins.NewAdmin.BottomData.RankTitle"] = "Creating a rank",
   ["Configuration.Admins.NewAdmin.BottomData.StepLabel"] = "Step %s/%s",
-  ["Configuration.Admins.NewAdmin.Page1.Body"] = "The Rank Creator allows you to create new admin ranks and specify their permitted apps and users. New users you add will be given access to Administer instantly even if already in-game.
-You'll only be able to add apps which you personally have access to. Only people with the permission will be able to enabled the option to permit all apps.",
+  ["Configuration.Admins.NewAdmin.Page1.Body"] = "The Rank Creator allows you to create new admin ranks and specify their permitted apps and users. New users you add will be given access to Administer instantly even if already in-game.\nYou'll only be able to add apps which you personally have access to. Only people with the permission will be able to enabled the option to permit all apps.",
   ["Configuration.Admins.NewAdmin.Page1.Header"] = "Welcome to the Rank Creator",
   ["Configuration.Admins.NewAdmin.Start"] = "+ New Rank",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Continue",
@@ -52,12 +51,7 @@ You'll only be able to add apps which you personally have access to. Only people
   ["Configuration.InfoPage.Donate.Message"] = "Administer is on a mission to develop the best resource and additions to it for free. We've been going for a long time and our work continues to be free. Please donate if Administer adds value to your game or staff team! <b>Your game gets 10% back! Donations are divided among Administer staff.</b>",
   ["Configuration.InfoPage.Donate.title"] = "Donations",
   ["Configuration.InfoPage.VersionDetails.Update"] = "Check",
-  ["Configuration.InfoPage.License"] = "Administer is created by Administer Software, a team of developers modernizing the Roblox administration experience. 
-All of our public works are proudly free software under the GNU AGPL 3.0 license. 
-Use, redistribution, and modification of Administer, first-party marketplace apps, and web services are governed under these terms.
-To obtain a copy of these terms, please visit the GitHub repository. To see the privacy policy for AOS, please visit the link in the DevForum post.
-
-Administer Software %s",
+  ["Configuration.InfoPage.License"] = "Administer is created by Administer Software, a team of developers modernizing the Roblox administration experience. \nAll of our public works are proudly free software under the GNU AGPL 3.0 license. \nUse, redistribution, and modification of Administer, first-party marketplace apps, and web services are governed under these terms.\nTo obtain a copy of these terms, please visit the GitHub repository. To see the privacy policy for AOS, please visit the link in the DevForum post.\n\nAdminister Software %s",
   ["Configuration.InfoPage.License.About"] = "Open Source Terms",
   ["Configuration.Marketplace.Header.Head"] = "Marketplace",
   ["Configuration.Marketplace.Header.Plugins"] = "Apps",
@@ -73,9 +67,7 @@ Administer Software %s",
   ["Configuration.Marketplace.Searchbar.Searchbar.Popup.Label"] = "Type a command...",
   ["Configuration.MenuBar.New.AInfoPage.HeaderLabel"] = "Information",
   ["Configuration.Settings.CategoriesPage.BoolTemplate.Action.Label"] = "DISABLE",
-  ["Configuration.Apps.Description"] = "%s
-
-%s by @%s from %s",
+  ["Configuration.Apps.Description"] = "%s\n\n%s by @%s from %s",
   ["Header.AppDrawer.HeaderLabel"] = "APPS",
   ["Header.Mark.HeaderLabel"] = "<b>%s</b> · %s",
   ["Home.Welcome"] = "<stroke color: \"rgb(0,0,0)\" transparency: \"0.85\" thickness: \".4\">Administer is loading...</stroke>",
@@ -110,8 +102,7 @@ Administer Software %s",
   ["admin.rankcreator.error.Generic"] = "We couldn't process that request right now, try again later.\\n\\n%s",
   ["admin.rank.created"] = "Created this from the rank editor.",
   ["admin.rankcreator.corrupt.Detail"] = "Improper Rank Configuration Detected",
-  ["admin.rankcreator.corrupt.Body"] = "Administer has detected an error in the rank configuration. This is most likely due to an incomplete setup process and will result in Administer not loading out of Studio. Please re-initialize Administer.
-%s",
+  ["admin.rankcreator.corrupt.Body"] = "Administer has detected an error in the rank configuration. This is most likely due to an incomplete setup process and will result in Administer not loading out of Studio. Please re-initialize Administer.\n%s",
   ["admin.ranks.superadmin.Detail"] = "Super Administrator",
   ["admin.ranks.superadmin.Body"] = "Because this user is a Super Administrator, they'll be able to access any App (currently installed and installed in the future), manage + audit system functionality, and use restricted functionalities.",
   ["admin.ranks.Others"] = "%s others...",
@@ -121,9 +112,7 @@ Administer Software %s",
   ["admin.ranks.protected.Detail"] = "Insufficient permissions",
   ["admin.ranks.protected.Body"] = "Protected ranks may not be edited.",
   ["admin.rankcreator.failed.Detail"] = "Oops! That's not meant to happen",
-  ["admin.rankcreator.errors.filter.Body"] = "Failed to connect to Roblox's filtering service. This likely isn't an issue with your game, try again later.
-
-%s",
+  ["admin.rankcreator.errors.filter.Body"] = "Failed to connect to Roblox's filtering service. This likely isn't an issue with your game, try again later.\n\n%s",
   ["admin.rankcreator.errors.name.Len"] = "Rank name must be more than one character and less than 50",
   ["admin.rankcreator.errors.name.Unique"] = "Rank names must be unique, %s already exists",
   ["admin.rankcreator.errors.members.NotEnough"] = "Ranks must have at least one member in them.",
@@ -191,8 +180,7 @@ Administer Software %s",
   ["apps.load.Fail"] = "Error loading apps",
   ["apps.load.Ratelimit"] = "Rate limit exceeded, please slow down",
   ["apps.score.Detail"] = "Why is this here?",
-  ["apps.score.Body"] = "You're seeing this featured because it's server, %s ({}), has reported its weighted score to be %s, which is the highest among your installed servers.
-If this is being done maliciously, remove the server.",
+  ["apps.score.Body"] = "You're seeing this featured because it's server, %s ({}), has reported its weighted score to be %s, which is the highest among your installed servers.\nIf this is being done maliciously, remove the server.",
   ["apps.aos.Out"] = "This server seems to be experiencing an outage. Try installing another in the meantime.",
   ["apps.aos.Uninstall"] = "Uninstalling app servers may have unintended side effects. Please make sure you have at least one server installed.",
   ["apps.aos.install.Detail"] = "Link custom server",
