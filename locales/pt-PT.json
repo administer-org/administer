@@ -268,7 +268,7 @@
     "admin.ranks.members.more": "%s outros são membros",
     "admin.ranks.protected.Detail": "Permissões insuficientes",
     "admin.ranks.protected.Body": "Os cargos protegidos não podem ser editados.",
-    "admin.rankcreator.errors.name.Len": "O nome do cargo deve ter mais de um caractere e menos de 50",
+    "admin.rankcreator.errors.name.Len": "O nome do cargo deve ter mais do que um caractere e menos de 50",
     "admin.rankcreator.errors.members.NoInput": "Um ou mais dos teus membros não têm um ID de utilizador atribuído. Todos os utilizadores devem ter um ID.",
     "apps.library.Detail": "%s aplicações, %s servidores",
     "updater.failedcomm": "Incapaz de comunicar com o AOS.",
