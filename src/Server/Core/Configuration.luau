@@ -27,9 +27,9 @@ local Settings: SettingsType = {
 		Minor = 0,
 		Tweak = 0,
 
-		Extra = "a22da06",
-		String = "2.0.0",
-		GitRevision = "a22da06",
+		Extra = "dev",
+		String = "2.1.0-dev",
+		GitRevision = "03ca53c",
 
 		NoExtraData = "2.0.0",
 		APIRevision = "2.0.0",
@@ -483,7 +483,7 @@ local Settings: SettingsType = {
 				["Value"] = {
 					Items = {
 						"optimistic",
-						"safe",
+						"safe"
 					},
 
 					["Value"] = "optimistic",
