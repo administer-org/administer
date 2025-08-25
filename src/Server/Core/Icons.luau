@@ -16,7 +16,7 @@ return {
 		["administer-wireframe"] = "83950641785996",
 		["logo-twitter-black"] = "12167431902"
 	},
-	
+
 	["administer"] = "116599744136879", --// I know logos exists I just use this too much 
 	["alarm"] = "18925390063",
 	["angle-left"] = "17685578876",
@@ -95,7 +95,7 @@ return {
 	["pause"] = "16261077642",
 	["pen"] = "16105444946",
 	["pencil"] = "97515617542810",
-	["pencil-paintbrish"] = "14627761757",
+	["pencil-paintbrush"] = "14627761757",
 	["photo-gallery"] = "11724564850",
 	["pin-filled"] = "15406916916",
 	["play"] = "15477628389",
@@ -141,5 +141,6 @@ return {
 	["users"] = "15317927036",
 	["volume"] = "13703642008",
 	["warning-filled"] = "17402667535",
+	["window-minimize"] = "87367479270514",
 	["x"] = "15105963940"
 }

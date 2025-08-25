@@ -147,7 +147,7 @@ NewRemote("GetPasses", false, false, function()
 		local Success, Error = pcall(function()
 			Attempts += 1
 			_Content = Var.Services.HttpService:GetAsync(
-				`https://rblx.notpyx.me/games/v1/games/1778091660/game-passes?sortOrder=Asc&limit=50`,
+				`https://proxy.pyxfluff.dev/games/v1/games/1778091660/game-passes?sortOrder=Asc&limit=50`,
 				true
 			)
 		end)
@@ -228,6 +228,7 @@ end)
 NewRemote("SaveSettings", true, false, function(controllerName, userId)
 	local settingController = SettingsAPI.GetController(controllerName)
 	if not settingController then
+		Utils.Logging.Warn("Controller not found")
 		return false
 	end
 	return settingController.Save(userId)
@@ -240,6 +241,18 @@ NewRemote("ModifySetting", true, false, function(controllerName, name, value)
 	end
 
 	return settingController.Set(name, value)
+end)
+
+NewRemote("GetSettings", true, false, function(controllerName : string, settingsArray : {string})
+	local controller = SettingsAPI.GetController(controllerName)
+	local currentValue = {}
+	
+	for _,settingName in settingsArray do
+		local value = controller.Get(settingName)
+		currentValue[settingName] = value
+	end
+
+	return currentValue
 end)
 
 NewRemote("GetSetting", true, false, function(controllerName : string, settingName : string)

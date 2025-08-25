@@ -1,15 +1,15 @@
 --// Administer
 
---// pyxfluff (2024-2025)
+--// pyxfluff 2024-2025
 
 local Frontend = { Popup = {}, Drawer = {} }
 
 local Libraries = script.Parent.Parent.Libraries
-local Modules = script.Parent
+local Modules   = script.Parent
 
 local Utilities = require(Modules.Utilities)
-local Var = require(Modules.Variables)
-local Types = require(Modules.Types)
+local Var       = require(Modules.Variables)
+local Types     = require(Modules.Types)
 
 function Frontend.Render() end
 
@@ -34,21 +34,30 @@ function Frontend.Log(Text, LogLevel)
 	return { MainFrame = {} }
 end
 
-function Frontend.ToggleFullscreen(ForceClose): ()
-	if Var.IsPanelFullSize or ForceClose == true then
-		Var.IsPanelFullSize = false
+function Frontend.ToggleFullscreen(
+	ForceClose: boolean, 
+	TargetFrame: Frame | CanvasGroup
+): ()
+	if not TargetFrame then
+		Utilities.Logging.Error("A TargetFrame is required to resize")
+	end
 
-		Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(.843,0,.708,0) }):Play()
-		Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0, 20) }):Play()
-		Var.Services.TweenService:Create(Var.MainFrame.Header.Mark, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Position = UDim2.new(.328, 0, 0, 0) }):Play()
+	local Speed = Var.AnimationSpeed * .75
+
+	if TargetFrame:GetAttribute("IsFullScreen") == true or ForceClose == true then
+		TargetFrame:SetAttribute("IsFullScreen", false)
+
+		Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(Speed, Enum.EasingStyle.Quart), { Size = UDim2.fromScale(.843,.708) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(Speed, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0, 20) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame.Header.Mark, TweenInfo.new(Speed, Enum.EasingStyle.Quart), { Position = UDim2.new(.328, 0, 0, 0) }):Play()
 	else
-		Var.IsPanelFullSize = true
+		TargetFrame:SetAttribute("IsFullScreen", true)
 
-		Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(.75, Enum.EasingStyle.Quart), { Size = UDim2.new(1,0,1,0) }):Play()
-		Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(.75, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0,0) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame, TweenInfo.new(Speed, Enum.EasingStyle.Quart), { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(.5, .5) }):Play()
+		Var.Services.TweenService:Create(Var.MainFrame.UICorner, TweenInfo.new(Speed, Enum.EasingStyle.Quart), { CornerRadius = UDim.new(0,0) }):Play()
 		Var.Services.TweenService:Create(
 			Var.MainFrame.Header.Mark, 
-			TweenInfo.new(.75, Enum.EasingStyle.Quart), 
+			TweenInfo.new(Speed, Enum.EasingStyle.Quart), 
 			{ 
 				Position = UDim2.new(.328, Var.Services.GUIService.TopbarInset.Min.X, 0, 0), 
 				Size = UDim2.new(Var.MainFrame.Header.Mark.Size.X.Scale, 0, 0, Var.Services.GUIService.TopbarInset.Height)
@@ -111,7 +120,16 @@ function Frontend.Open(WaitForCompletion): ()
 	end
 end
 
-function Frontend.Close(Instant: boolean, WaitForCompletion): ()
+function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForCompletion, Frame): ()
+	if typeof(Instant) ~= "boolean" then
+		Frame = Instant	
+		Instant = false
+	end
+
+	if not Frame then
+		Frame = Var.MainFrame
+	end
+
 	Var.IsPanelAnimating = true
 
 	xpcall(function(...)
@@ -128,7 +146,7 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	local Y: number = 0.7
 
 	local OT = Var.Services.TweenService:Create(
-		Var.MainFrame,
+		Frame,
 		TweenInfo.new(Duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
 		{
 			Size = UDim2.fromScale(X / 1.5, Y / 1.5),
@@ -141,7 +159,7 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	if not Var.Mobile then
 		Var.Services.TweenService
 			:Create(
-				Var.MainFrame,
+				Frame,
 				TweenInfo.new(Duration, Enum.EasingStyle.Cubic),
 				{ Position = UDim2.fromScale(0.5, 1.5), GroupTransparency = 1 }
 			)
@@ -149,7 +167,7 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	else
 		Var.Services.TweenService
 			:Create(
-				Var.MainFrame,
+				Frame,
 				TweenInfo.new(Duration, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, Duration * 0.45),
 				{ Position = UDim2.fromScale(1.5, 0.5), GroupTransparency = 1 }
 			)
@@ -157,13 +175,15 @@ function Frontend.Close(Instant: boolean, WaitForCompletion): ()
 	end
 
 	task.delay(Duration, function()
-		Var.IsPanelAnimating = false
-		Var.MainFrame.Visible = false
-		Var.IsOpen = false
+		if Frame == Var.MainFrame then
+			Var.IsPanelAnimating = false
+			Var.MainFrame.Visible = false
+			Var.IsOpen = false
+		end
 	end)
 
 	task.defer(function()
-		Frontend.ToggleFullscreen(true)
+		Frontend.ToggleFullscreen(true, Var.MainFrame)
 	end)
 
 	if WaitForCompletion then
@@ -193,7 +213,7 @@ function Frontend.Drawer.Open(): ()
 	ShouldAnimate = true
 	Ready = true
 
-	TimeToComplete = (Var.AnimationSpeed * 2) or 2
+	TimeToComplete = Var.AnimationSpeed * 2
 
 	Container.Size = UDim2.new(1, 0, 1, 0)
 	Container.Position = UDim2.new(0, 0, 0, 0)
@@ -351,7 +371,8 @@ function Frontend.Drawer.Close(): ()
 		:Play()
 
 	pcall(function()
-		game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 }):Play()
+		Var.Services.TweenService:Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 })
+			:Play()
 	end)
 
 	task.wait(TimeToComplete * .6)
@@ -390,7 +411,7 @@ function Frontend.Drawer.HoverBegin()
 	if not Var.DoHeaderEffects then return end
 
 	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
-	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
+	local QuickTI = TweenInfo.new(Var.AnimationSpeed * .25, Enum.EasingStyle.Quart)
 
 	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
 		Size = UDim2.new(.75,0,.75,0)
@@ -406,7 +427,7 @@ function Frontend.Drawer.HoverEnd()
 	if not Var.DoHeaderEffects then return end
 
 	local MarkBox = Var.MainFrame.Header.Mark.AppLogo
-	local QuickTI = TweenInfo.new(.25, Enum.EasingStyle.Quart)
+	local QuickTI = TweenInfo.new(Var.AnimationSpeed * .25, Enum.EasingStyle.Quart)
 
 	Var.Services.TweenService:Create(MarkBox.GridIcon, QuickTI, {
 		Size = UDim2.new(0,0,0,0)
@@ -438,7 +459,9 @@ function Frontend.Toast(Config: {
 	Toast.MainText.Text = Config.Subtext
 	Toast.Icon.Image = Config.Icon
 
-	Var.Services.TweenService:Create(Toast, TweenInfo.new(.6, Enum.EasingStyle.Quart), {
+	Toast.Visible = true
+
+	Var.Services.TweenService:Create(Toast, TweenInfo.new(Var.AnimationSpeed * .6, Enum.EasingStyle.Quart), {
 		Position = UDim2.fromScale(.5, .879),
 		Size = UDim2.fromScale(0.443, 0.094)
 	}):Play()
@@ -456,12 +479,17 @@ function Frontend.Toast(Config: {
 	end)
 
 	Close = function()
-		Var.Services.TweenService:Create(Toast, TweenInfo.new(.6, Enum.EasingStyle.Quart), {
+		local C = Var.Services.TweenService:Create(Toast, TweenInfo.new(Var.AnimationSpeed * .6, Enum.EasingStyle.Quart), {
 			Position = UDim2.fromScale(.5, 1.1),
 			Size = UDim2.fromScale(0.4, .74)
-		}):Play()
+		})
 
+		C:Play()
 		ClickEvent:Disconnect()
+
+
+		C.Completed:Wait()
+		Toast.Visible = false
 	end
 
 	Timer.Completed:Connect(Close)
@@ -472,7 +500,7 @@ end
 Frontend.Popup.OriginalStates = {}
 
 function Frontend.Popup.Open(): ()
-	local BGTweenInfo = TweenInfo.new(1 * .65, Enum.EasingStyle.Cubic)
+	local BGTweenInfo = TweenInfo.new(Var.AnimationSpeed * .65, Enum.EasingStyle.Cubic)
 
 	Frontend.Popup.OriginalStates = {}
 
@@ -511,7 +539,7 @@ function Frontend.Popup.Open(): ()
 
 	Utilities.Logging.Print("Calculated, proceeding")
 
-	local PopupTween = Var.Services.TweenService:Create(Popup, TweenInfo.new(1, Enum.EasingStyle.Cubic), {
+	local PopupTween = Var.Services.TweenService:Create(Popup, TweenInfo.new(Var.AnimationSpeed, Enum.EasingStyle.Cubic), {
 		Position = UDim2.fromScale(0.5, 0.5),
 		GroupTransparency = 0
 	})
@@ -519,14 +547,15 @@ function Frontend.Popup.Open(): ()
 	PopupTween:Play()
 	Utilities.Logging.Print("All done apparently...")
 
-	Var.Services.TweenService:Create(Popup, TweenInfo.new(1 * 0.85, Enum.EasingStyle.Cubic), {
+	Var.Services.TweenService:Create(Popup, TweenInfo.new(Var.AnimationSpeed * 0.85, Enum.EasingStyle.Cubic), {
 		Size = PopupOriginalSize
 	}):Play()
+
 	Var.PopupOpen = true
 end
 
 function Frontend.Popup.Close(): ()
-	local BGTweenInfo = TweenInfo.new(1 * .65, Enum.EasingStyle.Cubic)
+	local BGTweenInfo = TweenInfo.new(Var.AnimationSpeed * .65, Enum.EasingStyle.Cubic)
 
 	for descendant, original in Frontend.Popup.OriginalStates do
 		if descendant then
@@ -545,7 +574,7 @@ function Frontend.Popup.Close(): ()
 	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
 	local Y = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2])
 
-	local PopupTween = Var.Services.TweenService:Create(Box, TweenInfo.new(1 * .85, Enum.EasingStyle.Cubic), {
+	local PopupTween = Var.Services.TweenService:Create(Box, TweenInfo.new(Var.AnimationSpeed * .85, Enum.EasingStyle.Cubic), {
 		Size = UDim2.new(X * 0.35, 0, Y * 0.35, 0),
 		GroupTransparency = 1
 	})
@@ -682,6 +711,7 @@ function Frontend.Popup.new(
 	end
 
 	Frontend.Popup.Open()
+
 	MessageBox.Visible = true
 end
 
@@ -694,7 +724,7 @@ function Frontend.SwapAppBasic(
 	end
 
 	local OGFramePos, OGFrameAP, NewFramePos, NewFrameAP = Var.ActivePage.Position, Var.ActivePage.AnchorPoint, NewFrame.Position, NewFrame.AnchorPoint
-	local TInfo = TweenInfo.new(.75, Enum.EasingStyle.Quart)
+	local TInfo = TweenInfo.new(Var.AnimationSpeed * .75, Enum.EasingStyle.Quart)
 
 	NewFrame.Visible = true
 
@@ -742,7 +772,7 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number)
 	end
 
 	local OGFramePos, OGFrameAP, NewFramePos, NewFrameAP = Var.ActivePage.Position, Var.ActivePage.AnchorPoint, NewFrame.Position, NewFrame.AnchorPoint
-	local TInfo = TweenInfo.new(.75, Enum.EasingStyle.Quart)
+	local TInfo = TweenInfo.new(Var.AnimationSpeed * .75, Enum.EasingStyle.Quart)
 
 	NewFrame.Visible = true
 
@@ -775,6 +805,7 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number)
 end
 
 function Frontend.InitGestureBar()
+	--// Legacy code
 	local Connection
 
 	Var.MainFrame.Header.GestureBar.InputBegan:Connect(function(Input)
@@ -790,45 +821,26 @@ function Frontend.InitGestureBar()
 		end
 
 		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-			local StartPos, StartSize = Input.Position, Var.MainFrame.Size
-			local MinX, MinY = -350, -300
+			local StartPos = Input.Position
+			local StartSize = Var.MainFrame.Size
 
 			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
 				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 					local Delta = -(MoveInput.Position - StartPos)
-					local ConstrainedBy = ""
 
-					if StartSize.X.Offset + -Delta.X <= MinX then
-						ConstrainedBy = "X"
-					elseif StartSize.Y.Offset + Delta.Y <= MinY then
-						ConstrainedBy = "Y"
-					end
+					local NewX = math.clamp(StartSize.X.Offset + -Delta.X, MinX, MaxX)
+					local NewY = math.clamp(StartSize.Y.Offset + Delta.Y, MinY, MaxY)
 
-					if StartSize.X.Offset + -Delta.X <= MinX and StartSize.Y.Offset + Delta.Y <= MinY then
-						ConstrainedBy = "XY"
-					end
-
-					if StartSize.X.Offset + -Delta.X <= MinX or StartSize.Y.Offset + Delta.Y <= MinY then
-						Var.MainFrame.Size = UDim2.new(
-							StartSize.X.Scale, 
-							ConstrainedBy == "XY" and StartSize.X.Offset + MinX or ConstrainedBy == "X" and StartSize.X.Offset + MinX or StartSize.X.Offset + -Delta.X, 
-							StartSize.Y.Scale, 
-							ConstrainedBy == "XY" and StartSize.Y.Offset + MinY or ConstrainedBy == "Y" and StartSize.Y.Offset + MinY or StartSize.Y.Offset + Delta.Y
-						)
-
-						return
-					end
-
-					Var.MainFrame.Size = UDim2.new(StartSize.X.Scale, StartSize.X.Offset + -(Delta.X), StartSize.Y.Scale, StartSize.Y.Offset + Delta.Y)
+					Var.MainFrame.Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, NewY)
 				end
 			end)
-
 		elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
 			local StartPos, StartPanelPos = Input.Position, Var.MainFrame.Position
 
 			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
 				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 					local Delta = MoveInput.Position - StartPos
+
 					Var.MainFrame.Position = UDim2.new(StartPanelPos.X.Scale, StartPanelPos.X.Offset + Delta.X, StartPanelPos.Y.Scale, StartPanelPos.Y.Offset + Delta.Y)
 				end
 			end)
@@ -851,28 +863,345 @@ function Frontend.InitGestureBar()
 	end)
 end
 
+local MinX, MinY = -350, -300
+local MaxX, MaxY = workspace.Camera.ViewportSize.X, workspace.Camera.ViewportSize.Y
+local OverlayConnections: { [string]: RBXScriptConnection } = {}
+
+function Frontend.SpawnOverlay(
+	Frame: Frame | CanvasGroup,
+	IsMainFrame: boolean
+)
+	local Speed = Var.AnimationSpeed
+	local ButtonsOpen = false
+	local MovementConnection: RBXScriptConnection
+
+	--// Spawn new overlay
+	local OverlayClone = Var.AdministerRoot.AdmOverlays.Template:Clone()
+
+	OverlayClone.Parent = Var.AdministerRoot.AdmOverlays
+	OverlayClone.Name = `{Frame.Name}_Overlay`
+
+	Frame:GetPropertyChangedSignal("Size"):Connect(function()
+		OverlayClone.Size = Frame.Size
+	end)
+
+	Frame:GetPropertyChangedSignal("Position"):Connect(function()
+		OverlayClone.Position = Frame.Position
+	end)
+
+	Frame:GetPropertyChangedSignal("AnchorPoint"):Connect(function()
+		OverlayClone.AnchorPoint = Frame.AnchorPoint
+	end)
+
+	if Frame:FindFirstChild("UISizeConstraint") then
+		local SizeConstraint = Frame:FindFirstChild("UISizeConstraint"):Clone()
+
+		SizeConstraint.Parent = OverlayClone
+	end
+
+	OverlayClone.AnchorPoint = Frame.AnchorPoint
+	OverlayClone.Position = Frame.Position
+	OverlayClone.Size = Frame.Size
+
+	OverlayClone.Visible = true
+
+	--// Gripper
+	local function HideButtons()
+		local Controls = OverlayClone.Grabber.Controls
+
+		ButtonsOpen = false
+
+		Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			Position = UDim2.fromScale(.5, 1.02),
+			Size = UDim2.fromOffset(150, 6)
+		}):Play()
+
+		Var.Services.TweenService:Create(Controls, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			GroupTransparency = 1,
+			Size = UDim2.fromScale(.704, 2.5),
+			Position = UDim2.fromScale(0, 0)
+		}):Play()
+	end
+
+	local function ShowButtons()
+		local Controls = OverlayClone.Grabber.Controls
+
+		if ButtonsOpen then return end
+
+		ButtonsOpen = true
+
+		Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			Position = UDim2.fromScale(.55, 1.02),
+			Size = UDim2.fromOffset(105, 6)
+		}):Play()
+
+		Controls.Visible = true
+		Controls.GroupTransparency = 1
+		Controls.Size = UDim2.fromScale(.704, 2.5)
+		Controls.Position = UDim2.fromScale(0, 0)
+
+		Var.Services.TweenService:Create(Controls, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			GroupTransparency = 0,
+			Size = UDim2.fromScale(.704, 3.5),
+			Position = UDim2.fromScale(-.85, .5)
+		}):Play()
+	end
+
+	local LeftOver = OverlayClone.GrabberLeft.MouseEnter:Connect(ShowButtons)
+	local LeftLeave = OverlayClone.GrabberLeft.MouseLeave:Connect(function()
+		task.delay(3, HideButtons)
+	end)
+
+	local Grabber = OverlayClone.Grabber.RealGrabber
+	local GrabMove, InputEnded: RBXScriptSignal
+
+	Grabber.MouseEnter:Connect(function()
+		if ButtonsOpen then return end
+
+		Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			Size = UDim2.fromOffset(165, 15),
+			BackgroundColor3 = Color3.fromRGB(185, 185, 185)
+		}):Play()
+	end)
+
+	Grabber.MouseLeave:Connect(function()
+		Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			Size = UDim2.fromOffset(150, 6),
+			BackgroundColor3 = Color3.new(1,1,1)
+		}):Play()
+	end)
+
+	Grabber.InputBegan:Connect(function(Input)
+		if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+		local StartPos, StartPanelPos = Input.Position, Var.MainFrame.Position
+
+		GrabMove = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
+			if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
+				local Delta = MoveInput.Position - StartPos
+
+				Var.MainFrame.Position = UDim2.new(StartPanelPos.X.Scale, StartPanelPos.X.Offset + Delta.X, StartPanelPos.Y.Scale, StartPanelPos.Y.Offset + Delta.Y)
+			end
+		end)
+	end)
+
+	Grabber.InputEnded:Connect(function()
+		if GrabMove then GrabMove:Disconnect() end
+
+		Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+			Size = UDim2.fromOffset(150, 6),
+			BackgroundColor3 = Color3.new(1,1,1)
+		}):Play()
+	end)
+
+	--// Corner grabber
+	local function GripAnimation(
+		Type: "Release" | "Grip" | "Hover",
+		Axis: "X" | "Y" | "XY"
+	)
+		if Type == "Release" then
+			Var.Services.TweenService:Create(
+				OverlayClone.CornerGripper.Grabber,
+				TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+					Size = UDim2.fromOffset(50, 50)
+				}
+			):Play()
+
+			if MovementConnection then
+				MovementConnection:Disconnect()
+			end
+		elseif Type == "Grip" then
+			Var.Services.TweenService:Create(
+				OverlayClone.CornerGripper.Grabber,
+				TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), 
+				{
+					Size = UDim2.fromOffset(
+						Axis == "X" and 75 or Axis == "XY" and 60 or 45, 
+						Axis == "Y" and 75 or Axis == "XY" and 60 or 45
+					)
+				}
+			):Play()
+		elseif Type == "Hover" then
+			Var.Services.TweenService:Create(
+				OverlayClone.CornerGripper.Grabber,
+				TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
+					Size = UDim2.fromOffset(
+						Axis == "X" and 70 or Axis == "XY" and 60 or 45, 
+						Axis == "Y" and 70 or Axis == "XY" and 60 or 45
+					)
+				}
+			):Play()
+		end
+	end
+
+	local function DoResize(Input, Axis)
+		if MovementConnection then MovementConnection:Disconnect() end
+		if InputEnded then InputEnded:Disconnect() end
+
+		local StartPos = Var.Services.UserInputService:GetMouseLocation()
+		local StartSize = Frame.Size
+
+		MovementConnection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
+			if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
+				local MousePos = Var.Services.UserInputService:GetMouseLocation()
+				local Delta = MousePos - StartPos
+
+				local NewX = StartSize.X.Offset + Delta.X * 1.5
+				local NewY = StartSize.Y.Offset + Delta.Y * 1.5
+
+				if Axis == "X" then
+					Frame.Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, StartSize.Y.Offset)
+				elseif Axis == "Y" then
+					Frame.Size = UDim2.new(StartSize.X.Scale, StartSize.X.Offset, StartSize.Y.Scale, NewY)
+				elseif Axis == "XY" then
+					Frame.Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, NewY)
+				end
+			end
+		end)
+
+		InputEnded = Var.Services.UserInputService.InputEnded:Connect(function(EndInput)
+			if EndInput.UserInputType == Enum.UserInputType.MouseButton1 then
+				if MovementConnection then MovementConnection:Disconnect() end
+				if InputEnded then InputEnded:Disconnect() end
+				GripAnimation("Release", Axis)
+			end
+		end)
+	end
+
+
+	OverlayClone.CornerGripper.Trigger.MouseEnter:Connect(function()
+		GripAnimation("Hover", "XY")
+	end)
+
+	OverlayClone.CornerGripper.Trigger.MouseLeave:Connect(function()
+		GripAnimation("Release", "XY")
+	end)
+
+	OverlayClone.CornerGripper.Trigger.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			GripAnimation("Grip", "XY")
+			DoResize(Input, "XY")
+		end
+	end)
+
+	OverlayClone.CornerGripper.TriggerHoriz.MouseEnter:Connect(function()
+		GripAnimation("Hover", "X")
+	end)
+
+	OverlayClone.CornerGripper.TriggerHoriz.MouseLeave:Connect(function()
+		GripAnimation("Release", "X")
+	end)
+
+	OverlayClone.CornerGripper.TriggerHoriz.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			GripAnimation("Grip", "X")
+			DoResize(Input, "X")
+		end
+	end)
+
+	OverlayClone.CornerGripper.TriggerVert.MouseEnter:Connect(function()
+		GripAnimation("Hover", "Y")
+	end)
+
+	OverlayClone.CornerGripper.TriggerVert.MouseLeave:Connect(function()
+		GripAnimation("Release", "Y")
+	end)
+
+	OverlayClone.CornerGripper.TriggerVert.InputBegan:Connect(function(Input)
+		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+			GripAnimation("Grip", "Y")
+			DoResize(Input, "Y")
+		end
+	end)
+
+	--// Connections
+	OverlayConnections[Frame.Name] = {}
+
+	for _, Conn in ({
+		Close = OverlayClone.Grabber.Controls.Close.MouseButton1Click:Connect(function()
+			Frontend.Close(Frame)
+		end),
+
+		Expand = OverlayClone.Grabber.Controls.Expand.MouseButton1Click:Connect(function()
+			Frontend.ToggleFullscreen(false, Frame)
+		end),
+
+		ExpandFixGripper = Frame:GetAttributeChangedSignal("IsFullScreen"):Connect(function()
+			local IsFullScreen = Frame:GetAttribute("IsFullScreen")
+			Var.Services.TweenService:Create(OverlayClone.CornerGripper.Grabber, TweenInfo.new(Var.AnimationSpeed * .3), {
+				ImageTransparency = IsFullScreen and 1 or 0
+			}):Play()
+
+			OverlayClone.CornerGripper.TriggerVert.Visible = not IsFullScreen
+			OverlayClone.CornerGripper.TriggerHoriz.Visible = not IsFullScreen
+			OverlayClone.CornerGripper.Trigger.Visible = not IsFullScreen
+
+			if IsFullScreen then
+				local Trigger = Instance.new("TextButton")
+
+				Trigger.Parent = Frame
+				--Trigger.BackgroundTransparency = 1
+				Trigger.Text = ""
+
+				Trigger.Size = UDim2.fromOffset(150, 15)
+
+				Trigger.AnchorPoint = Vector2.new(0.5, 1)
+				Trigger.Position = UDim2.new(0.5, 0, 1, -10)
+			end
+		end),
+
+		Shrink = OverlayClone.Grabber.Controls.Minimize.MouseButton1Click:Connect(function()
+			print("shrink TODO")
+		end)}) 
+	do
+		table.insert(OverlayConnections[Frame.Name], Conn)
+	end
+end
+
 function Frontend.RegisterPanelKeybind()
 	local currentKeys, Debounce = {}, false
 
-	local openKeybind = Utilities.GetSetting("PanelKeybind")
+	local targetSettings = {
+		"PanelKeybind",
+		"PanelFullscreenKeybind",
+		"AppDrawerKeybind"
+	}
+	local keybinds = Utilities.GetSettings(targetSettings)
+
+	local openKeybind = keybinds["PanelKeybind"]
 	local openChanged = Utilities.GetSettingChanged("PanelKeybind")
-	local ExpandKeybind = Utilities.GetSetting("PanelFullscreenKeybind")
+
+	local ExpandKeybind = keybinds["PanelFullscreenKeybind"]
 	local expandChanged = Utilities.GetSettingChanged("PanelFullscreenKeybind")
+
+	local DrawerKeybind = keybinds["AppDrawerKeybind"]
+	local DrawerChanged = Utilities.GetSettingChanged("AppDrawerKeybind")
+
 	local loadedSettings: RemoteEvent = Var.Remotes:FindFirstChild("SettingsLoaded")
-	
+
 	loadedSettings.OnClientEvent:Connect(function()
-		openKeybind = Utilities.GetSetting("PanelKeybind")
-		ExpandKeybind = Utilities.GetSetting("PanelFullscreenKeybind")
+		keybinds = Utilities.GetSettings(targetSettings)
+
+		openKeybind = keybinds["PanelKeybind"]
+		ExpandKeybind = keybinds["PanelFullscreenKeybind"]
+		DrawerKeybind = keybinds["AppDrawerKeybind"]
 	end)
+
 	openChanged.OnClientEvent:Connect(function(newValue)
 		openKeybind = newValue
 	end)
+
 	expandChanged.OnClientEvent:Connect(function(newValue)
 		ExpandKeybind = newValue
 	end)
 
+	DrawerChanged.OnClientEvent:Connect(function(newValue)
+		DrawerKeybind = newValue
+	end)
+
 	Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 		if IsGameProc then return end
+		
+		if KeyCode.KeyCode == Enum.KeyCode.Unknown then return end
 
 		table.insert(currentKeys, KeyCode.KeyCode)
 	end)
@@ -899,7 +1228,7 @@ function Frontend.RegisterPanelKeybind()
 					Frontend.Open(true)
 				end
 
-				Frontend.ToggleFullscreen()
+				Frontend.ToggleFullscreen(false, Var.MainFrame)
 
 				Debounce = false
 			elseif commaSeparated == openKeybind then
@@ -913,8 +1242,72 @@ function Frontend.RegisterPanelKeybind()
 				end
 
 				Debounce = false
+			elseif commaSeparated == DrawerKeybind then
+				Frontend.Drawer.Open()
 			end
 		end
+	end)
+end
+
+function Frontend.AddButtonAnimation(Button: TextButton)
+	local Tween = TweenInfo.new(Var.AnimationSpeed * .3, Enum.EasingStyle.Quart)
+	
+	local OriginalSize = Button.Size
+	local OriginalPos = Button.Position
+	local UICorner = Button:FindFirstChildWhichIsA("UICorner") or Instance.new("UICorner")
+	local OriginalCorner = UICorner.CornerRadius
+	
+	UICorner.Parent = Button
+
+	Button.MouseEnter:Connect(function()
+		local Frame = Instance.new("Frame")
+		
+		Frame.BackgroundTransparency = 1
+		Frame.Size = UDim2.fromScale(1,1)
+		Frame.Name = "ButtonAnimFrame"
+
+		local FrameCorner = UICorner:Clone()
+		FrameCorner.Parent = Frame
+		Frame.Parent = Button
+
+		Var.Services.TweenService:Create(Frame, Tween, {
+			BackgroundTransparency = 0.7
+		}):Play()
+
+		Var.Services.TweenService:Create(Button, Tween, {
+			Size = OriginalSize + UDim2.fromOffset(5, 5),
+			--Position = OriginalPos - UDim2.fromOffset(5, 5)
+		}):Play()
+
+		Var.Services.TweenService:Create(UICorner, Tween, {
+			CornerRadius = OriginalCorner + UDim.new(0, 4)
+		}):Play()
+
+		Var.Services.TweenService:Create(FrameCorner, Tween, {
+			CornerRadius = FrameCorner.CornerRadius + UDim.new(0, 4)
+		}):Play()
+	end)
+
+	Button.MouseLeave:Connect(function()
+		local AnimFrame = Button:FindFirstChild("ButtonAnimFrame")
+		if AnimFrame then
+			Var.Services.TweenService:Create(AnimFrame, Tween, {
+				BackgroundTransparency = 1
+			}):Play()
+			
+			task.delay(Tween.Time, function()
+				AnimFrame:Destroy()
+			end)
+		end
+
+		Var.Services.TweenService:Create(Button, Tween, {
+			Size = OriginalSize,
+			--Position = OriginalPos
+		}):Play()
+
+		Var.Services.TweenService:Create(UICorner, Tween, {
+			CornerRadius = OriginalCorner
+		}):Play()
 	end)
 end
 

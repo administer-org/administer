@@ -18,9 +18,11 @@ local t = Utilities.Translate
 Frontend.Close(true)
 
 local function CacheSettings()
-	Var.AnimationSpeed = tonumber(Utilities.GetSetting("AnimationSpeed"))
-	Var.ShortNumberDecimals = tonumber(Utilities.GetSetting("ShortNumberDecimals"))
-	Var.Verbosity = Utilities.GetSetting("Verbosity")
+	local settingData = Utilities.GetSettings({"AnimationSpeed", "ShortNumberDecimals", "Verbosity"})
+	
+	Var.AnimationSpeed = tonumber(settingData["AnimationSpeed"])
+	Var.ShortNumberDecimals = tonumber(settingData["ShortNumberDecimals"])
+	Var.Verbosity = settingData["Verbosity"]
 
 	return true
 end
@@ -38,11 +40,10 @@ end)
 
 if not success then
 	print(errormsg)
-	Utilities.NewNotification("Administer", "", "Administer has been incorrectly installed and may not continue loading.", "Startup failed", 999)
+	Utilities.NewNotification("Administer", "", Utilities.Translate("error.NoPing"), "Startup failed", 999)
 
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
-
 
 local function DoUpdate()
 	Var.FinishedUpdate = false
@@ -61,8 +62,8 @@ task.delay(5, function()
 		Utilities.NewNotification(
 			"Administer", 
 			Utilities.Icon "triangle-warning", 
-			"Update thread is frozen, please ensure AOS is responsive. Some services may be unavailable.", 
-			"Webservices Unresponsive", 
+			Utilities.Translate("updater.Failed.Body"), 
+			Utilities.Translate("updater.Failed.Header"), 
 			999
 		)
 	end
@@ -78,7 +79,9 @@ end)
 
 Var.Remotes.SettingsLoaded.OnClientEvent:Wait()
 
-local KeybindRegisterTimeframe = Utilities.GetSetting("KeybindRegisterTime")
+local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand"})
+
+local KeybindRegisterTimeframe = essentialSettings["KeybindRegisterTime"]
 
 if KeybindRegisterTimeframe == "optimistic" then
 	Frontend.RegisterPanelKeybind()
@@ -114,7 +117,7 @@ task.defer(function()
 				ButtonID = "Information"
 			},
 			{
-				Name = Utilities.ToSentenceCase( t("Configuration.Apps.Content.Template.Settings.HeaderLabel") ),
+				Name = Utilities.ToSentenceCase( t("Apps.MainFrame.Config.Title") ),
 				Icon = Utilities.Icon "gear",
 				Click = function() end,
 				Frame = Var.MainFrame.Configuration.Settings,
@@ -128,7 +131,7 @@ task.defer(function()
 				ButtonID = "Marketplace"
 			},
 			{
-				Name = t("Configuration.Admins.Container.Admins.Header.TLabel"),
+				Name = t("Configuration.Admins.Container.Ranks.Header.TLabel"),
 				Icon = Utilities.Icon "user-clip",
 				Click = function() end,
 				Frame = Var.MainFrame.Configuration.Admins,
@@ -137,6 +140,13 @@ task.defer(function()
 		}
 	})
 end)
+
+for _, Button in Var.MainFrame:GetDescendants() do
+	if Button:IsA("TextButton") then
+		print(`ok to {Button.Name}`)
+		Frontend.AddButtonAnimation(Button)
+	end
+end
 
 --// Homepage, app drawer, header connections
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
@@ -151,12 +161,12 @@ Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open
 Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
 Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
 
-Frontend.InitGestureBar()
+Frontend.SpawnOverlay(Var.MainFrame)
 
 Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
 	t("Welcome.Initial.HeaderLabel") :: string,
 	Var.Services.Players.LocalPlayer.DisplayName,
-	Utilities.GetSetting("HomepageGreeting")
+	essentialSettings["HomepageGreeting"]
 )}</stroke>`
 
 Var.MainFrame.Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
@@ -224,8 +234,8 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 		Utilities.NewNotification(
 			"Administer",
 			Utilities.Icon "iphone-notch",
-			"Mobile mode activated. Swipe inwards from the right edge of your screen to open Administer.",
-			"Mobile Beta",
+			Utilities.Translate("mobile.body"),
+			Utilities.Translate("mobile.detail"),
 			25
 		)
 	end)
@@ -245,9 +255,7 @@ else
 
 	Var.MainFrame.Parent.MobileOpen:Destroy()
 
-	print(Utilities.GetSetting("AssistiveClose"))
-
-	if Utilities.GetSetting("AssistiveClose") == true then
+	if essentialSettings["AssistiveClose"] == true then
 		Var.MainFrame.Header.AssistiveClose.Visible = true
 		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 	end
@@ -270,7 +278,7 @@ xpcall(function(...)
 			Card.Parent = Info.UpdateCenter.ScrollingFrame
 			Card.Name = "Administer"
 
-			Card.Data.Text = `Unable to communicate with AOS.`
+			Card.Data.Text = Utilities.Translate("updater.failedcomm")
 			Card.ServiceName.Text = "Administer"
 			Card.Logo.Image = Utilities.Icon "administer"
 			Card.ServiceRDNN.Text = "org.admsoftware.Core"
@@ -285,7 +293,7 @@ xpcall(function(...)
 		Card.Parent = Info.UpdateCenter.ScrollingFrame
 		Card.Name = Data.Service.Name
 
-		Card.Data.Text = `{Data.IsUpToDate and "Up to date" or "Out of date"}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
+		Card.Data.Text = `{Data.IsUpToDate and Utilities.Translate("generic.UpToDate") or Utilities.Translate("generic.OutOfDate")}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
 		Card.ServiceName.Text = Data.Service.Name
 		Card.Logo.Image = Data.Service.Icon
 		Card.ServiceRDNN.Text = Data.ID
@@ -344,13 +352,35 @@ xpcall(function(...)
 	end
 
 	Var.Services.MarketplaceService.PromptGamePassPurchaseFinished:Connect(Utilities.ProcessDono)
+
+	Info.VersionDetails.AdmSoftware.Button.MouseButton1Click:Connect(function()
+		Frontend.Popup.new(
+			{
+				Icon = Utilities.Icon "administer",
+				Name = "Administer"
+			},
+			{
+				Primary = Utilities.Icon "administer",
+				SubIcon = Utilities.Icon "hammer"
+			},
+			Utilities.Translate("Configuration.InfoPage.License.About"),
+			string.format(Utilities.Translate("Configuration.InfoPage.License"), "2022 - 2025"),
+			{
+				{
+					Text = Utilities.Translate("generic.OK"),
+					Icon = Utilities.Icon "check-plain",
+					Callback = function(c) c() end
+				}
+			}
+		)
+	end)
 end, function(a0)
 	Utilities.Logging.Warn("Failed to fetch info page assets, assuming this is a permissions issue!", a0)
 end)
 
-script.Assets.LocalScript.Enabled = Utilities.GetSetting("EnableClickEffects")
+script.Assets.LocalScript.Enabled = essentialSettings["EnableClickEffects"]
 
-if Utilities.GetSetting("ChatCommand") then
+if essentialSettings["ChatCommand"] then
 	local Command = Instance.new("TextChatCommand")
 
 	Command.PrimaryAlias = "/adm"

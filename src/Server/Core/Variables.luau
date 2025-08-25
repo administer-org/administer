@@ -136,14 +136,14 @@ Variables.Branches = {
 		ImageID = "rbxassetid://18770010888",
 		Name = "Administer Public Beta",
 		BranchName = "pub_beta",
-		IsActive = true
+		IsActive = false
 	},
 
 	Stable = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
 		BranchName = "stable",
-		IsActive = false
+		IsActive = true
 	}
 }
 

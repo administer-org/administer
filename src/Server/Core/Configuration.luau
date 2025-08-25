@@ -85,6 +85,16 @@ local Settings: SettingsType = {
 			Job    = "community management, product testing"
 		},
 		{
+			UserID = 1,
+			Name   = "iiPythonx",
+			Job    = "hosting, database administration"
+		},
+		{
+			UserID = 3239844753,
+			Name   = "CDot_NightHawk",
+			Job    = "hosting infrastructure"
+		},
+		{
 			UserID = 556692115,
 			Name   = "FabulousTrophies",
 			Job    = "product testing"
@@ -102,17 +112,27 @@ local Settings: SettingsType = {
 		{
 			UserID = 1381321740,
 			Name   = "apexblue1705",
-			Job    = "product testing"
+			Job    = "product testing, translation (vi)"
 		},
 		{
-			UserID = 1,
-			Name   = "iiPythonx",
-			Job    = "hosting, database administration"
+			UserID = 1556153247,
+			Name   = "gdr",
+			Job    = "translation (ru)"
 		},
 		{
-			UserID = 3239844753,
-			Name   = "CDot_NightHawk",
-			Job    = "hosting infrastructure"
+			UserID = 215537737,
+			Name   = "SKrun",
+			Job    = "translation (pt)"
+		},
+		{
+			UserID = 1936557762,
+			Name   = "WarriorOfLC",
+			Job    = "translation (many languages)"
+		},
+		{
+			UserID = 1119454702,
+			Name   = "CheekyPine",
+			Job    = "translation (es)"
 		},
 		{
 			UserID = 1,
@@ -208,7 +228,7 @@ local Settings: SettingsType = {
 					}
 				}
 			},
-			
+
 			["sudo"] = {
 				["Description"] = "Enables free admin for everybody in Studio. Use this as an alternative to `EnableFreeAdmin` if you only need it for configuration within Studio.",
 				["SettingType"] = "Boolean",
@@ -315,6 +335,18 @@ local Settings: SettingsType = {
 				["Value"] = {
 					["Value"] = "LeftShift,F2",
 					["Default"] = "LeftShift,F2"
+				}
+			},
+
+			["AppDrawerKeybind"] = {
+				["Description"] = "Opens the App Drawer when you push this button",
+				["SettingType"] = "KeyCode",
+				["SettingDisplayType"] = "KeybindSelector",
+				["RequiresRestart"] = false,
+
+				["Value"] = {
+					["Value"] = "Equals",
+					["Default"] = "Equals"
 				}
 			},
 

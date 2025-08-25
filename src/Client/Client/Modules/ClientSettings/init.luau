@@ -12,8 +12,8 @@ local Settings = variables.Remotes.GetAllSettings:InvokeServer()
 for i,v in pairs(Settings) do
 	local controllerName = v._SettingsMeta.Name
 	local success = variables.Remotes.LoadSettings:InvokeServer(controllerName, game.Players.LocalPlayer.UserId)
-	if success then
-		utilities.Logging.Warn(`Failed to laod some settings data`)
+	if not success then
+		utilities.Logging.Warn(`Failed to load some settings data! {success}`)
 	end
 end
 Settings = variables.Remotes.GetAllSettings:InvokeServer()
@@ -146,7 +146,7 @@ function clientSettings.LoadCategories(categories)
 		categoryFrame.Activator.MouseButton1Click:Connect(function()
 			clientSettings.ClearSettings()
 			clientSettings.LoadSettings(settingData)
-			selectedCategory = categories["_SettingsMeta"].Name
+			selectedData = categories["_SettingsMeta"].Name
 			selectedCategory = index
 		end)
 	end

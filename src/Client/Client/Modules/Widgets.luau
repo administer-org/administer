@@ -64,8 +64,8 @@ function Widgets.Edit(
 	if ContainingUI:GetAttribute("IsEditing") then
 		Frontend.Toast({
 			Icon = Utilities.Icon "triangle-warning",
-			Text = "Something went wrong",
-			Subtext = "Please finish editing before you try again.",
+			Text = Utilities.Translate("generic.error.Generic"),
+			Subtext = Utilities.Translate("widgets.concurrent.Body"),
 			Timeout = 5
 		})	
 

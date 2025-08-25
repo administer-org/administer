@@ -38,15 +38,15 @@ function Admins.Load(): ()
 		end, function(e)
 			Frontend.Popup.new(
 				{
-					Icon = `rbxassetid://{Var.Icons["logos"]["administer-blue"]}`,
+					Icon = Utilities.Icon "administer",
 					Name = "Access Control",
 					Subheader = "Error"
 				}, {
 					Primary = Utilities.Icon "user",
 					SubIcon = Utilities.Icon "triangle-warning"
 				},
-				"Improper Rank Configuration Detected",
-				`Administer has detected an error in the rank configuration. This is most likely due to an incomplete setup process and will result in Administer not loading out of Studio. Please re-initialize Administer.\n{e}`,
+				Utilities.Translate("admin.rankcreator.corrupt.Detail"),
+				string.format(Utilities.Translate("admin.rankcreator.corrupt.Body"), e)
 				{
 					{
 						Text = "Ok",
@@ -68,18 +68,22 @@ function Admins.Load(): ()
 		else
 			for i, v in List do
 				local Template = RanksFrame.Template:Clone()
-				local CreatorName = v.CreatorID == 1 and "System" or Var.Services.Players:GetNameFromUserIdAsync(v.CreatorID)
+				local CreatorName = v.CreatorID == 1 and Utilities.Translate("admin.ranktype.System") or Var.Services.Players:GetNameFromUserIdAsync(v.CreatorID)
 				Template.Name = v.Name
 				Template.RankName.Text = v.Name
-				Template.Info.Text =
-					`{v.RankID} • {v.Apps.SuperAdmin and "Full Access" or #v.Apps .. " apps"} • Created by @{CreatorName} {Utilities.FormatRelativeTime(v.Modified)}`
+				Template.Info.Text = string.format(Utilities.Translate("Configuration.Admins.Container.Ranks.Content.Template.Info"),
+					v.RankID,
+					v.Apps.SuperAdmin and Utilities.Translate("Configuration.Admins.Ranks.HasSuperAdmin") or string.format(Utilities.Translate("Configuration.Admins.Ranks.HasApps"), #v.Apps),
+					CreatorName,
+					Utilities.FormatRelativeTime(v.Modified)
+				)
 
 				if v.Apps.SuperAdmin then
 					local Card = Template.Pages.Frame:Clone()
 					local Tip = Instance.new("TextButton")
 
 					Card.Visible = true
-					Card.AppName.Text = "Super Administrator"
+					Card.AppName.Text = Utilities.Translate("admin.ranks.superadmin.Detail")
 					Card.ImageLabel.Image = Utilities.Icon "user-shield"
 					Card.Parent = Template.Pages
 
@@ -99,11 +103,11 @@ function Admins.Load(): ()
 							{
 								Primary = Utilities.Icon "user-shield"
 							},
-							"Super Administrator",
-							"Because this user is a Super Administrator, they'll be able to access any App (currently installed and installed in the future), manage + audit system functionality, and use restricted functionalities.",
+							Utilities.Translate("admin.ranks.superadmin.Detail"),
+							Utilities.Translate("admin.ranks.superadmin.Body"),
 							{
 								{
-									Text = "OK",
+									Text = Utilities.Translate("generic.Done"),
 									Icon = Utilities.Icon "check-plain",
 									Callback = function(c) c() end
 								}
@@ -138,7 +142,7 @@ function Admins.Load(): ()
 
 					local Card = Template.Pages.Frame:Clone()
 					Card.Visible = true
-					Card.AppName.Text = `{AppCount - 5} others...`
+					Card.AppName.Text = string.format(Utilities.Translate("admin.ranks.Others"), AppCount - 5)
 					Card.Parent = Template.Pages
 				else
 					for k, App in UsableAppInfo do
@@ -197,11 +201,33 @@ function Admins.Load(): ()
 
 					end
 				end
+				
+				if UserNames[1] == nil then
+					Template.MembersText.Text = string.format(Utilities.Translate("admin.ranks.members.one"), Utilities.Translate("generic.User"))
+					
+					continue
+				end
 
 				Template.MembersText.Text = (
-					#UserNames == 3 and `<b>{UserNames[1]}</b>, <b>{UserNames[2]}</b>, <b>{UserNames[3]}</b>, and <b>{#v.Members - 3} {#v.Members - 3 == 1 and "other is a member" or "are members"}</b>`
-						or #UserNames == 2 and `<b>{UserNames[1]}</b> and <b>{UserNames[2]}</b> are members`
-						or `<b>{UserNames[1]}</b> is a member`
+					#UserNames == 3 and string.format(
+						"<b>%s</b>, <b>%s</b>, <b>%s</b>, and <b>%d %s</b>",
+						UserNames[1],
+						UserNames[2],
+						UserNames[3],
+						#v.Members - 3,
+						Utilities.Translate(#v.Members - 3 == 1 and "admin.ranks.members.one" or "admin.ranks.members.more"):format(#v.Members - 3)
+					)
+						or #UserNames == 2 and string.format(
+							"<b>%s</b> and <b>%s</b> %s",
+							UserNames[1],
+							UserNames[2],
+							Utilities.Translate("admin.ranks.members.two")
+						)
+						or string.format(
+							"<b>%s</b> %s",
+							UserNames[1],
+							Utilities.Translate("admin.ranks.members.one")
+						)
 				)
 
 				table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
@@ -236,8 +262,8 @@ function Admins.Load(): ()
 
 						Frontend.Toast({
 							Icon = Utilities.Icon "triangle-warning",
-							Text = "Insufficient permissions",
-							Subtext = "Protected ranks may not be edited.",
+							Text = Utilities.Translate("admin.ranks.protected.Detail"),
+							Subtext = Utilities.Translate("admin.ranks.protected.Body"),
 							Timeout = 5
 						})
 					end))
@@ -448,16 +474,8 @@ function Admins.RunCreatorApp()
 			Frames.Page2.TextInput.Text = Env.EditModeName
 			Frames.Page2.ColorInput.Text = Env.EditModeColor
 		else
-			Frames.Page5.Header.Text = "Oops! That's not meant to happen."
-			if FilterResult[2] then
-				Frames.Page5.Body.Text = "Failed to connect to Roblox's filtering service. This likely isn't an issue with your game, try again later.\n\n"
-					.. FilterResult[2]
-					or "The server did not send an error."
-			else
-				Frames.Page5.Body.Text = "Failed to call the remote to filter. Did you install Administer wrong?\n\n"
-					.. FilterResult
-					or "The server did not send an error."
-			end
+			Frames.Page5.Header.Text = Utilities.Translate("admin.rankcreator.failed.Detail")
+			Frames.Page5.Body.Text = string.format(Utilities.Translate("admin.rankcreator.errors.filter.Body"), FilterResult[2])
 
 			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
 		end
@@ -467,8 +485,8 @@ function Admins.RunCreatorApp()
 		if string.len(Frames.Page2.TextInput.Text) == 0 or string.len(Frames.Page2.TextInput.Text) > 50 then
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
-				Text = "Invalid input",
-				Subtext = "Rank name must be more than one character and less than 50.",
+				Text = Utilities.Translate("generic.InvalidInput"),
+				Subtext = Utilities.Translate("admin.rankcreator.errors.name.Len"),
 				Timeout = 5
 			})
 
@@ -481,8 +499,8 @@ function Admins.RunCreatorApp()
 		if ExistingRank ~= nil and not Env.EditMode then
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
-				Text = "Invalid input",
-				Subtext = `Rank names must be unique, {Frames.Page2.TextInput.Text} already exists`,
+				Text = Utilities.Translate("generic.InvalidInput"),
+				Subtext = string.format(Utilities.Translate("admin.rankcreator.errors.name.Unique")),
 				Timeout = 5
 			})
 
@@ -519,7 +537,7 @@ function Admins.RunCreatorApp()
 					Clone._Name.Text = `{Info["Name"]}`
 					Clone.Image.Image = Info["EmblemUrl"]
 				else
-					Clone._Name.Text = `Group not found!`
+					Clone._Name.Text = Utilities.Translate("generic.NotFound")
 					Clone.Image.Image = "rbxassetid://15105863258"
 				end
 
@@ -570,7 +588,7 @@ function Admins.RunCreatorApp()
 					Clone._Name.Text = `{Info[1]}`
 					Clone.Image.Image = Info[2]
 				else
-					Clone._Name.Text = `Not found`
+					Clone._Name.Text = Utilities.Translate("generic.NotFound")
 					Clone.Image.Image = "rbxassetid://15105863258"
 				end
 			end
@@ -622,8 +640,8 @@ function Admins.RunCreatorApp()
 		if MemberCount == 0 then
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
-				Text = "Not enough members",
-				Subtext = `Ranks must have at least one member in them.`,
+				Text = Utilities.Translate("generic.InvalidInput"),
+				Subtext = Utilities.Translate("admin.rankcreator.errors.members.NotEnough"),
 				Timeout = 5
 			})
 
@@ -633,8 +651,8 @@ function Admins.RunCreatorApp()
 		elseif MemberCount > Env.MaxPeople then
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
-				Text = "Too many members",
-				Subtext = `You may only have up to {Env.MaxPeople} members.`,
+				Text = Utilities.Translate("generic.InvalidInput"),
+				Subtext = string.format(Utilities.Translate("admin.rankcreator.errors.members.TooMany")),
 				Timeout = 5
 			})
 
@@ -666,11 +684,11 @@ function Admins.RunCreatorApp()
 							Primary = Utilities.Icon "warning-filled",
 							SubIcon = Utilities.Icon "x"
 						},
-						"Invalid input",
-						"One or more of your members do not have a UserID assigned. All users must have an ID.",
+						Utilities.Translate("generic.InvalidInput"),
+						Utilities.Translate("admin.rankcreator.errors.members.NoInput"),
 						{
 							{
-								Text = "Ok",
+								Text = Utilities.Translate("generic.OK"),
 								Icon = Utilities.Icon "check-plain",
 								Callback = function(c)
 									c()
@@ -904,7 +922,7 @@ function Admins.RunCreatorApp()
 
 		SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
 
-		Frames.BottomData.RankTitle.Text = "Creating a rank"
+		Frames.BottomData.RankTitle.Text = Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.RankTitle")
 		CanGoBack = true
 	end)
 

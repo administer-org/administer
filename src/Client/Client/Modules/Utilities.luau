@@ -16,6 +16,12 @@ function Utilities.GetSetting(Setting: string): any
 	return setting
 end
 
+function Utilities.GetSettings(settingsArray: {Types.Setting}, UserID: number?): Types.SettingResponse
+	local settingData = Var.Remotes.GetSettings:InvokeServer("Administer", settingsArray)
+
+	return settingData
+end
+
 function Utilities.GetSettingChanged(Setting: string): RemoteEvent
 	local remote = Var.Remotes.GetRemote:InvokeServer("Administer", Setting)
 	
@@ -41,27 +47,52 @@ function Utilities.ShortNumber(Number: number): string
 end
 
 function Utilities.FormatRelativeTime(Unix: number): string
-	local TimeDifference = os.time() - (Unix ~= nil and Unix or 0)
+	local TimeDifference = os.time() - (Unix or 0)
+	
+	if TimeDifference == 1 then
+		
+	end
 
 	if TimeDifference < 60 then
-		return "Just now"
+		return Utilities.Translate("reltime.Now")
 	elseif TimeDifference < 3600 then
 		local Minutes = math.floor(TimeDifference / 60)
-		return `{Minutes} {Minutes == 1 and "minute" or "minutes"} ago`
+		return string.format(
+			Utilities.Translate("reltime.Format"),
+			Minutes,
+			Utilities.Translate(Minutes == 1 and "reltime.Minute" or "reltime.Minutes")
+		)
 	elseif TimeDifference < 86400 then
 		local Hours = math.floor(TimeDifference / 3600)
-		return `{Hours} {Hours == 1 and "hour" or "hours"} ago`
+		return string.format(
+			Utilities.Translate("reltime.Format"),
+			Hours,
+			Utilities.Translate(Hours == 1 and "reltime.Hour" or "reltime.Hours")
+		)
 	elseif TimeDifference < 604800 then
 		local Days = math.floor(TimeDifference / 86400)
-		return `{Days} {Days == 1 and "day" or "days"} ago`
+		return string.format(
+			Utilities.Translate("reltime.Format"),
+			Days,
+			Utilities.Translate(Days == 1 and "reltime.Day" or "reltime.Days")
+		)
 	elseif TimeDifference < 31536000 then
 		local Weeks = math.floor(TimeDifference / 604800)
-		return `{Weeks} {Weeks == 1 and "week" or "weeks"} ago`
+		return string.format(
+			Utilities.Translate("reltime.Format"),
+			Weeks,
+			Utilities.Translate(Weeks == 1 and "reltime.Week" or "reltime.Weeks")
+		)
 	else
 		local Years = math.floor(TimeDifference / 31536000)
-		return `{Years} {Years == 1 and "years" or "years"} ago`
+		return string.format(
+			Utilities.Translate("reltime.Format"),
+			Years,
+			Utilities.Translate(Years == 1 and "reltime.Year" or "reltime.Years")
+		)
 	end
 end
+
 
 Utilities.Logging.Print = function(...)
 	if Var.Verbosity == "log" then
@@ -206,7 +237,7 @@ end
 function Utilities.Translate(StringIdentifier: string): string | { string }
 	local Locale, LocaleSetting = string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1], Utilities.GetSetting("Language")
 	
-	if Locale ~= LocaleSetting then
+	if Locale ~= LocaleSetting and LocaleSetting ~= "en" then
 		--// prefer the setting
 		Locale = LocaleSetting
 	end
@@ -282,9 +313,19 @@ function Utilities.ProcessDono(
 	if WasPurchased and Var.Remotes.GetPasses:InvokeServer()[GamePassId] ~= nil then
 		Frontend.Close(false)
 
-		script.Parent.FullscreenMessage.LocalScript.Enabled = true
+		script.Parent.Parent.Parent.FullscreenMessage.LocalScript.Enabled = true
 		require(Var.AdministerRoot.Client.Libraries.ConfettiCreator)()
 	end
+end
+
+function Utilities.CountryToFlag(CountryCode)
+	local Flag = ""
+
+	for i = 1, string.len(CountryCode) do
+		Flag = Flag .. utf8.char((CountryCode:sub(i, i):byte() % 32) + 0x1F1E5)
+	end
+
+	return Flag
 end
 
 return Utilities

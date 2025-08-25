@@ -94,15 +94,17 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 				task.defer(Frontend.Drawer.Close)
 				Frontend.SwapApps(ButtonConfig, Index, Clone)
 
-				xpcall(Icon.Click, Utilities.Logging.Warn)
+				if Icon.Click ~= nil then
+					xpcall(Icon.Click, Utilities.Logging.Warn)
+				end
 			end)
 
 			Clone.Parent = Button.SubCollection
-			
+
 			task.defer(function()
 				Clone.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
 			end)
-			
+
 			Clone.Name = Icon.Frame.Name
 
 			Height += .23
@@ -129,20 +131,20 @@ function Apps.Show(ServerURL, ID, Reason): string
 	if not Success then
 		Utilities.Logging.Warn(`Failed to fetch app {ID} from {ServerURL} - is the server active and responsive?`)
 		Utilities.Logging.Print(Data)
-		
-		return "The server didn't return an OK status code."
+
+		return Utilities.Translate("apps.aos.Down")
 	elseif Data["Error"] ~= nil then
 		Utilities.Logging.Warn(`App server lookup returned external error:`, Data["Error"])
-		
-		return "Something went wrong."
+
+		return Utilities.Translate("generic.error.Generic")
 	elseif Data[2] == 404 then
 		Utilities.Logging.Warn(Data[2])
-		
-		return "App not found."
+
+		return Utilities.Translate("generic.NotFound")
 	elseif Data[2] == 500 then
 		Utilities.Logging.Warn(Data[2])
-		
-		return "Internal Error"
+
+		return Utilities.Translate("apps.aos.InternalError")
 	end
 
 	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox
@@ -151,7 +153,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 
 	AppInfoFrame.AppIcon.Image = `rbxassetid://{Data["IconID"]}`
 	AppInfoFrame.AppIconBG.Image = `rbxassetid://{Data["BlurredIcon"]}`
-	
+
 	AppInfoFrame.Metadata.Text = 
 		`{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaCreated.Label"), "{{ }}", Utilities.FormatRelativeTime(Data["Metadata"]["CreatedAt"]))}` .. 
 		`\n\n{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaUpdated.Label"), "{{ }}",  Utilities.FormatRelativeTime(Data["Metadata"]["UpdatedAt"]))}` ..
@@ -164,7 +166,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	--end
 	AppInfoFrame.Details.Downloads.Value.Text = Data["Downloads"]
 	AppInfoFrame.ImportantInfo.Others.ItemType.Image = Data["AppType"] == "Theme" and Utilities.Icon "pencil-paintbrush" or Utilities.Icon "plugin"
-	
+
 	local Modules = { Sensitive = {}, Insensitive = {} }
 	for _, Dependency in Data.RichConfig.Dependencies.AdministerModules do
 		if table.find({"AdminRunner", "Apps"}, Dependency.Name) ~= nil then
@@ -173,20 +175,26 @@ function Apps.Show(ServerURL, ID, Reason): string
 			table.insert(Modules.Insensitive, Dependency.Name)
 		end 
 	end
-	
+
 	local CombinedSensitive, CombinedInsensitive = "", ""
 	for i, Module in Modules.Sensitive do
 		CombinedSensitive = CombinedSensitive .. i ~= #Modules.Sensitive and `{Module}, ` or `and {Module}`
 	end
-	
+
 	for i, Module in Modules.Insensitive do
 		CombinedInsensitive = CombinedInsensitive .. i ~= #Modules.Insensitive and `{Module}, ` or `and {Module}`
 	end
-	
-	AppInfoFrame.PrivacyUsage.Text = 
-		(CombinedSensitive ~= "" and `Uses sensitive Administer modules {CombinedSensitive}` or "Does not use sensitive Administer modules") .. "\n" .. 
-		(CombinedInsensitive ~= "" and `Uses insensitive Administer modules {CombinedInsensitive}` or "Does not use insensitive Administer modules") .. "\n" .. 
-		`Published by <b>{string.find(ServerURL, "admsoftware.org") ~= nil and "a trusted Administer AOS instance" or "a 3rd party AOS instance"}</b>`
+
+	AppInfoFrame.PrivacyUsage.Text = (
+		(CombinedSensitive ~= "" and Utilities.Translate("apps.sensitivity.Context", Utilities.Translate("apps.sensitivity.Sensitive"), CombinedSensitive)
+			or Utilities.Translate("apps.sensitivity.DoesNotUse", Utilities.Translate("apps.sensitivity.Sensitive"))) .. "\n" ..
+			(CombinedInsensitive ~= "" and Utilities.Translate("apps.sensitivity.Context", Utilities.Translate("apps.sensitivity.Insensitive"), CombinedInsensitive)
+				or Utilities.Translate("apps.sensitivity.DoesNotUse", Utilities.Translate("apps.sensitivity.Insensitive"))) .. "\n" ..
+			Utilities.Translate("apps.published.Context", Utilities.Translate(
+				string.find(ServerURL, "admsoftware.org") ~= nil and "apps.published.Official" or "apps.published.ThirdParty"
+				)
+			)
+	)
 
 	AppInfoFrame.Details.Creator.Icon.Image = Var.Services.Players:GetUserThumbnailAsync(
 		Data["Developer"]["ID"],
@@ -252,8 +260,8 @@ function Apps.Show(ServerURL, ID, Reason): string
 		else
 			Frontend.Toast({
 				Icon = Utilities.Icon "check-plain",
-				Text = "Success!",
-				Subtext = "The app has loaded, but you may need to rejoin for the frontend to load.",
+				Text = Utilities.Translate("generic.Success"),
+				Subtext = Utilities.Translate("apps.installed.Body"),
 				Timeout = 5
 			})
 		end
@@ -320,6 +328,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	end)
 
 	Connections["DislikeButton"] = AppInfoFrame.Details.Votes.Dislikes.TextButton.MouseButton1Click:Connect(function()
+		print("Disliking")
 		DoVote(0)
 	end)
 
@@ -350,7 +359,7 @@ function Apps.Search(Query: string, ServerURL: string?): {}
 			Data = {
 				{
 					Type = "text",
-					Value = "Sorry, but we couldn't find any results for that."
+					Value = Utilities.Translate("apps.search.NoResults")
 				}
 			},
 			AOSProcessedInfo = Result.meta._aos_search_api
@@ -358,9 +367,11 @@ function Apps.Search(Query: string, ServerURL: string?): {}
 	elseif Result.meta.ratio_info.is_ratio == true then
 		table.insert(Final, {
 			Type = "text",
-			Value = `We think you meant {Result.meta.ratio_info.keyword} ({
-			string.sub(string.gsub(Result.meta.ratio_info.confidence, "0.", ""), 1, 2) .. "%"
-			} confidence), results for it may be included.`
+			Value = string.format(
+				Utilities.Translate("apps.search.FoundMatch"), 
+				Result.meta.ratio_info.keyword,
+				string.sub(string.gsub(Result.meta.ratio_info.confidence, "0.", ""), 1, 2) .. "%"
+			)
 		})
 	end
 
@@ -390,24 +401,24 @@ function Apps.LoadAppList(List: {}?): ()
 	if InProgress then
 		Frontend.Toast({
 			Icon = Utilities.Icon "triangle-warning",
-			Text = "Error loading apps",
-			Subtext = "Rate limit exceeded, please slow down",
+			Text = Utilities.Translate("apps.load.Fail"),
+			Subtext = Utilities.Translate("apps.load.Ratelimit"),
 			Timeout = 10
 		})
-		
+
 		Utilities.Logging.Warn("You're clicking too fast or your app servers are unresponsive! Please slow down.")
 
 		Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
 		Var.Marketplace.ActivePage = "MPFrozen"
 
 		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Visible = true
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),"{{ }}", "debounce triggered, app server is unresponsive. try again in 5-10 seconds")
+		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),"{{ }}", "debounce triggered, AOS is unresponsive. try again in 5-10 seconds")
 
 		return
 	end
 
 	InProgress = true
-	
+
 	task.delay(5, function()
 		--// prevent the UI from locking up
 		InProgress = false
@@ -426,6 +437,12 @@ function Apps.LoadAppList(List: {}?): ()
 			NewCard.Visible = true
 
 			NewCard.ObjName.Text = CardData.name
+			NewCard.Server.Text = string.format(Utilities.Translate("Configuration.Apps.Description"),
+				`{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}`,
+				Utilities.ToSentenceCase(CardData.object_type),
+				CardData.developer.Name,
+				CardData.ServerName
+			)
 			NewCard.Server.Text = `{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}\n\n{Utilities.ToSentenceCase(CardData.object_type)} by @{CardData.developer.Name} from {CardData.ServerName}`
 
 			NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
@@ -433,11 +450,11 @@ function Apps.LoadAppList(List: {}?): ()
 
 			Connections[`Download-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
 				local ShowResult = Apps.Show(CardData.Server, CardData.id, CardData.Server)
-				
+
 				if ShowResult ~= true then
 					Frontend.Toast({
 						Icon = Utilities.Icon "triangle-warning",
-						Text = "Failed to load app",
+						Text = Utilities.Translate("apps.load.Fail"),
 						Subtext = ShowResult,
 						Timeout = 10
 					})
@@ -532,11 +549,11 @@ function Apps.LoadAppList(List: {}?): ()
 					Primary = Utilities.Icon "grid",
 					SubIcon = Utilities.Icon "question-circle"
 				},
-				"Why is this here?",
-				`You're seeing this featured because it's server, {Selected.ServerName} ({Selected.Server}), has reported its weighted score to be {Selected.weighted_score}, which is the highest among your installed servers.\nIf this is being done maliciously, remove the server.`,
+				Utilities.Translate("apps.score.Detail"),
+				string.sub(Utilities.Translate("apps.score.Body"), Selected.ServerName, Selected.Server, Selected.weighted_score),
 				{
 					{
-						Text = "OK",
+						Text = Utilities.Translate("generic.OK"),
 						Icon = "check",
 						Callback = function(c)
 							c()
@@ -581,7 +598,7 @@ end
 
 function Apps.InitSerarchbar()
 	local MP = Var.MainFrame.Configuration.Marketplace
-	
+
 	MP.Sidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
 		MP.Sidebar.Searchbar.Title.Text = MP.Sidebar.Searchbar.Input.Text 	
 	end)
@@ -631,7 +648,7 @@ function Apps.InitSerarchbar()
 			MP.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
 			Var.Marketplace.ActivePage = "CardGrid"
 			MP.MainMarketplace.CardGrid.Visible = true
-			
+
 			Cards = {
 				[ServerURL] = Cards
 			}
@@ -645,9 +662,9 @@ local IsLibraryLoading = false
 
 function Apps.LoadLibrary()
 	if IsLibraryLoading then return end
-	
+
 	IsLibraryLoading = true
-	
+
 	local AppsMenu = Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary
 	for i, AppItem: Instance in AppsMenu.Content:GetChildren() do
 		if not AppItem:IsA("CanvasGroup") or AppItem.Name == "Template" or AppItem.Name == "ServerTemplate" then continue end
@@ -665,9 +682,11 @@ function Apps.LoadLibrary()
 		NewTemplate.Name = k
 		NewTemplate.Logo.Image = App["Icon"]
 		NewTemplate.AppShortDesc.Text = App["Description"]
-		NewTemplate.InstallDate.Text = `Installed {App["InstalledSince"] ~= 0 and Utilities.FormatRelativeTime(
-			App["InstalledSince"]
-		) or "locally"}`
+		NewTemplate.InstallDate.Text = string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+			App["InstalledSince"] ~= 0 and Utilities.FormatRelativeTime(
+				App["InstalledSince"]
+			) or Utilities.Translate("generic.Locally")
+		)
 
 		if not Var.EnableEditableImages then
 			NewTemplate.BackgroundImage.Image = `rbxassetid://{App["Icon"]}`
@@ -690,7 +709,7 @@ function Apps.LoadLibrary()
 			Frontend.Popup.new(
 				{
 					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
-					Icon = `rbxassetid://{Var.Icons.logos["administer-blue"]}`
+					Icon = Utilities.Icon "administer"
 				},
 				{
 					Primary = `rbxassetid://{App["Icon"]}`,
@@ -711,7 +730,7 @@ function Apps.LoadLibrary()
 								Frontend.Popup.new(
 									{
 										Name = "Administer",
-										Icon = `rbxassetid://{Var.Icons.logos["administer-blue"]}`
+										Icon = Utilities.Icon "administer"
 									},
 									{
 										Primary = `rbxassetid://{App["Icon"]}`,
@@ -731,7 +750,7 @@ function Apps.LoadLibrary()
 								)
 							else
 								_Close()
-								
+
 								Apps.LoadLibrary()
 							end	
 						end
@@ -757,21 +776,25 @@ function Apps.LoadLibrary()
 			NewTemplate.ServerName.Text = Server.Name
 			NewTemplate.Name = Server.Name
 			NewTemplate.Metadata.Text = `{Server.Banner.text}\n\nAOS v{Server.AOSVers}\n\n{Server.IsDev and "Development mode \n\n" or ""}{Server.URL}`
-			NewTemplate.InstallDate.Text = `Installed {Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
-				Server.ServerInstall
-			) or "locally"}`
+			string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+				Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
+					Server.ServerInstall
+				) or Utilities.Translate("generic.Locally")
+			)
 
 			NewTemplate.BackgroundImage.BackgroundColor3 = Color3.fromHex(Server.Banner.color)
-			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · Running since {Utilities.FormatRelativeTime(os.time() - Server.Uptime)}`
+			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · {Utilities.Translate("apps.RunningSince")} {Utilities.FormatRelativeTime(os.time() - Server.Uptime)}`
 
 		end, function()
 			--// must be an error
 			NewTemplate.ServerName.Text = Server.URL
 			NewTemplate.Name = Server.URL
-			NewTemplate.Metadata.Text = `This server seems to be experiencing an outage. Try installing another in the meantime.`
-			NewTemplate.InstallDate.Text = `Installed {Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
-				Server.ServerInstall
-			) or "locally"}`
+			NewTemplate.Metadata.Text = Utilities.Translate("apps.aos.Out")
+			string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+				Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
+					Server.ServerInstall
+				) or Utilities.Translate("generic.Locally")
+			)
 
 			NewTemplate.Buttons.LongText.Icon.BackgroundColor3 = Color3.fromRGB(255, 108, 110)
 			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · Error {Server.Code}`	
@@ -784,14 +807,14 @@ function Apps.LoadLibrary()
 			Frontend.Popup.new(
 				{
 					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
-					Icon = `rbxassetid://{Var.Icons.logos["administer-blue"]}`
+					Icon = Utilities.Icon "administer"
 				},
 				{
-					Primary = `rbxassetid://{Var.Icons.logos["administer-blue"]}`,
+					Primary = Utilities.Icon "administer",
 					SubIcon = Utilities.Icon "warning-filled"
 				},
 				Utilities.Translate("Configuration.Apps.MessageBox.Header"):gsub("{{ app }}", Server.URL),
-				"Uninstalling app servers may have unintended side effects. Please make sure you have at least one server installed.",
+				Utilities.Translate("apps.aos.Uninstall"),
 				{
 					{
 						Text = Utilities.Translate("generic.Yes"),
@@ -805,10 +828,10 @@ function Apps.LoadLibrary()
 								Frontend.Popup.new(
 									{
 										Name = "Administer",
-										Icon = `rbxassetid://{Var.Icons.logos["administer-blue"]}`
+										Icon = Utilities.Icon "administer"
 									},
 									{
-										Primary = `rbxassetid://{Var.Icons.logos["administer-blue"]}`,
+										Primary = Utilities.Icon "administer",
 										SubIcon = Utilities.Icon "x"
 									},
 
@@ -839,7 +862,7 @@ function Apps.LoadLibrary()
 			)
 		end)
 	end
-	
+
 	IsLibraryLoading = false
 end
 
@@ -848,7 +871,11 @@ function Apps.Init(JustRefreshCounts)
 	local ActiveApps = Var.Remotes.GetInstalledApps:InvokeServer("Combined")
 	local Counts = Var.Remotes.GetAppCounts:InvokeServer()
 
-	Sidebar.Buttons.XLibrary.Resources.Content.Apps.Text = `{Counts.Apps} apps, {Counts.Servers} servers`
+	Sidebar.Buttons.XLibrary.Resources.Content.Apps.Text = string.format(
+		Utilities.Translate("apps.library.Detail"),
+		Counts.Apps,
+		Counts.Servers
+	)
 
 	if JustRefreshCounts then return end
 
@@ -874,11 +901,11 @@ function Apps.Init(JustRefreshCounts)
 			if Button.Name == "Themes" or Button.Name == "Apps" then
 				Var.Marketplace.ActivePage = "CardGrid"
 				Var.Marketplace.ActivePageType = Button.Name
-				
+
 				Apps.LoadAppList()
 			elseif Button.Name == "AAFeatured" then
 				Var.Marketplace.ActivePageType = "FEATURED"
-				
+
 				Apps.LoadAppList()
 			elseif Button.Name == "XLibrary" then
 				Apps.LoadLibrary()
@@ -907,34 +934,32 @@ function Apps.Init(JustRefreshCounts)
 			{
 				Icon = Utilities.Icon "administer",
 				Name = "Administer",
-				Subheader = "AOS Registration"
+				Subheader = `AOS {Utilities.Translate("generic.Registration")}`
 			},
 			{
 				Primary = Utilities.Icon "network",
 				SubIcon = Utilities.Icon "chain"
 			},
 
-			"Link custom server",
-			"Please enter your custom AOS server here with https:// and no trailing slash. It must be online and linked to your Mongo instance in order to be saved as primary.",
+			Utilities.Translate("apps.aos.install.Detail"),
+			Utilities.Translate("apps.aos.install.Body"),
 
 			{
 				{
-					Text = "Cancel",
+					Text = Utilities.Translate("generic.Exit"),
 					Icon = Utilities.Icon "no-entry",
 					Callback = function(Close)
 						Close()
 					end
 				},
 				{
-					Text = "Register",
+					Text = Utilities.Translate("generic.Done"),
 					Icon = Utilities.Icon "floppy-disk",
 					Callback = function(Close, TextInputs)
 						Close()
 
 						local ServerURL = TextInputs[1]
 						local Result = Var.Remotes.InstallServer:InvokeServer(ServerURL, game.Players.LocalPlayer.UserId)
-
-						print(Result)
 
 						if Result[1] then
 							Result = Var.Remotes.RegisterPrimaryAOS:InvokeServer(ServerURL)
@@ -943,19 +968,19 @@ function Apps.Init(JustRefreshCounts)
 								{
 									Icon = Utilities.Icon "administer",
 									Name = "Administer",
-									Subheader = "AOS Registration"
+									Subheader = `AOS {Utilities.Translate("generic.Registration")}`
 								},
 								{
 									Primary = Utilities.Icon "network",
 									SubIcon = Utilities.Icon(Result[1] and "check-plain" or "x")
 								},
-								Result[1] and "Success!" or "Something went wrong",
+								Result[1] and Utilities.Translate("generic.Success") or Utilities.Translate("generic.errors.Generic"),
 								Result[1] and 
-									"This AOS instance has been saved and registered as primary." or 
-									"Sorry, but something went wrong while assigning your primary instance. Please make note of the error in your game's logs and report it to the server maintainer.",
+									Utilities.Translate("apps.addserver.OK") or 
+									Utilities.Translate("apps.addserver.Failed"),
 								{
 									{
-										Text = "OK",
+										Text = Utilities.Translate("generic.OK"),
 										Icon = Utilities.Icon "check-plain",
 										Callback = function(Close)
 											Close()
@@ -975,7 +1000,7 @@ function Apps.Init(JustRefreshCounts)
 									SubIcon = Utilities.Icon "question-circle"
 								},
 								"Invalid server",
-								`This is not a valid AOS instance or it is offline. {Result[2]}`,
+								Utilities.Translate("apps.server.NotAdminister") .. Result[2],
 								{
 									{
 										Text = "OK",

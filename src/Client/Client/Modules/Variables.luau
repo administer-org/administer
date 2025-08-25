@@ -17,6 +17,7 @@ Variables.ActivePage = Variables.MainFrame.Home
 Variables.DoHeaderEffects = true
 Variables.HeartbeatDuration = 10
 Variables.PingTicksLog = 60
+Variables.AnimationSpeed = 1
 
 Variables.CombinedButtonConfig = {}
 Variables.Ping = {}

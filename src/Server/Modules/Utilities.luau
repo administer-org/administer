@@ -28,8 +28,29 @@ Utils.GetSetting = function(setting: Types.Setting, UserID: number?): Types.Sett
 	elseif setting == "Verbosity" then
 		return SettingsCache.Verbosity or Var.SettingsAPI.Get("Verbosity")
 	end
-	
+
 	return Var.SettingsAPI.Get(setting)
+end
+
+Utils.GetSettings = function(settings: {Types.Setting}, UserID: number?): Types.SettingResponse
+	local settingData = {}
+	if Var.SettingsAPI == nil then
+		return "log"
+	end
+	
+	for _, setting in pairs(Settings) do
+		local val = nil
+		
+		if setting == "Verbosity" then
+			val = SettingsCache.Verbosity or Var.SettingsAPI.Get("Verbosity")
+		else
+			val = Var.SettingsAPI.Get(setting)
+		end
+		
+		settingData[setting] = val
+	end
+
+	return settingData
 end
 
 Utils.Logging = {
@@ -45,7 +66,7 @@ Utils.Logging = {
 		if table.find({"log", "warning"}, Utils.GetSetting("Verbosity")) ~= nil then
 			return
 		end 
-		
+
 		warn(`[{Config.Name}] [warn]`, ..., debug.traceback(""))
 	end,
 
@@ -305,17 +326,18 @@ function Utils.NewRemote(
 			return true
 		end)
 
-		return
-
 	elseif RemoteType == "RemoteFunction" then
 		(Rem :: RemoteFunction).OnServerInvoke = function(Player: Player, ...)
+			
+			local blacklist = {"Ping", "GetSetting"}
+			
 			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] then return false end
-
-			if RemoteName ~= "Ping" then Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`) end
+			
+			if not table.find(blacklist, RemoteName) then Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`) end
 
 			local t, cbk = tick(), Callback(Player, ...)
 
-			if RemoteName ~= "Ping" then Utils.Logging.Print(`--> {Utils.t(nil, "generic.Done")} ({string.sub(tostring((tick() - t) * 1000), 1, 6)}ms)`) end
+			if not table.find(blacklist, RemoteName) then Utils.Logging.Print(`--> {Utils.t(nil, "generic.Done")} ({string.sub(tostring((tick() - t) * 1000), 1, 6)}ms)`) end
 
 			return cbk
 		end
@@ -329,6 +351,8 @@ function Utils.NewRemote(
 
 		Rem.Parent = AppFolder
 	end
+	
+	return Rem
 end
 
 function Utils.Time.RelativeFormat(Unix)
@@ -372,11 +396,7 @@ function Utils.GetGameOwner(): { ID: number, MemberType: string }
 	local _, Result, Type = pcall(function()
 		local GameInfo = Var.Services.MarketplaceService:GetProductInfo(game.PlaceId, Enum.InfoType.Asset)
 
-		if GameInfo.Creator.CreatorType == "User" then
-			return GameInfo.Creator.Id, "User"
-		else
-			return Var.Services.GroupService:GetGroupInfoAsync(GameInfo.Creator.CreatorTargetId).Owner.Id, "Group"
-		end
+		return game.CreatorId, GameInfo.Creator.CreatorType
 	end)
 
 	return {
@@ -575,15 +595,15 @@ function Utils.HasSeenTutorial(
 			UserId = Player
 		}
 	end
-	
+
 	if IsGlobal then
 		Player = {
 			UserId = "Global"
 		}
 	end
-	
+
 	local Data = Var.DataStores.AdminsDS:GetAsync(`__{Player.UserId}_Tutorials`) or {}
-	
+
 	if Data[TutorialName] == nil then 
 		return false
 	else
@@ -597,19 +617,19 @@ function Utils.TutorialSeen(Player, Tutorial, IsGlobal)
 			UserId = Player
 		}
 	end
-	
+
 	if IsGlobal then
 		Player = {
 			UserId = "Global"
 		}
 	end
-	
+
 	local Data = Var.DataStores.AdminsDS:GetAsync(`__{Player.UserId}_Tutorials`) or {}
-	
+
 	Data[Tutorial] = true
-	
+
 	Var.DataStores.AdminsDS:SetAsync(`__{Player.UserId}_Tutorials`, Data)
-	
+
 	return {true, `OK __{Player.UserId}_Tutorials: {Tutorial} true`}	
 end
 

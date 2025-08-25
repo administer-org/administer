@@ -17,24 +17,70 @@ type SettingsGroup = Types.SettingsGroup
 type SettingsApi = Types.SettingsAPI
 type MainSettings = Types.MainSettings
 
-local function saveDataStore(key: string, data: {}): boolean
+local function saveDataStore(key: string, serverKey: string, data: {}): boolean
+	local clientData = {}
+	local serverData = {}
+	
+	for categoryName, config in data do
+		clientData[categoryName] = {}
+		serverData[categoryName] = {}
+		
+		for settingName, data in config do
+			if data["SaveOnServer"] then
+				serverData[categoryName][settingName] = data
+			end
+			if data["SaveOnClient"] or data["SaveOnClient"] == nil then
+				clientData[categoryName][settingName] = data
+			end
+		end
+	end
+	
 	local success, err = pcall(function()
-		SettingsDataStore:SetAsync(key, HttpService:JSONEncode(data))
+		SettingsDataStore:SetAsync(key, HttpService:JSONEncode(clientData))
+		SettingsDataStore:SetAsync(serverKey, HttpService:JSONEncode(serverData))
 	end)
 	return success
 end
 
-local function loadDataStore(key: string, template: {}?): {}
-	local success, rawData = pcall(function()
-		return SettingsDataStore:GetAsync(key)
+local function loadDataStore(key: string, serverKey: string, template: {}?): {}
+	local success, clientData, serverData = pcall(function()
+		if key and serverKey then
+			return SettingsDataStore:GetAsync(key), SettingsDataStore:GetAsync(serverKey)
+		elseif key then
+			return SettingsDataStore:GetAsync(key), "{}"
+		elseif serverKey then
+			return "{}", SettingsDataStore:GetAsync(serverKey)
+		else
+			warn("A key must be provided")
+			return nil, nil
+		end
 	end)
 
-	if success and rawData then
-		local successDecode, data = pcall(function()
-			return HttpService:JSONDecode(rawData)
+	if success and clientData and serverData then
+		local successDecode, decodedClientData, decodedServerData = pcall(function()
+			return HttpService:JSONDecode(clientData), HttpService:JSONDecode(serverData)
 		end)
+		
+		if successDecode then
+			local data = {}
+			
+			for categoryName, config in decodedClientData do
+				data[categoryName] = {}
 
-		if successDecode and typeof(data) == "table" then
+				for settingName, loadedData in config do
+					data[categoryName][settingName] = loadedData
+				end
+			end
+			
+			for categoryName, config in decodedServerData do
+				if data[categoryName] == nil then
+					data[categoryName] = {}
+				end
+				for settingName, loadedData in config do
+					data[categoryName][settingName] = loadedData
+				end
+			end
+			
 			if template then
 				local function mergeTemplate(dataTable, templateTable)
 					local result = {}
@@ -214,7 +260,7 @@ function SettingsAPI.new(rawSettings)
 	function APIController.Save(UserId: number?): boolean
 		if isServer then
 			local success, err = pcall(function()
-				saveDataStore(dataStoreKey .. "#" .. UserId, settingsGroup)
+				saveDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", settingsGroup)
 			end)
 			return success
 		else
@@ -225,11 +271,10 @@ function SettingsAPI.new(rawSettings)
 		end
 	end
 
-	function APIController.Load(UserId: number?, customSettings: SettingsGroup?): boolean
+	function APIController.Load(UserId: number?, customTemplate: SettingsGroup?): boolean
 		if isServer then
-			if customSettings then settingsGroup = customSettings end
 			local success, err = pcall(function()
-				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId, rawSettings)
+				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", customTemplate or rawSettings)
 			end)
 			if success then
 				local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
@@ -244,7 +289,7 @@ function SettingsAPI.new(rawSettings)
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local loadRemote: RemoteFunction = remoteFolder:FindFirstChild("LoadSettings")
-			return loadRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId, customSettings)
+			return loadRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId, customTemplate)
 		end
 	end
 

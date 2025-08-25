@@ -71,15 +71,15 @@ function Http.GetRoute(
 	if AppServer == nil or AppServer == "" then
 		AppServer = Var.PrimaryAppServer ~= "" and Var.PrimaryAppServer ~= nil and Var.PrimaryAppServer or Var.DefaultAppServer 
 	end
-	
+
 	local ST = tick()
 	local Response
 	local IsAOS = string.match(AppServer, "^https://aos%-.+%.admsoftware%.org$") ~= nil
-	
+
 	Options = Options or {}
-	
+
 	local Timeout = Options.Timeout or 5
-	
+
 	if AppServer == "" then error() end
 
 	xpcall(function()
@@ -137,7 +137,7 @@ function Http.GetRoute(
 			local AvailableServers = FindAOSInstances()
 			local LowestPing = 999999
 			print(AvailableServers)
-			
+
 			--// find lowest ping and set it as primary for now
 			for _, Server in AvailableServers do
 				if tonumber(Server.Ping) < LowestPing then
@@ -145,7 +145,7 @@ function Http.GetRoute(
 					ActiveFailoverDomain = Server.url
 				end 
 			end
-			
+
 			--// retry!!
 			return Http.GetRoute(ActiveFailoverDomain, Route, OnOK, OnError, Options)
 		end
