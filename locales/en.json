@@ -185,6 +185,8 @@
     "apps.aos.Uninstall": "Uninstalling app servers may have unintended side effects. Please make sure you have at least one server installed.",
     "apps.aos.install.Detail": "Link custom server",
     "apps.aos.install.Body": "Please enter your custom AOS server here with https:// and no trailing slash. It must be online and linked to your Mongo instance in order to be saved as primary.",
+    "apps.aos.install.CantUninstall": "Cannot uninstall",
+    "apps.aos.install.CantInstall.detail.NotEnoughServers": "To remove this server, you must first add a new one.",
     "apps.library.Detail": "%s apps, %s servers",
     "apps.published.Context": "Published by <b>%s</b>",
     "apps.published.Official": "a trusted Administer AOS instance",
