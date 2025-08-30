@@ -256,6 +256,8 @@
     "setting.category.Apps": "Apps",
     "setting.category.Accessibility": "Accessibility",
     "setting.category.Miscellaneous": "Miscellaneous",
+    "setting.Locale.Swapped.Title": "Switched to English",
+    "setting.Locale.Swapped.Body": "Your interface is now American English. To apply changes, please restart the game.\nLocales are still a beta feature. If you notice anything incorrect or would like to add a new language, please visit the Administer Translator Portal to fix it.",
     "reltime.Now": "Just now",
     "reltime.Day": "day ago",
     "reltime.Days": "days ago",
