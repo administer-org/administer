@@ -10,7 +10,7 @@
     "Configuration.Admins.Container.Ranks.Content.Template.Info": "%s • %s • Created by @%s %s",
     "Configuration.Admins.Ranks.Protected": "Protected",
     "Configuration.Admins.Ranks.Unprotected": "Not protected",
-    "Configuration.Admins.Ranks.HasApps": "%d Apps",
+    "Configuration.Admins.Ranks.HasApps": "%s Apps",
     "Configuration.Admins.Ranks.HasSuperAdmin": "Full Access",
     "Configuration.Admins.Container.Ranks.Header.TLabel": "Ranks",
     "Configuration.Admins.EditRank.Apps.Content.Template.AppName": "Configuration",
