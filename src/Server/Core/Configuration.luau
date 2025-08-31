@@ -29,7 +29,7 @@ local Settings: SettingsType = {
 
 		Extra = "dev",
 		String = "2.1.0-rc1",
-		GitRevision = "03ca53c",
+		GitRevision = "b915738",
 
 		NoExtraData = "2.0.0",
 		APIRevision = "2.0.0",
