@@ -79,8 +79,19 @@ end)
 
 Var.Remotes.SettingsLoaded.OnClientEvent:Wait()
 
-local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand"})
+if Var.UseAcrylic then
+	--// blast from the past
+	local NewEffect = Instance.new("DepthOfFieldEffect")
+	NewEffect.FarIntensity = 0
+	NewEffect.FocusDistance = 51.6
+	NewEffect.InFocusRadius = 50
+	NewEffect.NearIntensity = 1
 
+	NewEffect.Parent = game.Lighting
+	NewEffect.Name = "AdministerAcrylic"
+end
+
+local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand"})
 local KeybindRegisterTimeframe = essentialSettings["KeybindRegisterTime"]
 
 if KeybindRegisterTimeframe == "optimistic" then
@@ -140,13 +151,6 @@ task.defer(function()
 		}
 	})
 end)
-
-for _, Button in Var.MainFrame:GetDescendants() do
-	if Button:IsA("TextButton") then
-		print(`ok to {Button.Name}`)
-		Frontend.AddButtonAnimation(Button)
-	end
-end
 
 --// Homepage, app drawer, header connections
 Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
@@ -226,7 +230,7 @@ end, function(e)
 	Utilities.Logging.Warn(`[x] [thread Admins] {e}`)
 end)
 
-if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled then
+if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled or Var.Mobile then
 	Utilities.Logging.Print("Mobile mode has been enabled!")
 	Var.Mobile = true
 
@@ -250,6 +254,9 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 
 	Var.MainFrame.Header.AssistiveClose.Visible = true
 	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
+	
+	--// Grid changes
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.ModernInstallBox.MainContent.MainContent.MetadataBox.UIGridLayout.CellSize = UDim2.fromOffset(150, 115)
 else
 	Var.Mobile = false
 
@@ -302,7 +309,7 @@ xpcall(function(...)
 	end
 
 	repeat
-		Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({"administer"})["administer"]
+		Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({ "administer" })["administer"]
 
 		if Var.DisableOnlineServices then
 			Var.Version = {
@@ -312,7 +319,7 @@ xpcall(function(...)
 		end
 
 		task.wait(1)
-	until Var.Version.IsUpToDate ~= nil
+	until Var.Version.IsUpToDate ~= nil or Var.DisableOnlineServices
 
 	NewVersCard(Var.Version)
 
@@ -378,15 +385,27 @@ end, function(a0)
 	Utilities.Logging.Warn("Failed to fetch info page assets, assuming this is a permissions issue!", a0)
 end)
 
-script.Assets.LocalScript.Enabled = essentialSettings["EnableClickEffects"]
-
-if essentialSettings["ChatCommand"] then
+if essentialSettings.ChatCommand then
 	local Command = Instance.new("TextChatCommand")
 
 	Command.PrimaryAlias = "/adm"
 	Command.SecondaryAlias = "/administer"
 	Command.Triggered:Connect(Frontend.Open)
 	Command.Parent = game.TextChatService.TextChatCommands
+end
+
+if essentialSettings.EnableClickEffects then
+	for _, Button in Var.MainFrame:GetDescendants() do
+		if Button:IsA("TextButton") or Button:IsA("ImageButton") then
+			Frontend.AddButtonAnimation(Button)
+		end
+	end
+
+	Var.MainFrame.DescendantAdded:Connect(function(Instance)
+		if Instance:IsA("TextButton") or Instance:IsA("ImageButton") then
+			Frontend.AddButtonAnimation(Instance)
+		end
+	end)
 end
 
 if KeybindRegisterTimeframe == "safe" then

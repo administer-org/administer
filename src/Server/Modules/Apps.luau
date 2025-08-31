@@ -260,7 +260,7 @@ function App.GetAll(Source: string): Types.TableWildcard
 end
 
 function App.Install(AppID: number, InstallContext: string, AppName: string): Types.Response
-	--// NEW: Now we run the app in this server to test it. Putting here so I don't forget for the 2.0 logs.
+	print(AppID, InstallContext, AppName)
 	Utils.Logging.Print(`[-] Attempting to load app`)
 	local _, res = xpcall(function(): Types.Response
 		App.LoadLocal(AppID, {
@@ -312,15 +312,17 @@ function App.ServerAPI.GetList(
 
 	for i, Server in (SpecificServer ~= nil and {{ ServerURL = SpecificServer }} or Var.DataStores.AppDB:GetAsync("AppServerList")) do
 		local FullList = {}
+		
+		local InstanceName = HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(D, _)
+			return D.instance_name
+		end, function(x)
+			return "Unknown"
+		end)
 
 		return HTTP.GetRoute(Server.ServerURL, `/api/directory?asset_type={Area}`, function(Apps, ResponseData): {}
 			for i, v in Apps do
 				v["Server"] = Server.ServerURL
-				v["ServerName"] = HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(D, _)
-					return D.instance_name
-				end, function(x)
-					return "Unknown"
-				end)
+				v["ServerName"] = InstanceName
 
 				table.insert(FullList, v)
 			end
@@ -338,7 +340,7 @@ function App.ServerAPI.New(URL: string, ActingUser: number?): Types.Response
 	Utils.Logging.Print("Installing app server...")
 
 	return HTTP.GetRoute(URL, "/pub/.administer", function(Data, Info)
-		if Data["server"] ~= "AdministerAppServer" then
+		if Data.server ~= "AdministerAppServer" then
 			Utils.Logging.Warn("This does not seem to be a valid or up-to-date AOS instance.")
 			return { false, "This is not a valid AOS instance." }
 		end
@@ -473,7 +475,7 @@ function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 			Data.CannotDownload = false
 			Data.RichConfig = RichConfig
 		end, function(e)
-			print(e)
+			Utils.Logging.Warn(e)
 			Data.CannotDownload = true
 		end)
 
@@ -570,7 +572,7 @@ function App.ServerAPI.GetAOSInstances(
 
 		return Content.instances
 	end, function(...)
-		print(...)
+		Utils.Logging.Warn("Failed to get gateway reply:", ...)
 	end)
 end
 

@@ -152,7 +152,7 @@ function Utilities.NewNotification(
 	end
 
 	local NewSound = Instance.new("Sound")
-	NewSound.SoundId = "rbxassetid://9770089602"
+	NewSound.SoundId = "rbxassetid://17208372272"
 	NewSound.Parent = NotificationContent
 	NewSound:Play()
 

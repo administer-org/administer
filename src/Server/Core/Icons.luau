@@ -16,7 +16,8 @@ return {
 		["administer-wireframe"] = "83950641785996",
 		["logo-twitter-black"] = "12167431902"
 	},
-
+	
+	["accessibility"] = "103566714530577",
 	["administer"] = "116599744136879", --// I know logos exists I just use this too much 
 	["alarm"] = "18925390063",
 	["angle-left"] = "17685578876",
@@ -75,7 +76,7 @@ return {
 	["hourglass-end"] = "84027648824846",
 	["hourglass-start"] = "137727164423650",
 	["hourglass-wait"] = "114352905669431",
-	["house-key"] = "128148976846957",
+	["house-key"] = "71693879906063",
 	["info"] = "14919001252",
 	["iphone-notch"] = "12500517462",
 	["joystick"] = "15477682728",
@@ -106,6 +107,7 @@ return {
 	["question-circle"] = "15105863258",
 	["refresh"] = "14512840024",
 	["route"] = "81251692641354",
+	["screen-capture"] = "112713507213210",
 	["search"] = "15406949659",
 	["send"] = "17250641964",
 	["settings-dials"] = "18512346359",
@@ -118,7 +120,7 @@ return {
 	["sidebar-menu"] = "15483587163",
 	["skull"] = "18894156729",
 	["sparkles"] = "18151072839",
-	["spinner-legagcy"] = "14512850323",
+	["spinner-legacy"] = "14512850323",
 	["statistics"] = "14694937954",
 	["star"] = "82388076328781",
 	["star-filled"] = "100883084418403",
@@ -129,6 +131,7 @@ return {
 	["text-input"] = "82357874222016",
 	["ticket"] = "15483554733",
 	["time-fading"] = "18759922371",
+	["translate"] = "95054342744923",
 	["trash"] = "16832240361",
 	["triangle-warning"] = "80557838026290",
 	["user"] = "15317920838",

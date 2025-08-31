@@ -1,4 +1,4 @@
---// pyxfluff 2025
+--// pyxfluff 2024-2025
 
 --// This is mostly for the Marketplace but has some other app-related functions.
 
@@ -8,6 +8,8 @@ local Types     = require(Modules.Types)
 local Var       = require(Modules.Variables)
 local Frontend  = require(Modules.Frontend)
 local Utilities = require(Modules.Utilities)
+
+local Shime = require(Modules.Parent.Libraries.Shime)
 
 local Apps = {}
 local Connections = {}
@@ -117,13 +119,14 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 end
 
 function Apps.GetVersionLabel(RequestedAPIVersion: number): string
-	return `<font color="rgb(139,139,139)">Your version </font>{RequestedAPIVersion == Var.AppAPIVersion and `<font color="rgb(56,218,111)">is supported! ({Var.VersionString})</font>` or `<font color="rgb(255,72,72)">may not be supported ({Var.VersionString})</font>`}`
+	Utilities.Logging.Warn("Attempt to use a deprecated API (Apps.GetVersionLabel)")
+	return
 end
 
 function Apps.Show(ServerURL, ID, Reason): string
 	Utilities.Logging.Print("Downloading full info for that app...")
 
-	local TI = TweenInfo.new((tonumber(Utilities.GetSetting("AnimationSpeed")) or 1) * 2, Enum.EasingStyle.Quart)
+	local TI = TweenInfo.new(Var.AnimationSpeed * 2, Enum.EasingStyle.Quart)
 	local Success, Data = pcall(function()
 		return Var.Remotes.GetAppInfo:InvokeServer(ServerURL, ID)
 	end)
@@ -133,8 +136,8 @@ function Apps.Show(ServerURL, ID, Reason): string
 		Utilities.Logging.Print(Data)
 
 		return Utilities.Translate("apps.aos.Down")
-	elseif Data["Error"] ~= nil then
-		Utilities.Logging.Warn(`App server lookup returned external error:`, Data["Error"])
+	elseif Data.Error ~= nil then
+		Utilities.Logging.Warn(`AOS lookup returned external error:`, Data.Error)
 
 		return Utilities.Translate("generic.error.Generic")
 	elseif Data[2] == 404 then
@@ -147,25 +150,113 @@ function Apps.Show(ServerURL, ID, Reason): string
 		return Utilities.Translate("apps.aos.InternalError")
 	end
 
-	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox
+	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.MainContent
+
+	local function NewInfoBox(Icon, Title, Value)
+		local NewMetaBox = AppInfoFrame.MainContent.MetadataBox.Template:Clone()
+
+		NewMetaBox.Parent = AppInfoFrame.MainContent.MetadataBox
+		NewMetaBox.Visible = true
+		NewMetaBox.Name = Title
+
+		NewMetaBox.Body.Text = Value
+		NewMetaBox.Icon.Image = Utilities.Icon(Icon)
+		NewMetaBox.Title.Text = Title
+	end
+	
+	--// Cleanup
+	for _, Tag in AppInfoFrame.TopHeader.Details:GetChildren() do
+		if Tag:GetAttribute("IsTag") then Tag:Destroy() end
+	end
+	
+	for _, Box in AppInfoFrame.MainContent.MetadataBox:GetChildren() do
+		if Box:IsA("Frame") and Box.Name ~= "Template" then 
+			Box:Destroy()
+		end
+	end
+	
+	for _, Box in AppInfoFrame.MainContent.PrivacyBoxSensitive:GetChildren() do
+		if Box:IsA("TextLabel") and Box.Name ~= "Item" then 
+			Box:Destroy()
+		end
+	end
+	
+	for _, Box in AppInfoFrame.MainContent.PrivacyBoxInsensitive:GetChildren() do
+		if Box:IsA("TextLabel") and Box.Name ~= "Item" then 
+			Box:Destroy()
+		end
+	end
 
 	Data = Data[2]
 
-	AppInfoFrame.AppIcon.Image = `rbxassetid://{Data["IconID"]}`
-	AppInfoFrame.AppIconBG.Image = `rbxassetid://{Data["BlurredIcon"]}`
+	NewInfoBox(
+		"calendar",
+		string.format(Utilities.Translate("Configuration.Marketplace.Install.Created"), ""), 
+		Utilities.FormatRelativeTime(Data.Metadata.CreatedAt)
+	)
 
-	AppInfoFrame.Metadata.Text = 
-		`{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaCreated.Label"), "{{ }}", Utilities.FormatRelativeTime(Data["Metadata"]["CreatedAt"]))}` .. 
-		`\n\n{string.gsub(Utilities.Translate("Configuration.Marketplace.Install.MetaUpdated.Label"), "{{ }}",  Utilities.FormatRelativeTime(Data["Metadata"]["UpdatedAt"]))}` ..
-		`\n\n{string.format(Utilities.Translate("appplatform.Supported"), Data.RichConfig.Dependencies.AppPlatform)}`
-	--if Reason == nil then Configuration.Marketplace.Install.MetaServer.Label
-	--	AppInfoFrame.MetaServer.Label.Text =
-	--		`Shown because <b>You're subscribed to {string.split(ServerURL, "/")[3]}</b>`
-	--else
-	--	AppInfoFrame.MetaServer.Label.Text = `Shown because <b>{Reason}</b>`
-	--end
-	AppInfoFrame.Details.Downloads.Value.Text = Data["Downloads"]
-	AppInfoFrame.ImportantInfo.Others.ItemType.Image = Data["AppType"] == "Theme" and Utilities.Icon "pencil-paintbrush" or Utilities.Icon "plugin"
+	NewInfoBox(
+		"hourglass-wait",
+		string.format(Utilities.Translate("Configuration.Marketplace.Install.Updated"), ""), 
+		Utilities.FormatRelativeTime(Data.Metadata.UpdatedAt)
+	)
+
+	NewInfoBox(
+		"administer",
+		"Administer Version", 
+		Data.RichConfig.Dependencies.AppPlatform
+	)
+
+	NewInfoBox(
+		"house-key",
+		"Server URL", 
+		ServerURL
+	)
+
+	NewInfoBox(
+		"comment-code",
+		"Asset Type", 
+		--Data.AppType
+		"App"
+	)
+
+	NewInfoBox(
+		"info",
+		"Trusted", 
+		"This server is <b>trusted.</b>"
+	)
+
+	NewInfoBox(
+		"question-circle",
+		"AOSGenerator", 
+		Data.Metadata.AOSGenerator
+	)
+
+	NewInfoBox(
+		"question-circle",
+		"App ID", 
+		Data.Metadata.AdministerID
+	)
+
+	if Data.IconID then
+		AppInfoFrame.MainContent.MediaScroller.Template.Visible = true
+		AppInfoFrame.MainContent.MediaScroller.Template.Image = `rbxassetid://{Data.IconID}`
+	else
+		AppInfoFrame.MainContent.MediaScroller.Template.Visible = false
+		
+		for _, Image in Data.Media do
+			local NewImage = AppInfoFrame.MainContent.MediaScroller.Template:Clone()
+
+			NewImage.Visible = true
+			NewImage.Parent = AppInfoFrame.MainContent.MediaScroller
+			NewImage.Name = Image
+
+			NewImage.Image = `rbxassetid://{Image}` 
+		end
+	end
+
+	AppInfoFrame.TopHeader.MediaBackdrop.Image = `rbxassetid://{Data.BlurredIcon}`
+	AppInfoFrame.TopHeader.Details.Downloads.Value.Text = Utilities.ShortNumber(Data.Downloads)
 
 	local Modules = { Sensitive = {}, Insensitive = {} }
 	for _, Dependency in Data.RichConfig.Dependencies.AdministerModules do
@@ -176,76 +267,108 @@ function Apps.Show(ServerURL, ID, Reason): string
 		end 
 	end
 
-	local CombinedSensitive, CombinedInsensitive = "", ""
-	for i, Module in Modules.Sensitive do
-		CombinedSensitive = CombinedSensitive .. i ~= #Modules.Sensitive and `{Module}, ` or `and {Module}`
-	end
-
-	for i, Module in Modules.Insensitive do
-		CombinedInsensitive = CombinedInsensitive .. i ~= #Modules.Insensitive and `{Module}, ` or `and {Module}`
-	end
-
-	AppInfoFrame.PrivacyUsage.Text = (
-		(CombinedSensitive ~= "" and Utilities.Translate("apps.sensitivity.Context", Utilities.Translate("apps.sensitivity.Sensitive"), CombinedSensitive)
-			or Utilities.Translate("apps.sensitivity.DoesNotUse", Utilities.Translate("apps.sensitivity.Sensitive"))) .. "\n" ..
-			(CombinedInsensitive ~= "" and Utilities.Translate("apps.sensitivity.Context", Utilities.Translate("apps.sensitivity.Insensitive"), CombinedInsensitive)
-				or Utilities.Translate("apps.sensitivity.DoesNotUse", Utilities.Translate("apps.sensitivity.Insensitive"))) .. "\n" ..
-			Utilities.Translate("apps.published.Context", Utilities.Translate(
-				string.find(ServerURL, "admsoftware.org") ~= nil and "apps.published.Official" or "apps.published.ThirdParty"
-				)
+	if Modules.Sensitive == {} then
+		Modules.Sensitive = {
+			string.format(
+				Utilities.Translate("apps.sensitivity.DoesNotUse"), 
+				Utilities.Translate("apps.sensitivity.Sensitive")
 			)
-	)
+		}
+	end
 
-	AppInfoFrame.Details.Creator.Icon.Image = Var.Services.Players:GetUserThumbnailAsync(
-		Data["Developer"]["ID"],
+	if Modules.Insensitive == {} then
+		Modules.Insensitive = {
+			string.format(
+				Utilities.Translate("apps.sensitivity.DoesNotUse"), 
+				Utilities.Translate("apps.sensitivity.Insensitive")
+			)
+		}
+	end
+
+	for _, SensitiveModule in Modules.Sensitive do
+		local NewSensitivity = AppInfoFrame.MainContent.PrivacyBoxSensitive.Item:Clone()
+
+		NewSensitivity.Name = SensitiveModule
+		NewSensitivity.Visible = true
+		NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxSensitive
+		
+		NewSensitivity.Text = SensitiveModule
+	end
+
+	for _, SensitiveModule in Modules.Insensitive do
+		local NewSensitivity = AppInfoFrame.MainContent.PrivacyBoxInsensitive.Item:Clone()
+
+		NewSensitivity.Name = SensitiveModule
+		NewSensitivity.Visible = true
+		NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxInsensitive
+		
+		NewSensitivity.Text = SensitiveModule
+	end
+
+	AppInfoFrame.TopHeader.Details.Creator.Icon.Image = Var.Services.Players:GetUserThumbnailAsync(
+		Data.Developer.ID,
 		Enum.ThumbnailType.HeadShot,
 		Enum.ThumbnailSize.Size180x180
 	)
-	AppInfoFrame.Details.Creator.Value.Text = `@{Data["Developer"]["Name"]}`
-	for _, Tag in AppInfoFrame.Details:GetChildren() do
-		if Tag:GetAttribute("IsTag") then Tag:Destroy() end
-	end
+
+	AppInfoFrame.TopHeader.Details.Creator.Value.Text = `@{Data.Developer.Name}`
 
 	for _, TagData in Data.Tags do
-		local Tag = AppInfoFrame.Details.TagTemplate:Clone()
+		local Tag = AppInfoFrame.TopHeader.Details.TagTemplate:Clone()
 
 		Tag.Value.Text = TagData
 		Tag.Name = TagData
 		Tag.Visible = true
-		Tag.Parent = AppInfoFrame.Details
+		Tag.Parent = AppInfoFrame.TopHeader.Details
 
 		Tag:SetAttribute("IsTag", true)
 	end
 
-	AppInfoFrame.Head.Text = Data["Name"]
-	AppInfoFrame.Subheader.Text = Data["Title"]
-	AppInfoFrame.Description.Text = Data["LongDescription"]
+	AppInfoFrame.TopHeader.AppIcon.AppName.Text = Data.Name
+	AppInfoFrame.TopHeader.AppIcon.Subheader.Text = Data.Title
+	AppInfoFrame.MainContent.Description.Text = Data.LongDescription
 
-	AppInfoFrame.Details.Votes.Dislikes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Dislikes"])
-	AppInfoFrame.Details.Votes.Likes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Likes"])
-	AppInfoFrame.Details.Favorites.Value.Text = Utilities.ShortNumber(Data["Votes"]["Favorites"])
+	AppInfoFrame.TopHeader.Details.Votes.Dislikes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Dislikes"])
+	AppInfoFrame.TopHeader.Details.Votes.Likes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Likes"])
+	AppInfoFrame.TopHeader.Details.Favorites.Value.Text = Utilities.ShortNumber(Data["Votes"]["Favorites"])
 
 	local Percent = tonumber(Data["Votes"]["Likes"]) / (tonumber(Data["Votes"]["Dislikes"])
 		+ tonumber(Data["Votes"]["Likes"]))
 
-	Connections["DownloadClick"] = AppInfoFrame.Details.Downloads.Install.MouseButton1Click:Connect(function()
-		AppInfoFrame.Details.Downloads.Value.Text = Utilities.Translate("generic.Loading") .. "..."
-		AppInfoFrame.Details.Downloads.Icon.Image = Utilities.Icon "hourglass-wait"
+	Connections.DownloadClick = AppInfoFrame.TopHeader.Details.Downloads.MouseButton1Click:Connect(function()
+		if Data.CannotDownload then
+			Frontend.Toast({
+				Icon = Utilities.Icon "triangle-warning",
+				Text = "Downloads disabled",
+				Subtext = "This app may not be downloaded at this time",
+				Timeout = 10
+			})
+			
+			return
+		end
+		
+		local Shimmer = Shime.new(AppInfoFrame.TopHeader.Details.Downloads)
+		
+		Shimmer:Play()
+		
+		AppInfoFrame.TopHeader.Details.Downloads.Value.Text = Utilities.Translate("generic.Loading") .. "..."
+		AppInfoFrame.TopHeader.Details.Downloads.Icon.Image = Utilities.Icon "hourglass-wait"
 
-		local Res = Var.Remotes.InstallApp:InvokeServer(ServerURL, ID, Data["Name"])
+		local Res = Var.Remotes.InstallApp:InvokeServer(ServerURL, ID, Data.Name)
 
-		AppInfoFrame.Details.Downloads.Icon.Image = Utilities.Icon "download"
+		AppInfoFrame.TopHeader.Details.Downloads.Icon.Image = Utilities.Icon "download"
 
 		if not Res[1] then
 			Frontend.Popup.new(
 				{
 					Name = Utilities.ToSentenceCase( Utilities.Translate("Configuration.Marketplace.Header.Head") ),
 					Icon = Utilities.Icon "grid"
-				}, {
+				}, 
+				{
 					Primary = Utilities.Icon "warning-filled",
 					SubIcon = Utilities.Icon "x"
 				}, 
-				Utilities.Translate("apps.InstallFail"),
+				Utilities.Translate("apps.load.Fail"),
 				Res[2],
 				{
 					{
@@ -267,17 +390,20 @@ function Apps.Show(ServerURL, ID, Reason): string
 		end
 
 		task.delay(2, function()
-			AppInfoFrame.Details.Downloads.Value.Text = Utilities.ShortNumber(Data["Downloads"])
+			AppInfoFrame.TopHeader.Details.Downloads.Value.Text = Utilities.ShortNumber(Data.Downloads)
 		end)
+		
+		Shimmer:Pause()
+		Shimmer:GetFrame():Destroy()
 	end)
 
 	Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
-	AppInfoFrame.Visible = true
+	AppInfoFrame.Parent.Visible = true
 
-	Var.Services.TweenService:Create(AppInfoFrame.Details.Votes.VotePercentage, TI, { Size = UDim2.fromScale(Percent, 1) })
+	Var.Services.TweenService:Create(AppInfoFrame.TopHeader.Details.Votes.VotePercentage, TI, { Size = UDim2.fromScale(Percent, 1) })
 		:Play()
 
-	if not AppInfoFrame.Details.Votes.Likes:FindFirstChild("TextButton") then
+	if not AppInfoFrame.TopHeader.Details.Votes.Likes:FindFirstChild("TextButton") then
 		for i = 1, 2 do
 			local Button = Instance.new("TextButton")
 
@@ -285,15 +411,14 @@ function Apps.Show(ServerURL, ID, Reason): string
 			Button.Size = UDim2.fromScale(1,1)
 			Button.Text = ""
 
-			Button.Parent = (i == 1 and AppInfoFrame.Details.Votes.Likes or AppInfoFrame.Details.Votes.Dislikes)
+			Button.Parent = (i == 1 and AppInfoFrame.TopHeader.Details.Votes.Likes or AppInfoFrame.TopHeader.Details.Votes.Dislikes)
 		end
 	end
 
 	local function DoVote(VoteType)
-		local Response = Var.Remotes.Vote:InvokeServer(ServerURL, ID, 1)
+		local Response = Var.Remotes.Vote:InvokeServer(ServerURL, ID, VoteType)
 
 		if Response.StatusCode == 400 then
-			print(Response.Body)
 			Frontend.Popup.new(
 				{
 					Name = Utilities.ToSentenceCase( Utilities.Translate("Configuration.Marketplace.Header.Head") ),
@@ -323,12 +448,11 @@ function Apps.Show(ServerURL, ID, Reason): string
 		return Apps.Show(ServerURL, ID, Reason)
 	end
 
-	Connections["LikeButton"] = AppInfoFrame.Details.Votes.Likes.TextButton.MouseButton1Click:Connect(function()
+	Connections.LikeButton = AppInfoFrame.TopHeader.Details.Votes.Likes.TextButton.MouseButton1Click:Connect(function()
 		DoVote(1)
 	end)
 
-	Connections["DislikeButton"] = AppInfoFrame.Details.Votes.Dislikes.TextButton.MouseButton1Click:Connect(function()
-		print("Disliking")
+	Connections.DislikeButton = AppInfoFrame.TopHeader.Details.Votes.Dislikes.TextButton.MouseButton1Click:Connect(function()
 		DoVote(0)
 	end)
 
@@ -449,16 +573,32 @@ function Apps.LoadAppList(List: {}?): ()
 			NewCard.Stats.Rating.Label.Text = CardData.rating
 
 			Connections[`Download-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
-				local ShowResult = Apps.Show(CardData.Server, CardData.id, CardData.Server)
+				local Shimmer = Shime.new(NewCard.Stats.DownloadButton)
+				Shimmer:Play()
+				
+				xpcall(function()
+					local ShowResult = Apps.Show(CardData.Server, CardData.id, CardData.Server)
 
-				if ShowResult ~= true then
+					if ShowResult ~= true then
+						Frontend.Toast({
+							Icon = Utilities.Icon "triangle-warning",
+							Text = Utilities.Translate("apps.load.Fail"),
+							Subtext = ShowResult,
+							Timeout = 10
+						})
+					end
+				end, function(e)
+					print(e)
 					Frontend.Toast({
 						Icon = Utilities.Icon "triangle-warning",
-						Text = Utilities.Translate("apps.load.Fail"),
-						Subtext = ShowResult,
-						Timeout = 10
+						Text = Utilities.Translate("generic.error.Generic"),
+						Subtext = e,
+						Timeout = 15
 					})
-				end
+				end)
+				
+				Shimmer:Pause()
+				Shimmer:GetFrame():Destroy()
 			end)
 
 			Connections[`Show-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton2Click:Connect(function()
@@ -599,20 +739,23 @@ end
 function Apps.InitSerarchbar()
 	local MP = Var.MainFrame.Configuration.Marketplace
 
-	MP.Sidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
-		MP.Sidebar.Searchbar.Title.Text = MP.Sidebar.Searchbar.Input.Text 	
+	MP.ASidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
+		MP.ASidebar.Searchbar.Title.Text = MP.ASidebar.Searchbar.Input.Text 	
 	end)
 
-	MP.Sidebar.Searchbar.Input.FocusLost:Connect(
+	MP.ASidebar.Searchbar.Input.FocusLost:Connect(
 		function(EnterPressed: boolean, ...)
 			if not EnterPressed then return end
+			
+			local Shimmer = Shime.new(MP.ASidebar.Searchbar)
+			Shimmer:Play()
 
 			MP.MainMarketplace.MPFrozen.Visible = false
 
 			local Cards = {}
 			local ServerURL = Var.Remotes.GetPrimaryServer:InvokeServer()
 			local SearchResult = Apps.Search(
-				MP.Sidebar.Searchbar.Input.Text
+				MP.ASidebar.Searchbar.Input.Text
 			)
 
 			for _, Data in SearchResult.Data do
@@ -654,6 +797,9 @@ function Apps.InitSerarchbar()
 			}
 
 			Apps.LoadAppList(Cards)
+			
+			Shimmer:Pause()
+			Shimmer:GetFrame():Destroy()
 		end
 	)
 end
@@ -715,7 +861,7 @@ function Apps.LoadLibrary()
 					Primary = `rbxassetid://{App["Icon"]}`,
 					SubIcon = Utilities.Icon "warning-filled"
 				},
-				Utilities.Translate("Configuration.Apps.MessageBox.Header"):gsub("{{ app }}", k),
+				Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(k),
 				Utilities.Translate("Configuration.Apps.MessageBox.Content"),
 				{
 					{
@@ -804,6 +950,16 @@ function Apps.LoadLibrary()
 		NewTemplate.Visible = true
 
 		NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
+			if #AppServers == 1 then
+				Frontend.Toast({
+					Icon = Utilities.Icon "triangle-warning",
+					Text = Utilities.Translate("apps.aos.install.CantUninstall"),
+					Subtext = Utilities.Translate("apps.aos.install.CantInstall.detail.NotEnoughServers"),
+					Timeout = 10
+				})
+
+				return
+			end
 			Frontend.Popup.new(
 				{
 					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
@@ -813,7 +969,7 @@ function Apps.LoadLibrary()
 					Primary = Utilities.Icon "administer",
 					SubIcon = Utilities.Icon "warning-filled"
 				},
-				Utilities.Translate("Configuration.Apps.MessageBox.Header"):gsub("{{ app }}", Server.URL),
+				Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(Server.URL),
 				Utilities.Translate("apps.aos.Uninstall"),
 				{
 					{
@@ -867,7 +1023,7 @@ function Apps.LoadLibrary()
 end
 
 function Apps.Init(JustRefreshCounts)
-	local Sidebar = Var.MainFrame.Configuration.Marketplace.Sidebar
+	local Sidebar = Var.MainFrame.Configuration.Marketplace.ASidebar
 	local ActiveApps = Var.Remotes.GetInstalledApps:InvokeServer("Combined")
 	local Counts = Var.Remotes.GetAppCounts:InvokeServer()
 

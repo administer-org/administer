@@ -131,8 +131,6 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 
 		NewRank.Members = Data.Members
 		NewRank.Apps = Data.Apps
-		
-		print(Data.IsEdit, Data.EditOriginalName)
 
 		if not Data.IsEditing then
 			table.insert(NewRank.Modifications, {

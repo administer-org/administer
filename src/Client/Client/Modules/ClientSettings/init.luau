@@ -36,10 +36,10 @@ clientSettings.SettingElements = {
 		["Element"] = elements.BoolTemplate,
 		["Init"] = function(frame, settingInfo)
 			local currentValue = settingInfo.Value.Value
-			
+
 			local toggle = elementModules.Toggle.createSwitch(frame.Priorities.Select, frame.Priorities.SelectedItem)
 			toggle:SetValue(currentValue)
-			
+
 			return toggle.ValueChanged, toggle, "value"
 		end
 	},
@@ -47,10 +47,10 @@ clientSettings.SettingElements = {
 		["Element"] = elements.TextTemplate,
 		["Init"] = function(frame, settingInfo)
 			local currentValue = settingInfo.Value.Value
-			
+
 			local input = elementModules.InputBox.setupTextBox(frame.Action)
 			input:SetValue(currentValue)
-			
+
 			return input.ValueChanged, input, "value"
 		end
 	},
@@ -59,11 +59,11 @@ clientSettings.SettingElements = {
 		["Init"] = function(frame, settingInfo)
 			local currentValue = settingInfo.Value.Value
 			local keybindsList = {}
-			
+
 			for i,v in pairs(string.split(currentValue,",")) do
 				table.insert(keybindsList, Enum.KeyCode:FromName(v))
 			end
-			
+
 			local listener = elementModules.KeybindSelector.createKeybindListener(frame.Priorities.Select, frame.Priorities.SelectedItem)
 			listener:SetValue(keybindsList)
 
@@ -74,13 +74,13 @@ clientSettings.SettingElements = {
 		["Element"] = elements.DropdownTemplate,
 		["Init"] = function(frame, settingInfo)
 			local currentValue = settingInfo.Value.Value
-			
-			local dropdown = elementModules.Dropdown.createDropdown(frame.Priorities.Select, frame.Priorities.SelectedItem, frame.Dropdown, frame.Dropdown.ScrollingFrame.UIGridLayout.Template, variables.MainFrame.Parent, settingInfo.Value.Items)
+
+			local dropdown = elementModules.Dropdown.createDropdown(frame.Priorities.Select, frame.Priorities.SelectedItem, frame.Dropdown, frame.Dropdown.ScrollingFrame.UIGridLayout.Template, variables.MainFrame.Parent, settingInfo.Value.Items, settingInfo.DisplayName)
 			dropdown:SetValue(currentValue)
-			
+
 			local arrowDown = utilities.Icon("arrow-down")
 			local arrowUp = utilities.Icon("arrow-up")
-			
+
 			frame.Priorities.Select.Arrow.Image = arrowDown
 			dropdown.Opened:Connect(function()
 				frame.Priorities.Select.Arrow.Image = arrowUp
@@ -88,7 +88,7 @@ clientSettings.SettingElements = {
 			dropdown.Closed:Connect(function()
 				frame.Priorities.Select.Arrow.Image = arrowDown
 			end)
-			
+
 			return dropdown.ValueChanged, dropdown, "value"
 		end
 	},
@@ -101,16 +101,16 @@ clientSettings.SettingElements = {
 			local step = settingInfo.Value.Step
 			local label = frame.Priorities.SelectedItem
 			local labelValue = math.round(currentValue * 100) / 100
-			
+
 			label.Text = labelValue
-			
+
 			local slider = elementModules.Slider.createSlider(frame.Priorities.Select, min, max, step, frame.Priorities.Bar.Fill, frame.Priorities.Bar.Head)
 			slider:SetValue(currentValue)
 			slider.ValueChanged:Connect(function()
 				local labelValue = math.round(slider.value * 100) / 100
 				label.Text = labelValue
 			end)
-			
+
 			return slider.DragEnded, slider, "value"
 		end
 	}
@@ -125,93 +125,105 @@ local layoutOrder = 0
 
 function clientSettings.LoadCategories(categories)
 	local highestOrder = 0
-	
+
 	for index, settingData in categories do
 		if index == "_SettingsMeta" then
 			local header = elements.Header:Clone()
 			header.Text = settingData.Name
 			header.Parent = settingsFrame.CategoriesPage
 			header.LayoutOrder = layoutOrder
-			
+
 			continue
 		end
-		
+
 		local categoryOptions = settingData._CategoryOpts
 		local categoryFrame = elements.CategoryTemplate:Clone()
-		
+
 		categoryFrame.Title.Text = categoryOptions.DisplayName
+
+		if categoryOptions.Icon then
+			categoryFrame.Icon.Image = utilities.Icon(categoryOptions.Icon)
+		else
+			categoryFrame.Title.Position = UDim2.new(0.116, -12, .5, 0)
+			categoryFrame.Title.AnchorPoint = Vector2.new(0, .5)
+			categoryFrame.Icon.Visible = false
+		end
+
 		categoryFrame.Parent = settingsFrame.CategoriesPage
 		categoryFrame.LayoutOrder = layoutOrder + 1
-		
-		categoryFrame.Activator.MouseButton1Click:Connect(function()
+
+		categoryFrame.MouseButton1Click:Connect(function()
 			clientSettings.ClearSettings()
 			clientSettings.LoadSettings(settingData)
+
 			selectedData = categories["_SettingsMeta"].Name
 			selectedCategory = index
 		end)
 	end
-	
+
 	layoutOrder += 2
 end
 
 function clientSettings.LoadSettings(settingData)
 	local categoryOptions = settingData._CategoryOpts
-	
+
 	settingsFrame.DetailsCard.AppName.Text = categoryOptions.DisplayName
 	settingsFrame.DetailsCard.AppShortDesc.Text = categoryOptions.Description
 	settingsFrame.DetailsCard.ColorBG.ColorFrame.BackgroundColor3 = Color3.fromHex(categoryOptions.Color)
-	
+
+	print(categoryOptions)
+
 	for i, v in pairs(settingData) do
 		if i == "_CategoryOpts" then
 			continue
 		end
-		
+
 		local displayType = v["SettingDisplayType"]
-		
+
 		if clientSettings.SettingElements[displayType] then
 			local frame = clientSettings.SettingElements[displayType].Element:Clone()
 			frame.Parent = settingsFrame.Settings
-			
+
 			frame.SettingName.Text = v.DisplayName or i
 			frame.Description.Text = v.Description
 			frame.SettingID.Text = i
-			
+
 			local signal : RBXScriptSignal, object, valueName = clientSettings.SettingElements[displayType].Init(frame, v)
-			
+
 			if not signal then
 				continue
 			end
-			
+
 			signal:Connect(function()
 				local value = object[valueName]
-				
+
 				v.Value.Value = value
 				local success = variables.Remotes.ModifySetting:InvokeServer(selectedData, i, value)
-				
+
 				if success then
 					success = variables.Remotes.SaveSettings:InvokeServer(selectedData, game.Players.LocalPlayer.UserId)
-					
+
 					if not success then
 						frontEnd.Toast({
 							Icon = utilities.Icon("x"),
-							Text = "Error",
-							Subtext = "Something went wrong saving changes",
+							Text = utilities.Translate("Configuration.ErrorLog"),
+							Subtext = `{utilities.Translate("generic.error.Generic")} {utilities.Translate("generic.Please")} {string.lower(utilities.Translate("generic.error.TryAgainLater"))}`,
 							Timeout = 5
 						})
-						
+
 						return
 					end
 					frontEnd.Toast({
 						Icon = utilities.Icon("check-plain"),
-						Text = "Success",
+						Text = utilities.Translate("generic.Success"),
 						Subtext = "Changes applied!",
 						Timeout = 3
 					})
 				else
 					frontEnd.Toast({
 						Icon = utilities.Icon("x"),
-						Text = "Error",
-						Subtext = "Something went wrong applying changes",
+						Text = utilities.Translate("Configuration.ErrorLog"),
+						Subtext = `{utilities.Translate("generic.error.Generic")} {utilities.Translate("generic.Please")} {string.lower(utilities.Translate("generic.error.TryAgainLater"))}`,
 						Timeout = 5
 					})
 				end

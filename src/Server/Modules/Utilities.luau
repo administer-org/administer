@@ -256,7 +256,7 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 
 	local NewSound = Instance.new("Sound")
 	NewSound.Parent = Notification
-	NewSound.SoundId = "rbxassetid://9770089602"
+	NewSound.SoundId = "rbxassetid://17208372272"
 	NewSound:Play()
 
 	local Tweens = {
@@ -514,10 +514,14 @@ function Utils.GetFilteredString(Player: Player, String: string): Types.Response
 	end
 end
 
-function Utils.t(Player: Player | nil, Key: string): string
+function Utils.t(Player: Player | nil | string, Key: string): string
+	local Result = ""
+
 	if Player == nil then
-		return (require(Locales[Settings.Interface.Language.Value.Default]) :: any)[Key]
-	else
+		Result =  require(Locales[Settings.Interface.Language.Value.Default])[Key]
+	elseif typeof(Player) == "string" then
+		Result = require(Locales[Player])[Key]
+ 	else
 		local LocaleResult
 		xpcall(function()
 			LocaleResult = (
@@ -527,10 +531,18 @@ function Utils.t(Player: Player | nil, Key: string): string
 			warn(debug.traceback(x))
 			LocaleResult = "en"
 		end)
+		
+		Var.CachedLocales[Player.UserId] = LocaleResult
 
 		--Utils.Logging.Print(`Locale: {LocaleResult}`)
 
-		return (require(Locales:FindFirstChild(LocaleResult)) :: any)[Key] or Key
+		Result = require(Locales:FindFirstChild(LocaleResult))[Key] or Key
+	end
+	
+	if not Result then
+		return Key
+	else
+		return Result
 	end
 end
 

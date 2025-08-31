@@ -7,9 +7,10 @@ local Frontend = { Popup = {}, Drawer = {} }
 local Libraries = script.Parent.Parent.Libraries
 local Modules   = script.Parent
 
-local Utilities = require(Modules.Utilities)
-local Var       = require(Modules.Variables)
-local Types     = require(Modules.Types)
+local Utilities   = require(Modules.Utilities)
+local Ripple      = require(Modules.Parent.Parent.ButtonAnims)
+local Var         = require(Modules.Variables)
+local Types       = require(Modules.Types)
 
 function Frontend.Render() end
 
@@ -67,49 +68,67 @@ function Frontend.ToggleFullscreen(
 end
 
 function Frontend.Open(WaitForCompletion): ()
-	if not Var.Panel then Var.Panel = Frontend.Render() end
-
 	local AS = Var.AnimationSpeed
 	local X = 0.85
 	local Y = 0.7
-
-	Var.MainFrame.Size = UDim2.fromScale(X / 1.5, Y / 1.5)
-	Var.MainFrame.GroupTransparency = 0.5
+	Var.MainFrame.GroupTransparency = 1
 
 	Var.IsPanelAnimating = true
 	Var.MainFrame.Visible = true
 	if Var.UseAcrylic then
-		Libraries.Neon:BindFrame(Var.Panel.MainFrame, {
+		require(Libraries.Neon):BindFrame(Var.MainFrame, {
 			Transparency = 0.95,
 			BrickColor = BrickColor.new("Institutional white")
 		})
 	end
 
+	local PopupTween
+	
+	print(Var.Mobile)
+
 	if not Var.Mobile then
-		Var.MainFrame.Position = UDim2.fromScale(0.5, 1.5)
-	else
-		Var.MainFrame.Position = UDim2.fromScale(1.5, 0.5)
-	end
+		script.Parent.Parent.Assets.PanelOpen:Play()
 
-	local PopupTween = Var.Services.TweenService:Create(
-		Var.MainFrame,
-		TweenInfo.new(AS, Enum.EasingStyle.Cubic),
-		{ Position = UDim2.fromScale(0.5, 0.5), GroupTransparency = 0 }
-	)
+		AS *= .55
 
-	PopupTween:Play()
+		Var.MainFrame.Position = UDim2.fromScale(.5, .5)
+		Var.MainFrame.Size = UDim2.fromScale(
+			Var.MainFrame.Size.X.Scale * .9, 
+			Var.MainFrame.Size.Y.Scale * .9
+		)
 
-	Var.Services.TweenService
-		:Create(
+		PopupTween = Var.Services.TweenService:Create(
 			Var.MainFrame,
-			TweenInfo.new(AS, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false, AS * 0.2),
-			{
-				Size = UDim2.fromScale(X, Y)
+			TweenInfo.new(AS, Enum.EasingStyle.Cubic),
+			{ 
+				Size = UDim2.fromScale(
+					Var.MainFrame.Size.X.Scale * 1.1, 
+					Var.MainFrame.Size.Y.Scale * 1.1
+				), 
+				GroupTransparency = 0 
 			}
 		)
-		:Play()
+	else
+		Var.MainFrame.Position = UDim2.fromScale(1.5, 0.5)
 
-	--Var.OpenSound:Play()
+		Var.Services.TweenService
+			:Create(
+				Var.MainFrame,
+				TweenInfo.new(AS, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false, AS * 0.2),
+				{
+					Size = UDim2.fromScale(X, Y)
+				}
+			)
+			:Play()
+
+		PopupTween = Var.Services.TweenService:Create(
+			Var.MainFrame,
+			TweenInfo.new(AS, Enum.EasingStyle.Cubic),
+			{ Position = UDim2.fromScale(0.5, 0.5), GroupTransparency = 0 }
+		)
+	end
+
+	PopupTween:Play()
 	task.delay(AS, function()
 		Var.IsPanelAnimating = false
 		Var.IsOpen = true
@@ -133,7 +152,7 @@ function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForComple
 	Var.IsPanelAnimating = true
 
 	xpcall(function(...)
-		Libraries.Neon:UnbindFrame(Var.MainFrame)
+		require(Libraries.Neon):UnbindFrame(Var.MainFrame)
 	end, function(a0)
 		--// We can ignore this, it probably happened bc a skid is spamming the keybind.
 		Var.InitErrored = true
@@ -142,39 +161,38 @@ function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForComple
 	local Duration = 0
 	if not Instant then Duration = Var.AnimationSpeed end
 
-	local X: number = 0.85
-	local Y: number = 0.7
-
-	local OT = Var.Services.TweenService:Create(
-		Frame,
-		TweenInfo.new(Duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-		{
-			Size = UDim2.fromScale(X / 1.5, Y / 1.5),
-			GroupTransparency = 0.5
-		}
-	)
-
-	OT:Play()
-
 	if not Var.Mobile then
-		Var.Services.TweenService
-			:Create(
-				Frame,
-				TweenInfo.new(Duration, Enum.EasingStyle.Cubic),
-				{ Position = UDim2.fromScale(0.5, 1.5), GroupTransparency = 1 }
-			)
-			:Play()
+		Duration *= .55
+
+		Var.Services.TweenService:Create(
+			Var.MainFrame,
+			TweenInfo.new(Duration, Enum.EasingStyle.Cubic),
+			{ 
+				Size = UDim2.fromScale(
+					Var.MainFrame.Size.X.Scale * .9,
+					Var.MainFrame.Size.Y.Scale * .9
+				), 
+				GroupTransparency = 1 
+			}
+		):Play()
 	else
-		Var.Services.TweenService
-			:Create(
-				Frame,
-				TweenInfo.new(Duration, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, Duration * 0.45),
-				{ Position = UDim2.fromScale(1.5, 0.5), GroupTransparency = 1 }
-			)
-			:Play()
+		Var.Services.TweenService:Create(
+			Frame,
+			TweenInfo.new(Duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+			{
+				Size = UDim2.fromScale(
+					Var.MainFrame.Size.X.Scale / 1.5, 
+					Var.MainFrame.Size.Y.Scale / 1.5
+				),
+				Position = UDim2.fromScale(1.5, 0.5),
+				GroupTransparency = 1
+			}
+		):Play()
 	end
 
 	task.delay(Duration, function()
+		Frame.Visible = false
+		
 		if Frame == Var.MainFrame then
 			Var.IsPanelAnimating = false
 			Var.MainFrame.Visible = false
@@ -447,7 +465,7 @@ function Frontend.Toast(Config: {
 	Timeout: number,
 
 	OnClick: () -> ()?
-	})
+})
 	local Toast = Var.MainFrame.administer.Toast
 	local Close = nil
 
@@ -471,6 +489,7 @@ function Frontend.Toast(Config: {
 	})
 
 	Timer:Play()
+	script.Parent.Parent.Assets.ToastSound:Play()
 
 	local ClickEvent = Toast.Click.MouseButton1Click:Connect(function()
 		Close()
@@ -1200,7 +1219,7 @@ function Frontend.RegisterPanelKeybind()
 
 	Var.Services.UserInputService.InputBegan:Connect(function(KeyCode, IsGameProc)
 		if IsGameProc then return end
-		
+
 		if KeyCode.KeyCode == Enum.KeyCode.Unknown then return end
 
 		table.insert(currentKeys, KeyCode.KeyCode)
@@ -1249,65 +1268,91 @@ function Frontend.RegisterPanelKeybind()
 	end)
 end
 
-function Frontend.AddButtonAnimation(Button: TextButton)
+function Frontend.AddButtonAnimation(Button: TextButton | ImageButton)
 	local Tween = TweenInfo.new(Var.AnimationSpeed * .3, Enum.EasingStyle.Quart)
-	
-	local OriginalSize = Button.Size
-	local OriginalPos = Button.Position
+	local BGChanged
+
 	local UICorner = Button:FindFirstChildWhichIsA("UICorner") or Instance.new("UICorner")
 	local OriginalCorner = UICorner.CornerRadius
-	
+	local OriginalColor = Button.BackgroundColor3
+
+	Button.AutoButtonColor = false
+
 	UICorner.Parent = Button
 
+	local function Lighten(color, amount)
+		local h, s, v = color:ToHSV()
+
+		v = math.clamp(v + amount, 0, 1)
+
+		return Color3.fromHSV(h, s, v)
+	end
+
 	Button.MouseEnter:Connect(function()
-		local Frame = Instance.new("Frame")
-		
-		Frame.BackgroundTransparency = 1
-		Frame.Size = UDim2.fromScale(1,1)
-		Frame.Name = "ButtonAnimFrame"
+		local NewBorder = Instance.new("UIStroke")
 
-		local FrameCorner = UICorner:Clone()
-		FrameCorner.Parent = Frame
-		Frame.Parent = Button
+		NewBorder.Color = Button.BackgroundColor3
+		NewBorder.Transparency = Button.BackgroundTransparency
+		NewBorder.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		NewBorder.Thickness = 0
 
-		Var.Services.TweenService:Create(Frame, Tween, {
-			BackgroundTransparency = 0.7
-		}):Play()
+		NewBorder.Name = "ButtonAnimBorder"
+		NewBorder.Parent = Button
 
-		Var.Services.TweenService:Create(Button, Tween, {
-			Size = OriginalSize + UDim2.fromOffset(5, 5),
-			--Position = OriginalPos - UDim2.fromOffset(5, 5)
-		}):Play()
+		BGChanged = Button:GetPropertyChangedSignal("BackgroundColor3"):Connect(function()
+			NewBorder.Color = Button.BackgroundColor3
+		end)
 
 		Var.Services.TweenService:Create(UICorner, Tween, {
 			CornerRadius = OriginalCorner + UDim.new(0, 4)
 		}):Play()
 
-		Var.Services.TweenService:Create(FrameCorner, Tween, {
-			CornerRadius = FrameCorner.CornerRadius + UDim.new(0, 4)
+		Var.Services.TweenService:Create(Button.ButtonAnimBorder, Tween, {
+			Thickness = 3
 		}):Play()
+
+		Var.Services.TweenService:Create(Button, Tween, {
+			BackgroundColor3 = Lighten(Button.BackgroundColor3, 0.2)
+		}):Play()
+
+		script.Parent.Parent.Assets.SelectSound:Play()
 	end)
 
 	Button.MouseLeave:Connect(function()
-		local AnimFrame = Button:FindFirstChild("ButtonAnimFrame")
-		if AnimFrame then
-			Var.Services.TweenService:Create(AnimFrame, Tween, {
-				BackgroundTransparency = 1
-			}):Play()
-			
-			task.delay(Tween.Time, function()
-				AnimFrame:Destroy()
+		if Button:FindFirstChild("ButtonAnimBorder") then
+			task.defer(function()
+				BGChanged:Disconnect()
+
+				local BorderGone = Var.Services.TweenService:Create(Button.ButtonAnimBorder, Tween, {
+					Thickness = 0
+				})
+
+				BorderGone:Play()
+				BorderGone.Completed:Wait()
+
+				Button.ButtonAnimBorder:Destroy()
 			end)
 		end
 
 		Var.Services.TweenService:Create(Button, Tween, {
-			Size = OriginalSize,
-			--Position = OriginalPos
+			BackgroundColor3 = OriginalColor
 		}):Play()
 
 		Var.Services.TweenService:Create(UICorner, Tween, {
 			CornerRadius = OriginalCorner
 		}):Play()
+	end)
+
+	Button.MouseButton1Click:Connect(function()
+		script.Parent.Parent.Assets.ClickSound:Play()
+		
+		Ripple(Button, game.Players.LocalPlayer:GetMouse(), Var.AnimationSpeed * .4, Color3.fromRGB(255,255,255))
+	end)
+
+	Button.MouseButton2Click:Connect(function()
+		script.Parent.Parent.Assets.ClickSound:Play()
+		
+		Ripple(Button, game.Players.LocalPlayer:GetMouse(), Var.AnimationSpeed * .4, Color3.fromRGB(255,255,255))
 	end)
 end
 

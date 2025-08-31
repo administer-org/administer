@@ -26,6 +26,7 @@ local function saveDataStore(key: string, serverKey: string, data: {}): boolean
 		serverData[categoryName] = {}
 		
 		for settingName, data in config do
+			
 			if data["SaveOnServer"] then
 				serverData[categoryName][settingName] = data
 			end
@@ -229,6 +230,15 @@ function SettingsAPI.new(rawSettings)
 	end
 
 	function APIController.GetData(): any
+		--// pyxfluff: Workaround for weird issue with caching
+		pcall(function()
+			if settingsGroup._SettingsMeta.Name ~= "Administer" then return end
+			
+			for GroupName, Group in settingsGroup do
+				Group._CategoryOpts = require(script.Parent.Parent.Core.Configuration).Settings[GroupName]._CategoryOpts
+			end
+		end)
+		
 		return settingsGroup
 	end
 
@@ -267,6 +277,7 @@ function SettingsAPI.new(rawSettings)
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local saveRemote: RemoteFunction = remoteFolder:FindFirstChild("SaveSettings")
+			
 			return saveRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId)
 		end
 	end
@@ -276,6 +287,7 @@ function SettingsAPI.new(rawSettings)
 			local success, err = pcall(function()
 				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", customTemplate or rawSettings)
 			end)
+			
 			if success then
 				local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 				pcall(function() --// if this fails the server is not loaded yet
@@ -289,11 +301,13 @@ function SettingsAPI.new(rawSettings)
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local loadRemote: RemoteFunction = remoteFolder:FindFirstChild("LoadSettings")
+			
 			return loadRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId, customTemplate)
 		end
 	end
 
 	table.insert(SettingsAPI.SettingsList, APIController)
+	
 	return APIController
 end
 

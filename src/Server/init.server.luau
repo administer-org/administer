@@ -121,7 +121,16 @@ NewRemote("SendClientLocale", true, true, function(Player, LocaleCode): Types.Re
 	return { true, "OK" }
 end)
 
-NewRemote("DirectTranslate", false, true, Utils.t)
+NewRemote("DirectTranslate", false, false, Utils.t)
+NewRemote("GetLocaleNames", false, false, function()
+	local Result = {}
+	
+	for _, Locale in script.Core.Locales:GetChildren() do
+		Result[Locale.Name] = require(Locale)._locale_display_localized
+	end
+	
+	return Result
+end)
 
 --// Homepage
 NewRemote("UpdateHomePage", true, true, FrontendAPI.UpdateHomePage)
