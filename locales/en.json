@@ -35,6 +35,7 @@
     "Configuration.Admins.NewAdmin.Page3.AddPane.AddUser.LogoWordmark": "User",
     "Configuration.Admins.NewAdmin.Page3.LogoWordmark": "Members",
     "Configuration.Admins.NewAdmin.Page3.PageHdr": "Choose the members for this rank. You can edit this later.",
+    "Configuration.Admins.NewAdmin.Page4.LogoWordmark": "Access",
     "Configuration.Admins.NewAdmin.Page4.PageHdr": "Choose the apps and commands this rank will be able to use.",
     "Configuration.Admins.NewAdmin.Page5.Body": "Great! Your rank has been successfully created. Anybody you just added will be given the panel instantly. No need to do anything from here. If you would like to edit this rank in the future, come back to this page at any time and click the settings icon next to the name of the rank you just created.",
     "Configuration.Apps.Content.Template.InstallDate": "Installed %s",
