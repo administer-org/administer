@@ -201,10 +201,10 @@ function Admins.Load(): ()
 
 					end
 				end
-				
+
 				if UserNames[1] == nil then
 					Template.MembersText.Text = string.format(Utilities.Translate("admin.ranks.members.one"), Utilities.Translate("generic.User"))
-					
+
 					continue
 				end
 
@@ -361,7 +361,11 @@ local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 
 	Dots[`Dot{PageNumber}`].UIStroke.Thickness = 2
 	Dots[`Dot{PageNumber}`].BackgroundColor3 = Color3.fromRGB(37, 72, 194)
-	Dots.AProgress.Text = `Step {Page}/5`
+	Dots.AProgress.Text = string.format(
+		Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.StepLabel"),
+		Page,
+		"5"
+	)
 
 	ET.Completed:Wait() --// stop the animation from being too quick
 end
@@ -381,20 +385,28 @@ function Admins.ClearEditState(Env)
 	Env.Apps = {}
 end
 
+function Admins.GetEditState()
+	local Clone = table.clone(require(script.Parent.UI.AdminHelperEnv))
+	
+	Clone.Strings = nil
+	
+	return Clone
+end
+
 function Admins.OpenCreator()
 	local NewAdmin = Var.MainFrame.Configuration.Admins.NewAdmin
 	local CompleteTime = Var.AnimationSpeed * .6
-	
+
 	NewAdmin.GroupTransparency = 1
 	NewAdmin.Size = UDim2.fromScale(0.6, 0.57) 
 	NewAdmin.Position = UDim2.fromScale(.5, .65)
-	
+
 	Var.Services.TweenService:Create(NewAdmin, TweenInfo.new(CompleteTime, Enum.EasingStyle.Quart), {
 		Size = UDim2.fromScale(.867, .847),
 		Position = UDim2.fromScale(.5, .5),
 		GroupTransparency = 0
 	}):Play()
-	
+
 	NewAdmin.Visible = true
 	Var.RankCreatorOpen = true
 end
@@ -405,14 +417,14 @@ function Admins.CloseCreator()
 
 	Var.Services.TweenService:Create(NewAdmin, TweenInfo.new(CompleteTime, Enum.EasingStyle.Quart), {
 		Size = UDim2.fromScale(0.6, 0.57) ,
-			Position = UDim2.fromScale(.5, .65),
+		Position = UDim2.fromScale(.5, .65),
 		GroupTransparency = 1
 	}):Play()
-	
+
 	task.delay(CompleteTime, function()
 		Var.RankCreatorOpen = false
 		Var.MainFrame.Configuration.Admins.NewAdmin.Visible = false
-		
+
 		if Page == 2 then
 			SwapPages(Frames.Page2, Frames.Page1, "rbxassetid://18151072839", false, 1)
 		elseif Page == 3 then
@@ -433,6 +445,28 @@ function Admins.RunCreatorApp()
 	local ConnectionsTable
 	local FinalData = {}
 
+	--// Translations
+	Frames.BottomData.RankTitle.Text = Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.RankTitle")
+
+	Frames.Page1.Header.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page1.Header")
+	Frames.Page1.Body.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page1.Body")
+
+	Frames.Page2.Header.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page2.LogoWordmark")
+	Frames.Page2.Body.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page2.FilterHdr")
+
+	Frames.Page3.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page3.LogoWordmark")
+	Frames.Page3.PageHdr.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page3.PageHdr")
+
+	Frames.Page4.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page4.LogoWordmark")
+	Frames.Page4.PageHdr.Text = Utilities.Translate("Configuraton.Admins.NewAdmin.Page4.PageHdr")
+	
+	for _, Label in Frames:GetDescendants() do
+		if not Label:IsA("TextLabel") then continue end
+		if Label.Text ~= "Continue" then continue end
+		
+		Label.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark")
+	end
+
 	Frames.BottomData.Controls.ALast.MouseButton1Click:Connect(function()
 		if not CanGoBack then return end
 		if Page <= 1 then return end
@@ -445,17 +479,21 @@ function Admins.RunCreatorApp()
 		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true, 1)
 
 		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
+		
+		print("hi")
 
 		--// Verify the filtering service is online
 		local Success, FilterResult = pcall(function()
 			return Var.Remotes.FilterString:InvokeServer("test string")
 		end)
+		
+		print(Success, FilterResult)
 
 		if Success and FilterResult[1] then
 			SwapPages(Frames.Loading, Frames.Page2, "rbxassetid://15084609272", false, 2)
 
 			ConnectionsTable = {
-				Frames.Page2.TextInput:GetPropertyChangedSignal("Text"):Connect(function()
+				Frames.Page2.TextInput.FocusLost:Connect(function(_)
 					Frames.Page2.PreviewText.Text =
 						`Preview: {Var.Remotes.FilterString:InvokeServer(
 							Frames.Page2.TextInput.Text
@@ -464,9 +502,13 @@ function Admins.RunCreatorApp()
 
 				Frames.Page2.ColorInput:GetPropertyChangedSignal("Text"):Connect(function()
 					xpcall(function()
-						Frames.Page2.ColorPreview.BackgroundColor3 = Color3.fromHex(Frames.Page2.ColorInput.Text)
+						TweenService:Create(Frames.Page2.ColorPreview, TweenInfo.new(Var.AnimationSpeed * .3, Enum.EasingStyle.Quart), {
+							BackgroundColor3 = Color3.fromHex(Frames.Page2.ColorInput.Text)
+						}):Play()
 					end, function()
-						Frames.Page2.ColorPreview.BackgroundColor3 = Color3.fromHex("fff")
+						TweenService:Create(Frames.Page2.ColorPreview, TweenInfo.new(Var.AnimationSpeed * .3, Enum.EasingStyle.Quart), {
+							BackgroundColor3 = Color3.fromHex("#fff")
+						}):Play()
 					end)
 				end)
 			}
@@ -500,7 +542,7 @@ function Admins.RunCreatorApp()
 			Frontend.Toast({
 				Icon = Utilities.Icon "x",
 				Text = Utilities.Translate("generic.InvalidInput"),
-				Subtext = string.format(Utilities.Translate("admin.rankcreator.errors.name.Unique")),
+				Subtext = string.format(Utilities.Translate("admin.rankcreator.errors.name.Unique"), Frames.Page2.TextInput.Text),
 				Timeout = 5
 			})
 
@@ -526,6 +568,8 @@ function Admins.RunCreatorApp()
 			Clone.Visible = true
 			Clone:SetAttribute("IsTemplate", false)
 			Clone:SetAttribute("TemplateType", "Group")
+			
+			Clone.Label.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.GroupTemplate.Label")
 
 			local CheckTask = function()
 				Checking = true
@@ -571,6 +615,8 @@ function Admins.RunCreatorApp()
 
 			Clone:SetAttribute("IsTemplate", false)
 			Clone:SetAttribute("TemplateType", "User")
+			
+			Clone.Label.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.PlayerTemplate.Label")
 
 			local function CheckTask()
 				local Success, Info = pcall(function()
@@ -585,7 +631,7 @@ function Admins.RunCreatorApp()
 				end)
 
 				if Success then
-					Clone._Name.Text = `{Info[1]}`
+					Clone._Name.Text = Info[1]
 					Clone.Image.Image = Info[2]
 				else
 					Clone._Name.Text = Utilities.Translate("generic.NotFound")
@@ -614,6 +660,9 @@ function Admins.RunCreatorApp()
 			Frames.Page3.AddPane.AddGroup.Click.MouseButton1Click:Connect(NewGroupCard),
 			Frames.Page3.AddPane.AddUser.Click.MouseButton1Click:Connect(NewUserCard)
 		}
+		
+		Frames.Page3.AddPane.AddGroup.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.GroupTemplate.Label")
+		Frames.Page3.AddPane.AddUser.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.PlayerTemplate.Label")
 
 		for i, User in Env.EditModeMembers :: { { MemberType: string, ID: number, GroupRank: number? } } do
 			if User.MemberType == "User" then
@@ -767,7 +816,7 @@ function Admins.RunCreatorApp()
 
 		for i, v: Instance in Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() do
 			if Env.HasPopulatedApps then break end --// maybe a better place for this?
-			
+
 			if not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout", "Home" }, v.Name) then
 				if v:GetAttribute("ThreadType") == "multi" then
 					local NewApp = v:Clone()
@@ -858,7 +907,7 @@ function Admins.RunCreatorApp()
 		SwapPages(Frames.Loading, Frames.Page4, "rbxassetid://14865439768", false, 4)
 		Env.HasPopulatedApps = true
 	end)
-	
+
 
 	Frames.Page4.NextPage.MouseButton1Click:Connect(function()
 		CanGoBack = false

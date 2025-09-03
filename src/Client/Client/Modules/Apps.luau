@@ -159,28 +159,28 @@ function Apps.Show(ServerURL, ID, Reason): string
 		NewMetaBox.Visible = true
 		NewMetaBox.Name = Title
 
-		NewMetaBox.Body.Text = Value
+		NewMetaBox.Body.Text = Value and Value or Utilities.Translate("generic.error.Generic")
 		NewMetaBox.Icon.Image = Utilities.Icon(Icon)
 		NewMetaBox.Title.Text = Title
 	end
-	
+
 	--// Cleanup
 	for _, Tag in AppInfoFrame.TopHeader.Details:GetChildren() do
 		if Tag:GetAttribute("IsTag") then Tag:Destroy() end
 	end
-	
+
 	for _, Box in AppInfoFrame.MainContent.MetadataBox:GetChildren() do
 		if Box:IsA("Frame") and Box.Name ~= "Template" then 
 			Box:Destroy()
 		end
 	end
-	
+
 	for _, Box in AppInfoFrame.MainContent.PrivacyBoxSensitive:GetChildren() do
 		if Box:IsA("TextLabel") and Box.Name ~= "Item" then 
 			Box:Destroy()
 		end
 	end
-	
+
 	for _, Box in AppInfoFrame.MainContent.PrivacyBoxInsensitive:GetChildren() do
 		if Box:IsA("TextLabel") and Box.Name ~= "Item" then 
 			Box:Destroy()
@@ -243,7 +243,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		AppInfoFrame.MainContent.MediaScroller.Template.Image = `rbxassetid://{Data.IconID}`
 	else
 		AppInfoFrame.MainContent.MediaScroller.Template.Visible = false
-		
+
 		for _, Image in Data.Media do
 			local NewImage = AppInfoFrame.MainContent.MediaScroller.Template:Clone()
 
@@ -291,7 +291,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		NewSensitivity.Name = SensitiveModule
 		NewSensitivity.Visible = true
 		NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxSensitive
-		
+
 		NewSensitivity.Text = SensitiveModule
 	end
 
@@ -301,7 +301,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		NewSensitivity.Name = SensitiveModule
 		NewSensitivity.Visible = true
 		NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxInsensitive
-		
+
 		NewSensitivity.Text = SensitiveModule
 	end
 
@@ -343,14 +343,14 @@ function Apps.Show(ServerURL, ID, Reason): string
 				Subtext = "This app may not be downloaded at this time",
 				Timeout = 10
 			})
-			
+
 			return
 		end
-		
+
 		local Shimmer = Shime.new(AppInfoFrame.TopHeader.Details.Downloads)
-		
+
 		Shimmer:Play()
-		
+
 		AppInfoFrame.TopHeader.Details.Downloads.Value.Text = Utilities.Translate("generic.Loading") .. "..."
 		AppInfoFrame.TopHeader.Details.Downloads.Icon.Image = Utilities.Icon "hourglass-wait"
 
@@ -392,7 +392,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		task.delay(2, function()
 			AppInfoFrame.TopHeader.Details.Downloads.Value.Text = Utilities.ShortNumber(Data.Downloads)
 		end)
-		
+
 		Shimmer:Pause()
 		Shimmer:GetFrame():Destroy()
 	end)
@@ -414,36 +414,38 @@ function Apps.Show(ServerURL, ID, Reason): string
 			Button.Parent = (i == 1 and AppInfoFrame.TopHeader.Details.Votes.Likes or AppInfoFrame.TopHeader.Details.Votes.Dislikes)
 		end
 	end
-
+	
+	local IsVoting = false
 	local function DoVote(VoteType)
+		if IsVoting then
+			Frontend.Toast({
+				Icon = Utilities.Icon "triangle-warning",
+				Text = "Too many requests",
+				Subtext = "Please slow down.",
+				Timeout = 3
+			})
+			
+			return
+		end
+		
+		IsVoting = true
+		
 		local Response = Var.Remotes.Vote:InvokeServer(ServerURL, ID, VoteType)
 
 		if Response.StatusCode == 400 then
-			Frontend.Popup.new(
-				{
-					Name = Utilities.ToSentenceCase( Utilities.Translate("Configuration.Marketplace.Header.Head") ),
-					Icon = Utilities.Icon "grid"
-				}, {
-					Primary = Utilities.Icon "warning-filled",
-					SubIcon = Utilities.Icon "x"
-				}, 
-				Var.Services.HttpService:JSONDecode(Response.Body).message,
-				Var.Services.HttpService:JSONDecode(Response.Body).user_facing_message,
-				{
-					{
-						Icon = Utilities.Icon "check-plain",
-						Text = "OK",
-						Callback = function(Close)
-							Close()
-						end
-					}
-				}
-			)
+			Frontend.Toast({
+				Icon = Utilities.Icon "triangle-warning",
+				Text = Var.Services.HttpService:JSONDecode(Response.Body).message,
+				Subtext = Var.Services.HttpService:JSONDecode(Response.Body).user_facing_message,
+				Timeout = 10
+			})
 		end
 
 		for _, Event in Connections do
 			Event:Disconnect()
 		end
+		
+		IsVoting = false
 
 		return Apps.Show(ServerURL, ID, Reason)
 	end
@@ -567,15 +569,20 @@ function Apps.LoadAppList(List: {}?): ()
 				CardData.developer.Name,
 				CardData.ServerName
 			)
-			NewCard.Server.Text = `{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}\n\n{Utilities.ToSentenceCase(CardData.object_type)} by @{CardData.developer.Name} from {CardData.ServerName}`
 
 			NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
-			NewCard.Stats.Rating.Label.Text = CardData.rating
 
-			Connections[`Download-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton1Click:Connect(function()
+			NewCard.Stats.Rating.Label.Text = 
+				tostring(CardData.rating) == "1" and "100%" or string.sub(string.gsub(tostring(CardData.rating), "0.", ""), 1, 2).."%"
+
+			--// Interface customization
+			NewCard.Stats.Rating.ImageLabel.Image = Utilities.Icon "like"
+			NewCard.Stats.DownloadButton.Server.Text = Utilities.Translate("generic.Install")
+
+			Connections[`Download-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.MouseButton1Click:Connect(function()
 				local Shimmer = Shime.new(NewCard.Stats.DownloadButton)
 				Shimmer:Play()
-				
+
 				xpcall(function()
 					local ShowResult = Apps.Show(CardData.Server, CardData.id, CardData.Server)
 
@@ -588,7 +595,7 @@ function Apps.LoadAppList(List: {}?): ()
 						})
 					end
 				end, function(e)
-					print(e)
+					Utilities.Logging.Warn(e)
 					Frontend.Toast({
 						Icon = Utilities.Icon "triangle-warning",
 						Text = Utilities.Translate("generic.error.Generic"),
@@ -596,16 +603,16 @@ function Apps.LoadAppList(List: {}?): ()
 						Timeout = 15
 					})
 				end)
-				
+
 				Shimmer:Pause()
 				Shimmer:GetFrame():Destroy()
 			end)
 
-			Connections[`Show-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.Activator.MouseButton2Click:Connect(function()
+			Connections[`Show-{math.random(1,2^25)}`] = NewCard.Stats.DownloadButton.MouseButton2Click:Connect(function()
 				Frontend.Popup.new(
 					{
 						Icon = Utilities.Icon "grid",
-						Name = "Marketplace",
+						Header = Utilities.Translate("Configuration.Marketplace.Header.Head"),
 						Subheader = "AOS Instance"
 					},
 					{
@@ -669,10 +676,16 @@ function Apps.LoadAppList(List: {}?): ()
 		local Selected = Featured[1]
 
 		TopCard.ObjName.Text = Selected.name
-		TopCard.Server.Text = `{Utilities.ToSentenceCase(Selected.object_type)} by @{Selected.developer.Name} from {Selected.ServerName}`
 		TopCard.Stats.Installs.Label.Text = Utilities.ShortNumber(Selected.downloads)
-		TopCard.Stats.Rating.Label.Text = Selected.rating
 		TopCard.ImageLabel.Image = `rbxassetid://{Selected.image_id}`
+
+		TopCard.Stats.Rating.Label.Text = 
+			tostring(Selected.rating) == "1" and "100%" or string.sub(string.gsub(tostring(Selected.rating), "0.", ""), 1, 2).."%"
+		TopCard.Server.Text = string.format(Utilities.Translate("Configuration.Apps.Description"):gsub("%%s\n\n", ""),
+			Utilities.ToSentenceCase(Selected.object_type),
+			Selected.developer.Name,
+			Selected.ServerName
+		)
 
 		TopCard.Stats.DownloadButton.MouseButton1Click:Connect(function()
 			Apps.Show(Selected.Server, Selected.id, Selected.Server)
@@ -682,15 +695,19 @@ function Apps.LoadAppList(List: {}?): ()
 			Frontend.Popup.new(
 				{
 					Icon = Utilities.Icon "grid",
-					Name = "Marketplace",
-					Subheader = "AOS Instance"
+					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
+					Subheader = "AOS"
 				},
 				{
 					Primary = Utilities.Icon "grid",
 					SubIcon = Utilities.Icon "question-circle"
 				},
 				Utilities.Translate("apps.score.Detail"),
-				string.sub(Utilities.Translate("apps.score.Body"), Selected.ServerName, Selected.Server, Selected.weighted_score),
+				string.gsub( --// i hate this gsub but i dont want to update every locale
+					string.format(Utilities.Translate("apps.score.Body"), Selected.ServerName, Selected.weighted_score),
+					"{}",
+					Selected.Server
+				),
 				{
 					{
 						Text = Utilities.Translate("generic.OK"),
@@ -728,7 +745,7 @@ function Apps.LoadAppList(List: {}?): ()
 		Var.Marketplace.ActivePage = "MPFrozen"
 
 		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Visible = true
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),"{{ }}", "500")
+		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.format(Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"), "ETIMEOUT", "/api/directory")
 
 		return
 	end
@@ -746,7 +763,7 @@ function Apps.InitSerarchbar()
 	MP.ASidebar.Searchbar.Input.FocusLost:Connect(
 		function(EnterPressed: boolean, ...)
 			if not EnterPressed then return end
-			
+
 			local Shimmer = Shime.new(MP.ASidebar.Searchbar)
 			Shimmer:Play()
 
@@ -762,7 +779,7 @@ function Apps.InitSerarchbar()
 				if Data.Type == "text" then
 					Frontend.Toast({
 						Icon = "search",
-						Text = "Information",
+						Text = Utilities.Translate("Configuration.MenuBar.New.AInfoPage.HeaderLabel"),
 						Subtext = Data.Value,
 						Timeout = 5
 					})
@@ -785,6 +802,9 @@ function Apps.InitSerarchbar()
 					})
 				end
 			end
+			
+			Shimmer:Pause()
+			Shimmer:GetFrame():Destroy()
 
 			if #Cards == 0 then return end
 
@@ -797,9 +817,6 @@ function Apps.InitSerarchbar()
 			}
 
 			Apps.LoadAppList(Cards)
-			
-			Shimmer:Pause()
-			Shimmer:GetFrame():Destroy()
 		end
 	)
 end

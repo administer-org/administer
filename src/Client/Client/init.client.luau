@@ -79,6 +79,21 @@ end)
 
 Var.Remotes.SettingsLoaded.OnClientEvent:Wait()
 
+
+local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand", "ForceMobile", "ForceAcrylic"})
+
+print(essentialSettings)
+
+
+local KeybindRegisterTimeframe = essentialSettings.KeybindRegisterTime
+
+Var.Mobile = essentialSettings.ForceMobile == true
+Var.UseAcrylic = essentialSettings.ForceAcrylic == true
+
+if KeybindRegisterTimeframe == "optimistic" then
+	Frontend.RegisterPanelKeybind()
+end
+
 if Var.UseAcrylic then
 	--// blast from the past
 	local NewEffect = Instance.new("DepthOfFieldEffect")
@@ -89,13 +104,6 @@ if Var.UseAcrylic then
 
 	NewEffect.Parent = game.Lighting
 	NewEffect.Name = "AdministerAcrylic"
-end
-
-local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand"})
-local KeybindRegisterTimeframe = essentialSettings["KeybindRegisterTime"]
-
-if KeybindRegisterTimeframe == "optimistic" then
-	Frontend.RegisterPanelKeybind()
 end
 
 Widgets.Initialize()
@@ -220,11 +228,35 @@ xpcall(function()
 	task.defer(function()
 		pcall(Admins.Load)
 	end)
+	
+	Var.MainFrame.Configuration.Admins.Header.NewRank.Server.Text = t("Configuration.Admins.NewAdmin.Start")
 
 	Admins.RunCreatorApp()
 
-	Var.MainFrame.Configuration.Admins.Header.NewRank.Activator.MouseButton1Click:Connect(function()
+	Var.MainFrame.Configuration.Admins.Header.NewRank.MouseButton1Click:Connect(function()
 		Admins.OpenCreator()
+	end)
+	
+	Var.MainFrame.Configuration.Admins.Header.NewRank.MouseButton2Click:Connect(function()
+		Frontend.Popup.new(
+			{
+				Icon = Utilities.Icon "administer",
+				Name = "Administer",
+				Subheader = "RankCreator Debug Info"
+			},
+			{
+				
+			},
+			"Admin Debug Table",
+			game:GetService("HttpService"):JSONEncode(Admins.GetEditState()),
+			{
+				{
+					Text = "OK",
+					Icon = Utilities.Icon "check-plain",
+					Callback = function(e) e() end
+				}
+			}
+		)
 	end)
 end, function(e)
 	Utilities.Logging.Warn(`[x] [thread Admins] {e}`)
@@ -256,7 +288,7 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 	
 	--// Grid changes
-	Var.MainFrame.Configuration.Marketplace.MainMarketplace.ModernInstallBox.MainContent.MainContent.MetadataBox.UIGridLayout.CellSize = UDim2.fromOffset(150, 115)
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.MainContent.MainContent.MetadataBox.UIGridLayout.CellSize = UDim2.fromOffset(150, 115)
 else
 	Var.Mobile = false
 

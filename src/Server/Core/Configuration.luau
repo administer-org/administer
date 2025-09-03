@@ -28,7 +28,7 @@ local Settings: SettingsType = {
 		Tweak = 0,
 
 		Extra = "dev",
-		String = "2.1.0-rc1",
+		String = "2.1.0-rc2",
 		GitRevision = "b915738",
 
 		NoExtraData = "2.0.0",
@@ -335,8 +335,8 @@ local Settings: SettingsType = {
 				RequiresRestart = false,
 
 				Value = {
-					Value = "LeftShift,F2",
-					Default = "LeftShift,F2"
+					Value = "LeftControl,Space",
+					Default = "LeftControl,Space"
 				}
 			},
 
@@ -354,7 +354,7 @@ local Settings: SettingsType = {
 
 			EnableClickEffects = {
 				DisplayName = "Enable button effects",
-				Description = "Increases memory usage slightly, also makes noise.",
+				Description = "Adds a ripple & hover effect and some noise.",
 				SettingType = "Boolean",
 				SettingDisplayType = "Toggle",
 				RequiresRestart = true,
@@ -370,7 +370,7 @@ local Settings: SettingsType = {
 			_CategoryOpts = {
 				DisplayName = "Apps",
 				Color = "#2be2e1",
-				Description = "Manage app settings.",
+				Description = "Change how Administer treats Apps.",
 				Icon = "apps"
 			},
 
@@ -403,7 +403,7 @@ local Settings: SettingsType = {
 			_CategoryOpts = {
 				DisplayName = "Accessibility",
 				Color = "#e4e47f",
-				Description = "Adjust accessibility settings.",
+				Description = "Make Administer easier to use.",
 				Icon = "accessibility"
 			},
 
@@ -420,7 +420,7 @@ local Settings: SettingsType = {
 			},
 
 			AssistiveClose = {
-				Description = "Enables a close button in the top left for desktop. Always enabled on mobile.",
+				Description = "Enables a close button in the top left for desktop. Always enabled on mobile. Does not impact the Control Bar",
 				SettingType = "Boolean",
 				SettingDisplayType = "Toggle",
 				RequiresRestart = true,
@@ -448,6 +448,24 @@ local Settings: SettingsType = {
 
 					Value = "regular",
 					Default = "regular"
+				}
+			},
+
+			GripperIdleOpacity = {
+				Description = "Controls the visibility of the gripper in its idle state.",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+				RequiresRestart = false,
+
+				Value = {
+					Items = {
+						"opaque",
+						"faint",
+						"visible",
+					},
+
+					Value = "opaque",
+					Default = "opaque"
 				}
 			}
 		},
@@ -507,12 +525,53 @@ local Settings: SettingsType = {
 					Default = 2
 				}
 			}
+		},
+
+		BetaFeatures = {
+			_CategoryOpts = {
+				DisplayName = "Developer",
+				Color = "#daff00",
+				Description = "Development flags and beta features",
+				Icon = "hammer-idle"
+			},
+
+			MobileModeBeta = {
+				Description = "Beta Mobile-first interface",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false
+				}
+			},
+			
+			ForceMobile = {
+				Description = "Forces Vars.Mobile to be true",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false
+				}
+			},
+			
+			ForceAcrylic = {
+				Description = "Forces Vars.UseAcrylic to be true",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false
+				}
+			}
 		}
-	},
-
-	BetaOptIns = {},
-
-	Webhooks = {}
+	}
 }
 
 return Settings
