@@ -60,7 +60,7 @@ function serializeToLua(value: any, indent = 0): string {
 }
 
 function jsonToLua(jsonObj: { [key: string]: any }): string {
-    return `return ${serializeToLua(jsonObj)}`;
+    return `--// Compilation Date: ${new Date()}\nreturn ${serializeToLua(jsonObj)}`;
 }
 
 async function convertLuaFileToJson(luaContent: string): Promise<any> {

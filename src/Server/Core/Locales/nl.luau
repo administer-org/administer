@@ -1,3 +1,4 @@
+--// Compilation Date: Wed Sep 03 2025 14:25:01 GMT-0400 (Eastern Daylight Time)
 return {
   ["_locale"] = "nl_NL",
   ["_locale_display"] = "Nederlands (Nederland)",
