@@ -80,6 +80,7 @@
     "NotFound.PageBroken.sending": "This app (%s) had some form of runtime or Administer API error, which is fatal and would freeze something otherwise. Please report this error to the developer.",
     "Welcome.Initial.HeaderLabel": "Hello, %s! %s",
     "widgets.uninstalled.Header": "This widget is missing.",
+    "widgets.Corrupted": "It appears to have been corrupted.",
     "widgets.uninstalled.Body": "It probably got uninstalled. Please select another one.",
     "widgets.notselected.Header": "Select an app to display here.",
     "widgets.concurrent.Body": "Please finish editing before you try again.",
