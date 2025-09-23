@@ -1,4 +1,4 @@
---// Compilation Date: Wed Sep 03 2025 14:25:01 GMT-0400 (Eastern Daylight Time)
+--// Compilation Date: Tue Sep 23 2025 19:08:39 GMT-0400 (Eastern Daylight Time)
 return {
   ["_locale"] = "pt_PT",
   ["_locale_display"] = "Portuguese (Portugal)",
@@ -28,8 +28,8 @@ return {
   ["Configuration.Admins.NewAdmin.Page1.Body"] = "O Criador de Cargos permite-te criar novos cargos de administração e especificar as suas aplicações e utilizadores permitidos. Os novos utilizadores que adicionares terão acesso ao Administer instantaneamente, mesmo que já estejam no jogo.\nSó poderás adicionar aplicações às quais tenhas acesso pessoalmente. Só as pessoas com a permissão poderão ativar a opção de permitir todas as aplicações.",
   ["Configuration.Admins.NewAdmin.Page1.Header"] = "Bem-vindo ao Criador de Cargos",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Continuar",
-  ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Escolhe o nome do cargo. Ele será filtrado, deve ser único e ter menos de 50 caracteres.",
-  ["Configuration.Admins.NewAdmin.Page2.LogoWordmark"] = "Nome",
+  ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Escolhe alguns detalhes sobre o posto para que seja mais fácil de identificar. O nome do posto será filtrado, deve ser único e ter menos de 50 caracteres.",
+  ["Configuration.Admins.NewAdmin.Page2.LogoWordmark"] = "Identificação",
   ["Configuration.Admins.NewAdmin.Page2.PreviewText"] = "Pré-visualizar: %s",
   ["Configuration.Admins.NewAdmin.Page3.AddPane.AddGroup.LogoWordmark"] = "Grupo",
   ["Configuration.Admins.NewAdmin.Page3.AddPane.AddUser.LogoWordmark"] = "Utilizador",
@@ -125,7 +125,7 @@ return {
   ["admin.rankcreator.BadData"] = "Deves fornecer um AdminRank válido!",
   ["admin.rank.Default"] = "Adicionado pelo sistema para configuração inicial.",
   ["admin.rankcreator.error.Generic"] = "`Não conseguimos processar esse pedido neste momento, por favor tenta novamente mais tarde.\\n\\n%s`",
-  ["admin.rank.created"] = "Criado a partir do editor de cargos.",
+  ["admin.rank.created"] = "Criado a partir do editor de classificação.",
   ["generic.Unauthorized"] = "Não autorizado",
   ["generic.error.CheckLogs"] = "Algo correu mal, por favor consulta os registos.",
   ["generic.error.Generic"] = "Algo correu mal.",
@@ -304,5 +304,22 @@ return {
   ["apps.aos.install.Body"] = "Por favor, introduz aqui o teu servidor AOS personalizado com https:// e sem barra final. Deve estar online e ligado à tua instância Mongo para poder ser guardado como principal.",
   ["mobile.body"] = "Modo móvel ativado. Desliza para dentro a partir da borda direita do ecrã para abrir o Administer.",
   ["mobile.detail"] = "Modo móvel",
-  ["apps.aos.install.Detail"] = "Ligar servidor de costume"
+  ["apps.aos.install.Detail"] = "Ligar servidor de costume",
+  ["Configuration.Admins.NewAdmin.Page4.LogoWordmark"] = "Aceder",
+  ["Configuration.InfoPage.License"] = "O Administer é criado pela Administer Software, uma equipa de programadores que moderniza a experiência de administração do Roblox. \nTodos os nossos trabalhos públicos são orgulhosamente software livre sob a licença GNU AGPL 3.0. \nA utilização, redistribuição e modificação do Administer, das aplicações de mercado primárias e dos serviços Web são regidas por estes termos.\nPara obter uma cópia destes termos, visite o repositório GitHub. Para ver a política de privacidade do AOS, visite o link no post do DevForum.\n\nAdministrar software %s",
+  ["apps.addserver.OK"] = "Esta instância AOS foi guardada e registada como primária.",
+  ["setting.Locale.Swapped.Body"] = "A tua interface é agora em Inglês Americano. Para aplicar as alterações, reinicia o jogo.\nOs locais ainda são uma funcionalidade beta. Se você notar algo incorreto ou quiser adicionar um novo idioma, visite o Portal do Administrador Tradutor para corrigi-lo.",
+  ["apps.aos.install.CantUninstall"] = "Não é possível desinstalar",
+  ["apps.aos.install.CantInstall.detail.NotEnoughServers"] = "Para remover este servidor, é preciso primeiro adicionar um novo.",
+  ["Configuration.InfoPage.License.About"] = "Termos de Código Aberto",
+  ["Configuration.Apps.Description"] = "%s\n\n%s por @%s de %s",
+  ["widgets.concurrent.Body"] = "Termina a edição antes de tentares novamente.",
+  ["admin.ranktype.System"] = "sistema",
+  ["generic.Locally"] = "localmente",
+  ["apps.published.Context"] = "Publicado por <b>%s</b>",
+  ["apps.published.Official"] = "Este servidor é <b>confiável.</b>",
+  ["apps.published.ThirdParty"] = "Este servidor é de terceiros e <b>não é confiável.</b>",
+  ["setting.Locale.Swapped.Title"] = "Mudou para inglês",
+  ["apps.addserver.Failed"] = "Desculpa, mas algo correu mal ao atribuir a tua instância primária. Por favor, anota o erro nos logs do teu jogo e reporta-o ao responsável pelo servidor",
+  ["apps.RunningSince"] = "Em execução desde"
 }

@@ -1,4 +1,4 @@
---// Compilation Date: Wed Sep 03 2025 14:25:01 GMT-0400 (Eastern Daylight Time)
+--// Compilation Date: Tue Sep 23 2025 19:08:39 GMT-0400 (Eastern Daylight Time)
 return {
   ["_locale"] = "vi",
   ["_locale_display"] = "Vietnamese",

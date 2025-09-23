@@ -1,4 +1,4 @@
---// Compilation Date: Wed Sep 03 2025 14:25:01 GMT-0400 (Eastern Daylight Time)
+--// Compilation Date: Tue Sep 23 2025 19:08:39 GMT-0400 (Eastern Daylight Time)
 return {
   ["_locale"] = "en_UK",
   ["_locale_display"] = "English (United Kingdom)",
@@ -22,8 +22,8 @@ return {
   ["Configuration.Admins.NewAdmin.BottomData.StepLabel"] = "Step %s/%s",
   ["Configuration.Admins.NewAdmin.Page1.Body"] = "The Ranking Creator allows you to create new administrative rankings and specify their permitted apps and users. New users you add will be given access to Administer instantly even if already inside the game.\nYou'll only be able to add applications which you personally have access to. Only people with the permission will be able to enable the option to permit all apps.",
   ["Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark"] = "Continue",
-  ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Choose the ranking's name. It is gonna be filtered, it must be unique and has to be under 50 characters.",
-  ["Configuration.Admins.NewAdmin.Page2.LogoWordmark"] = "Name",
+  ["Configuration.Admins.NewAdmin.Page2.FilterHdr"] = "Pick some details about the rank to make it easier to identify. The rank's name will be filtered, must be unique, and under 50 characters.",
+  ["Configuration.Admins.NewAdmin.Page2.LogoWordmark"] = "Identification",
   ["Configuration.Admins.NewAdmin.Page2.PreviewText"] = "Preview: %s",
   ["Configuration.Admins.NewAdmin.Page3.AddPane.AddGroup.LogoWordmark"] = "Group",
   ["Configuration.Admins.NewAdmin.Page3.AddPane.AddUser.LogoWordmark"] = "User",
@@ -89,7 +89,7 @@ return {
   ["admin.rankcreator.BadData"] = "You must provide a valid AdminRank!",
   ["admin.rank.Default"] = "Added by System for the first-time setup.",
   ["admin.rankcreator.error.Generic"] = "We couldn't process that request right now, try again later.\\n\\n%s",
-  ["admin.rank.created"] = "Created this from the ranking editor.",
+  ["admin.rank.created"] = "Created from the rank editor.",
   ["generic.Unauthorized"] = "Unauthorized",
   ["generic.error.CheckLogs"] = "Something went wrong, please refer to the logs.",
   ["generic.error.Generic"] = "Something went wrong.",
@@ -263,5 +263,22 @@ return {
   ["reltime.Minute"] = "minute ago",
   ["reltime.Minutes"] = "minutes ago",
   ["reltime.Hour"] = "hour ago",
-  ["reltime.Hours"] = "hours ago"
+  ["reltime.Hours"] = "hours ago",
+  ["Configuration.Apps.Description"] = "%s\n\n%s by @%s from %s",
+  ["apps.aos.install.CantUninstall"] = "Cannot uninstall",
+  ["apps.aos.install.CantInstall.detail.NotEnoughServers"] = "To remove this server, you must first add a new one.",
+  ["apps.published.Context"] = "Published by <b>%s</b>",
+  ["apps.published.Official"] = "This server is <b>trusted.</b>",
+  ["Configuration.Admins.NewAdmin.Page4.LogoWordmark"] = "Access",
+  ["widgets.concurrent.Body"] = "Please finish editing before you try again.",
+  ["admin.ranktype.System"] = "System",
+  ["generic.Locally"] = "locally",
+  ["apps.addserver.OK"] = "This AOS instance has been saved and registered as primary.",
+  ["apps.addserver.Failed"] = "Sorry, but something went wrong while assigning your primary instance. Please make note of the error in your game's logs and report it to the server maintainer",
+  ["apps.RunningSince"] = "Running since",
+  ["setting.Locale.Swapped.Title"] = "Switched to English",
+  ["setting.Locale.Swapped.Body"] = "Your interface is now American English. To apply changes, please restart the game.\nLocales are still a beta feature. If you notice anything incorrect or would like to add a new language, please visit the Administer Translator Portal to fix it.",
+  ["apps.published.ThirdParty"] = "This server is 3rd party and <b>untrusted.</b>",
+  ["Configuration.InfoPage.License"] = "Administer is created by Administer Software, a team of developers modernizing the Roblox administration experience. \nAll of our public works are proudly free software under the GNU AGPL 3.0 license. \nUse, redistribution, and modification of Administer, first-party marketplace apps, and web services are governed under these terms.\nTo obtain a copy of these terms, please visit the GitHub repository. To see the privacy policy for AOS, please visit the link in the DevForum post.\n\nAdminister Software %s",
+  ["Configuration.InfoPage.License.About"] = "Open Source Terms"
 }

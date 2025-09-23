@@ -1,4 +1,4 @@
---// Compilation Date: Wed Sep 03 2025 14:25:01 GMT-0400 (Eastern Daylight Time)
+--// Compilation Date: Tue Sep 23 2025 19:08:39 GMT-0400 (Eastern Daylight Time)
 return {
   ["_locale"] = "en_US",
   ["_locale_display"] = "English (United States)",
@@ -81,6 +81,7 @@ return {
   ["NotFound.PageBroken.sending"] = "This app (%s) had some form of runtime or Administer API error, which is fatal and would freeze something otherwise. Please report this error to the developer.",
   ["Welcome.Initial.HeaderLabel"] = "Hello, %s! %s",
   ["widgets.uninstalled.Header"] = "This widget is missing.",
+  ["widgets.Corrupted"] = "It appears to have been corrupted.",
   ["widgets.uninstalled.Body"] = "It probably got uninstalled. Please select another one.",
   ["widgets.notselected.Header"] = "Select an app to display here.",
   ["widgets.concurrent.Body"] = "Please finish editing before you try again.",
