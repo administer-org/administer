@@ -272,5 +272,16 @@
     "reltime.Hours": "timmar sedan",
     "reltime.Year": "år sedan",
     "reltime.Years": "år sedan",
-    "reltime.Format": "%s %s"
+    "reltime.Format": "%s %s",
+    "apps.featured.TopInstalled": "Toppinstallerad från dina servrar",
+    "apps.library.Header": "Mitt bibliotek",
+    "apps.library.Subheader": "Saknar du appar eller kommandon? <font color='rgb(37, 72, 194)'>Kontrollera din rangkonfiguration.</font>",
+    "apps.InstallServer": "Installera server",
+    "Configuration.Admins.Container.Ranks.Subheader": "Skapa nya ranker och tilldela personer till dem.",
+    "editrank.disabled.creatoropen.Header": "Redigeringsläge inaktiverat",
+    "editrank.disabled.creatoropen.Body": "Vänligen avsluta skapandet innan du startar ett nytt.",
+    "widgets.Corrupted": "Den verkar ha blivit skadad.",
+    "apps.sidebar.Featured": "Utvalda",
+    "apps.sidebar.Library": "Biblioteket",
+    "apps.Hot": "HOT"
 }
