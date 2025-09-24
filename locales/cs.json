@@ -272,5 +272,16 @@
     "reltime.Hours": "před několika hodinami",
     "reltime.Year": "před rokem",
     "reltime.Years": "před lety",
-    "reltime.Format": "%s %s"
+    "reltime.Format": "%s %s",
+    "Configuration.Admins.Container.Ranks.Subheader": "Vytvářejte nové hodnosti a přiřazujte k nim lidi.",
+    "editrank.disabled.creatoropen.Header": "Režim úprav je zakázán",
+    "editrank.disabled.creatoropen.Body": "Než začnete vytvářet nový, dokončete prosím vytváření.",
+    "widgets.Corrupted": "Zdá se, že byl poškozen.",
+    "apps.sidebar.Featured": "Doporučené stránky",
+    "apps.library.Header": "Moje knihovna",
+    "apps.library.Subheader": "Chybějící aplikace nebo příkazy? <font color='rgb(37, 72, 194)'>Zkontrolujte konfiguraci hodnosti.</font>",
+    "apps.InstallServer": "Instalace serveru",
+    "apps.sidebar.Library": "Knihovna",
+    "apps.Hot": "HOT",
+    "apps.featured.TopInstalled": "Nejlépe nainstalovaný z vašich serverů"
 }
