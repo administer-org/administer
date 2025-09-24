@@ -279,5 +279,16 @@
     "apps.aos.Down": "AOS ni vrnil kode stanja OK",
     "apps.aos.InternalError": "Notranja napaka",
     "apps.sensitivity.Context": "Uporablja %s Upravljajte module %s",
-    "apps.sensitivity.Sensitive": "občutljivo"
+    "apps.sensitivity.Sensitive": "občutljivo",
+    "Configuration.Admins.Container.Ranks.Subheader": "Ustvarite nove rangove in jim dodelite ljudi.",
+    "editrank.disabled.creatoropen.Header": "Onemogočen način urejanja",
+    "widgets.Corrupted": "Zdi se, da je bila poškodovana.",
+    "apps.sidebar.Featured": "Priporočeni",
+    "apps.sidebar.Library": "Knjižnica",
+    "apps.Hot": "HOT",
+    "apps.library.Header": "Moja knjižnica",
+    "apps.library.Subheader": "Manjkajo aplikacije ali ukazi? <font color='rgb(37, 72, 194)'>Preverite konfiguracijo ranga.</font>",
+    "apps.InstallServer": "Namestitev strežnika",
+    "editrank.disabled.creatoropen.Body": "Preden začnete ustvarjati novo, končajte z ustvarjanjem.",
+    "apps.featured.TopInstalled": "Vrh nameščen z vaših strežnikov"
 }
