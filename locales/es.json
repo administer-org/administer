@@ -318,5 +318,16 @@
     "apps.published.Official": "Este servidor es de confianza <b>.</b>",
     "apps.published.ThirdParty": "Este servidor es de terceros y <b>no es de confianza.</b>",
     "setting.Locale.Swapped.Title": "Cambiado a inglés",
-    "setting.Locale.Swapped.Body": "Tu interfaz está ahora en inglés americano. Para aplicar los cambios, reinicia el juego.\nLas localizaciones son todavía una característica beta. Si notas algo incorrecto o te gustaría añadir un nuevo idioma, por favor visita el Portal de Administración de Traductores para arreglarlo."
+    "setting.Locale.Swapped.Body": "Tu interfaz está ahora en inglés americano. Para aplicar los cambios, reinicia el juego.\nLas localizaciones son todavía una característica beta. Si notas algo incorrecto o te gustaría añadir un nuevo idioma, por favor visita el Portal de Administración de Traductores para arreglarlo.",
+    "Configuration.Admins.Container.Ranks.Subheader": "Crea nuevos rangos y asigna personas a ellos.",
+    "editrank.disabled.creatoropen.Header": "Modo de edición desactivado",
+    "editrank.disabled.creatoropen.Body": "Por favor, termina de crear antes de empezar uno nuevo.",
+    "widgets.Corrupted": "Parece que se ha corrompido.",
+    "apps.sidebar.Featured": "Destacado",
+    "apps.sidebar.Library": "Biblioteca",
+    "apps.Hot": "CALIENTE",
+    "apps.featured.TopInstalled": "Top instalado desde sus servidores",
+    "apps.library.Header": "Mi biblioteca",
+    "apps.library.Subheader": "¿Faltan aplicaciones o comandos? <font color='rgb(37, 72, 194)'>Comprueba la configuración de tu rango.</font>",
+    "apps.InstallServer": "Instalar servidor"
 }
