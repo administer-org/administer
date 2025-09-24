@@ -279,5 +279,16 @@
     "setting.Locale.Swapped.Body": "Your interface is now American English. To apply changes, please restart the game.\nLocales are still a beta feature. If you notice anything incorrect or would like to add a new language, please visit the Administer Translator Portal to fix it.",
     "apps.published.ThirdParty": "This server is 3rd party and <b>untrusted.</b>",
     "Configuration.InfoPage.License": "Administer is created by Administer Software, a team of developers modernizing the Roblox administration experience. \nAll of our public works are proudly free software under the GNU AGPL 3.0 license. \nUse, redistribution, and modification of Administer, first-party marketplace apps, and web services are governed under these terms.\nTo obtain a copy of these terms, please visit the GitHub repository. To see the privacy policy for AOS, please visit the link in the DevForum post.\n\nAdminister Software %s",
-    "Configuration.InfoPage.License.About": "Open Source Terms"
+    "Configuration.InfoPage.License.About": "Open Source Terms",
+    "apps.library.Header": "My Library",
+    "apps.library.Subheader": "Missing apps or commands? <font color='rgb(37, 72, 194)'>Check your rank configuration.</font>",
+    "apps.InstallServer": "Install Server",
+    "Configuration.Admins.Container.Ranks.Subheader": "Create new ranks and assign people to them.",
+    "editrank.disabled.creatoropen.Header": "Edit mode disabled",
+    "editrank.disabled.creatoropen.Body": "Please finish creating before you start a new one.",
+    "widgets.Corrupted": "It appears to have been corrupted.",
+    "apps.sidebar.Featured": "Featured",
+    "apps.sidebar.Library": "Library",
+    "apps.Hot": "HOT",
+    "apps.featured.TopInstalled": "Top installed from your servers"
 }
