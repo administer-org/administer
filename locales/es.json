@@ -306,7 +306,7 @@
     "Configuration.Apps.Description": "%s\n\n%s por @%s de %s",
     "admin.ranktype.System": "Sistema",
     "apps.aos.install.CantUninstall": "No se puede desinstalar",
-    "Configuration.Admins.NewAdmin.Page4.LogoWordmark": "Accede a",
+    "Configuration.Admins.NewAdmin.Page4.LogoWordmark": "Acceso a",
     "apps.aos.install.CantInstall.detail.NotEnoughServers": "Para eliminar este servidor, primero debes añadir uno nuevo.",
     "Configuration.InfoPage.License": "Administer es creado por Administer Software, un equipo de desarrolladores que modernizan la experiencia de administración de Roblox. \nTodos nuestros trabajos públicos son orgullosamente software libre bajo la licencia GNU AGPL 3.0. \nEl uso, la redistribución y la modificación de Administer, las aplicaciones de mercado y los servicios web se rigen por estos términos.\nPara obtener una copia de estos términos, visite el repositorio GitHub. Para ver la política de privacidad de AOS, por favor visite el enlace en el post DevForum.\n\nAdministrar software %s",
     "Configuration.InfoPage.License.About": "Términos de código abierto",
