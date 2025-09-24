@@ -316,5 +316,16 @@
     "apps.aos.Uninstall": "Het verwijderen van app-servers kan onbedoelde neveneffecten hebben. Zorg ervoor dat je ten minste één server hebt geïnstalleerd.",
     "apps.aos.install.Body": "Voer hier uw aangepaste AOS-server in met https:// en zonder slash. Deze moet online zijn en gekoppeld aan uw Mongo-instantie om te kunnen worden opgeslagen als primair.",
     "mobile.body": "Mobiele modus geactiveerd. Veeg naar binnen vanaf de rechterkant van je scherm om Beheer te openen.",
-    "mobile.detail": "Mobiele modus"
+    "mobile.detail": "Mobiele modus",
+    "apps.sidebar.Featured": "Aanbevolen",
+    "Configuration.Admins.Container.Ranks.Subheader": "Maak nieuwe rangen en wijs er mensen aan toe.",
+    "editrank.disabled.creatoropen.Header": "Bewerkingsmodus uitgeschakeld",
+    "editrank.disabled.creatoropen.Body": "Maak het aanmaken af voordat je een nieuwe start.",
+    "widgets.Corrupted": "Het lijkt corrupt te zijn.",
+    "apps.sidebar.Library": "Bibliotheek",
+    "apps.Hot": "HOT",
+    "apps.featured.TopInstalled": "Top geïnstalleerd vanaf uw servers",
+    "apps.library.Header": "Mijn Bibliotheek",
+    "apps.library.Subheader": "Mis je apps of commando's? <font color='rgb(37, 72, 194)'>Controleer je rangconfiguratie.</font>",
+    "apps.InstallServer": "Server installeren"
 }
