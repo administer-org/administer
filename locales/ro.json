@@ -273,5 +273,16 @@
     "apps.addserver.OK": "Această instanță AOS a fost salvată și înregistrată ca principală.",
     "apps.RunningSince": "Funcționează de la",
     "setting.Locale.Swapped.Title": "Trecut la limba engleză",
-    "setting.Locale.Swapped.Body": "Interfața dvs. este acum în engleză americană. Pentru a aplica modificările, vă rugăm să reporniți jocul.\nLimbile locale sunt încă o caracteristică beta. Dacă observați ceva incorect sau doriți să adăugați o limbă nouă, vă rugăm să vizitați Portalul de administrare al traducătorului pentru a remedia problema."
+    "setting.Locale.Swapped.Body": "Interfața dvs. este acum în engleză americană. Pentru a aplica modificările, vă rugăm să reporniți jocul.\nLimbile locale sunt încă o caracteristică beta. Dacă observați ceva incorect sau doriți să adăugați o limbă nouă, vă rugăm să vizitați Portalul de administrare al traducătorului pentru a remedia problema.",
+    "Configuration.Admins.Container.Ranks.Subheader": "Creați ranguri noi și desemnați persoane pentru acestea.",
+    "editrank.disabled.creatoropen.Header": "Modul de editare dezactivat",
+    "editrank.disabled.creatoropen.Body": "Vă rugăm să terminați crearea înainte de a începe una nouă.",
+    "widgets.Corrupted": "Pare să fi fost corupt.",
+    "apps.sidebar.Featured": "În prim plan",
+    "apps.sidebar.Library": "Biblioteca",
+    "apps.Hot": "HOT",
+    "apps.featured.TopInstalled": "Top instalat de pe serverele dvs.",
+    "apps.library.Header": "Biblioteca mea",
+    "apps.library.Subheader": "Lipsesc aplicații sau comenzi? <font color='rgb(37, 72, 194)'>Verificați configurația rangului dvs.</font>",
+    "apps.InstallServer": "Instalarea serverului"
 }
