@@ -320,5 +320,16 @@
     "apps.published.ThirdParty": "Este servidor é de terceiros e <b>não é confiável.</b>",
     "setting.Locale.Swapped.Title": "Mudou para inglês",
     "apps.addserver.Failed": "Desculpa, mas algo correu mal ao atribuir a tua instância primária. Por favor, anota o erro nos logs do teu jogo e reporta-o ao responsável pelo servidor",
-    "apps.RunningSince": "Em execução desde"
+    "apps.RunningSince": "Em execução desde",
+    "Configuration.Admins.Container.Ranks.Subheader": "Cria novas classificações e atribui pessoas a elas.",
+    "editrank.disabled.creatoropen.Header": "Modo de edição desativado",
+    "widgets.Corrupted": "Parece ter sido corrompido.",
+    "editrank.disabled.creatoropen.Body": "Por favor, termina a criação antes de começares uma nova.",
+    "apps.sidebar.Featured": "Em destaque",
+    "apps.sidebar.Library": "Biblioteca",
+    "apps.Hot": "QUENTE",
+    "apps.featured.TopInstalled": "Top instalado a partir dos seus servidores",
+    "apps.library.Header": "A minha biblioteca",
+    "apps.library.Subheader": "Faltam aplicações ou comandos? <font color='rgb(37, 72, 194)'>Verifica a configuração da tua classificação.</font>",
+    "apps.InstallServer": "Instalar o servidor"
 }
