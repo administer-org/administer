@@ -279,5 +279,16 @@
     "generic.Success": "Успіх!",
     "generic.OutOfDate": "Застаріла",
     "generic.Registration": "Реєстрація",
-    "apps.aos.Down": "AOS не повернув код статусу OK"
+    "apps.aos.Down": "AOS не повернув код статусу OK",
+    "widgets.Corrupted": "Схоже, вона була пошкоджена.",
+    "apps.sidebar.Featured": "Функціональні можливості",
+    "apps.sidebar.Library": "Бібліотека",
+    "apps.Hot": "ГОРЯЧЕ",
+    "apps.featured.TopInstalled": "Топ встановлених з ваших серверів",
+    "apps.library.Header": "Моя бібліотека",
+    "Configuration.Admins.Container.Ranks.Subheader": "Створюйте нові звання та призначайте людей на них.",
+    "editrank.disabled.creatoropen.Header": "Режим редагування вимкнено",
+    "editrank.disabled.creatoropen.Body": "Будь ласка, завершіть створення, перш ніж почати нове.",
+    "apps.library.Subheader": "Відсутні програми або команди? <font color='rgb(37, 72, 194)'>Перевірте конфігурацію свого рангу.</font>",
+    "apps.InstallServer": "Встановити сервер"
 }
