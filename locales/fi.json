@@ -279,5 +279,16 @@
     "generic.InvalidInput": "Virheellinen syöttö",
     "generic.UpToDate": "Päivitetty",
     "generic.OutOfDate": "Vanhentunut",
-    "generic.Registration": "Rekisteröinti"
+    "generic.Registration": "Rekisteröinti",
+    "editrank.disabled.creatoropen.Header": "Muokkaustila poistettu käytöstä",
+    "apps.sidebar.Featured": "Esillä",
+    "apps.sidebar.Library": "Kirjasto",
+    "apps.library.Header": "Oma kirjasto",
+    "apps.library.Subheader": "Puuttuvat sovellukset tai komennot? <font color='rgb(37, 72, 194)'>Tarkista sijoitusasetuksesi.</font>",
+    "apps.InstallServer": "Asenna palvelin",
+    "Configuration.Admins.Container.Ranks.Subheader": "Luo uusia rivejä ja määritä niihin henkilöitä.",
+    "editrank.disabled.creatoropen.Body": "Lopeta luominen ennen kuin aloitat uuden.",
+    "widgets.Corrupted": "Se on ilmeisesti vioittunut.",
+    "apps.Hot": "HOT",
+    "apps.featured.TopInstalled": "Top asennettu palvelimiltasi"
 }
