@@ -320,5 +320,16 @@
     "setting.Locale.Swapped.Body": "Sua interface agora é em inglês americano. Para aplicar as alterações, reinicie o jogo.\nOs locais ainda são um recurso beta. Se você notar algo incorreto ou quiser adicionar um novo idioma, visite o Portal do Administrador Tradutor para corrigi-lo.",
     "Configuration.InfoPage.License.About": "Termos de código aberto",
     "Configuration.Admins.NewAdmin.Page4.LogoWordmark": "Acessar",
-    "generic.Locally": "localmente"
+    "generic.Locally": "localmente",
+    "Configuration.Admins.Container.Ranks.Subheader": "Crie novas classificações e atribua pessoas a elas.",
+    "editrank.disabled.creatoropen.Body": "Termine a criação antes de iniciar uma nova.",
+    "widgets.Corrupted": "Ele parece ter sido corrompido.",
+    "editrank.disabled.creatoropen.Header": "Modo de edição desativado",
+    "apps.sidebar.Featured": "Em destaque",
+    "apps.sidebar.Library": "Biblioteca",
+    "apps.Hot": "QUENTE",
+    "apps.featured.TopInstalled": "Top instalado a partir de seus servidores",
+    "apps.library.Header": "Minha biblioteca",
+    "apps.library.Subheader": "Faltam aplicativos ou comandos? <font color='rgb(37, 72, 194)'>Verifique a configuração de sua classificação.</font>",
+    "apps.InstallServer": "Instalar o servidor"
 }
