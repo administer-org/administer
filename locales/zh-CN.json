@@ -319,5 +319,16 @@
     "apps.sensitivity.Context": "使用 %s 管理模块 %s",
     "apps.sensitivity.Sensitive": "敏感的",
     "apps.sensitivity.Insensitive": "不敏感",
-    "apps.sensitivity.DoesNotUse": "不使用 %s 模块"
+    "apps.sensitivity.DoesNotUse": "不使用 %s 模块",
+    "Configuration.Admins.Container.Ranks.Subheader": "创建新等级并分配人员。",
+    "editrank.disabled.creatoropen.Header": "编辑模式已禁用",
+    "editrank.disabled.creatoropen.Body": "请先完成创建，然后再开始新的创建。",
+    "widgets.Corrupted": "似乎已损坏。",
+    "apps.sidebar.Featured": "特色",
+    "apps.sidebar.Library": "资料库",
+    "apps.Hot": "热",
+    "apps.featured.TopInstalled": "从您的服务器顶端安装",
+    "apps.library.Header": "我的资料库",
+    "apps.library.Subheader": "缺少应用程序或命令？<font color='rgb(37, 72, 194)'>检查您的等级配置。</font>",
+    "apps.InstallServer": "安装服务器"
 }
