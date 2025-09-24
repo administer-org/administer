@@ -279,5 +279,16 @@
     "generic.InvalidInput": "إدخال غير صالح",
     "generic.UpToDate": "محدثة",
     "generic.OutOfDate": "غير محدثة",
-    "generic.Registration": "التسجيل"
+    "generic.Registration": "التسجيل",
+    "Configuration.Admins.Container.Ranks.Subheader": "إنشاء رتب جديدة وتعيين أشخاص إليها.",
+    "editrank.disabled.creatoropen.Header": "تم تعطيل وضع التحرير",
+    "editrank.disabled.creatoropen.Body": "يرجى الانتهاء من الإنشاء قبل البدء في إنشاء واحدة جديدة.",
+    "widgets.Corrupted": "يبدو أنها تالفة.",
+    "apps.sidebar.Featured": "مميز",
+    "apps.sidebar.Library": "المكتبة",
+    "apps.Hot": "ساخن",
+    "apps.featured.TopInstalled": "أعلى مثبتة من خوادمك",
+    "apps.library.Header": "مكتبتي",
+    "apps.library.Subheader": "تطبيقات أو أوامر مفقودة؟ <font color='rgb(37, 72, 194)'>تحقق من تكوين رتبتك.</font>",
+    "apps.InstallServer": "تثبيت الخادم"
 }
