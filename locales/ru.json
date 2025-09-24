@@ -316,5 +316,16 @@
     "reltime.Minute": "минуту назад",
     "reltime.Minutes": "минут назад",
     "reltime.Hour": "час назад",
-    "reltime.Hours": "несколько часов назад"
+    "reltime.Hours": "несколько часов назад",
+    "editrank.disabled.creatoropen.Body": "Пожалуйста, завершите создание, прежде чем начинать новое.",
+    "Configuration.Admins.Container.Ranks.Subheader": "Создавайте новые ранги и назначайте на них людей.",
+    "editrank.disabled.creatoropen.Header": "Режим редактирования отключен",
+    "widgets.Corrupted": "Похоже, она была повреждена.",
+    "apps.sidebar.Featured": "Featured",
+    "apps.sidebar.Library": "Библиотека",
+    "apps.Hot": "HOT",
+    "apps.featured.TopInstalled": "Верхняя установка с ваших серверов",
+    "apps.library.Header": "Моя библиотека",
+    "apps.library.Subheader": "Не хватает приложений или команд? <font color='rgb(37, 72, 194)'>Проверьте конфигурацию ранга.</font>",
+    "apps.InstallServer": "Установить сервер"
 }
