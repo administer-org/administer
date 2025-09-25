@@ -230,7 +230,7 @@
     "setting.category.Accessibility": "Accessibilidad",
     "setting.category.Miscellaneous": "Varios",
     "Configuration.Admins.Ranks.Unprotected": "No protegido",
-    "Configuration.Admins.Ranks.HasApps": "Aplicaciones",
+    "Configuration.Admins.Ranks.HasApps": "%s Aplicaciones",
     "Configuration.Admins.Ranks.HasSuperAdmin": "Acceso Completo",
     "Configuration.Admins.NewAdmin.Start": "+ Nuevo Rango",
     "Configuration.InfoPage.Donate.Button": "DONAR %s",
