@@ -16,7 +16,7 @@ return {
 		["administer-wireframe"] = "83950641785996",
 		["logo-twitter-black"] = "12167431902"
 	},
-	
+
 	["accessibility"] = "103566714530577",
 	["administer"] = "116599744136879", --// I know logos exists I just use this too much 
 	["alarm"] = "18925390063",

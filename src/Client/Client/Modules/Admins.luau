@@ -15,6 +15,243 @@ local Frames = Var.MainFrame.Configuration.Admins.NewAdmin
 
 local TweenService = Var.Services.TweenService
 
+local CreatorStepCount = "6"
+
+local function NewCard(RankData: { any }, ParentFrame, IsDummyCard)
+	local Template = RanksFrame.Template:Clone()
+	local CreatorName = RankData.CreatorID == 1 and Utilities.Translate("admin.ranktype.System") or Var.Services.Players:GetNameFromUserIdAsync(RankData.CreatorID)
+
+	Template.Name = RankData.Name
+	Template.RankName.Text = RankData.Name
+	Template.Info.Text = string.format(Utilities.Translate("Configuration.Admins.Container.Ranks.Content.Template.Info"),
+		RankData.RankID,
+		RankData.Apps.SuperAdmin and Utilities.Translate("Configuration.Admins.Ranks.HasSuperAdmin") or string.format(Utilities.Translate("Configuration.Admins.Ranks.HasApps"), #RankData.Apps),
+		CreatorName,
+		Utilities.FormatRelativeTime(RankData.Modified)
+	)
+
+
+	if RankData.Apps.SuperAdmin then
+		local Card = Template.Pages.Frame:Clone()
+		local Tip = Instance.new("TextButton")
+
+		Card.Visible = true
+		Card.AppName.Text = Utilities.Translate("admin.ranks.superadmin.Detail")
+		Card.ImageLabel.Image = Utilities.Icon "user-shield"
+		Card.Parent = Template.Pages
+
+		Tip.Size = UDim2.new(1,0,1,0)
+		Tip.BackgroundTransparency = 1
+		Tip.BorderSizePixel = 0
+		Tip.Parent = Card
+		Tip.Text = ""
+
+		table.insert(Connections, Tip.MouseButton1Click:Connect(function()
+			Frontend.Popup.new(
+				{
+					Icon = Utilities.Icon "administer",
+					Name = "Administer",
+					Subheader = "Information"
+				},
+				{
+					Primary = Utilities.Icon "user-shield"
+				},
+				Utilities.Translate("admin.ranks.superadmin.Detail"),
+				Utilities.Translate("admin.ranks.superadmin.Body"),
+				{
+					{
+						Text = Utilities.Translate("generic.Done"),
+						Icon = Utilities.Icon "check-plain",
+						Callback = function(c) c() end
+					}
+				}
+			)
+		end))
+	end
+
+	local UsableAppInfo = {}
+	local AppCount = 0
+
+	for App, IsVisible in RankData.Apps do
+		if App == "CachedData" or App == "AdmHomepage" or App == "SuperAdmin" then continue end
+
+		if IsVisible then
+			AppCount += 1
+			table.insert(UsableAppInfo, RankData.Apps.CachedData[App])
+		end
+	end
+
+	if AppCount > 6 then
+		for j = 1, 5 do
+			if type(RankData.Apps[j]) == "boolean" then continue end
+
+			local Card = Template.Pages.Frame:Clone()
+
+			Card.Visible = true
+			Card.AppName.Text = UsableAppInfo[j].Name
+			Card.ImageLabel.Image = UsableAppInfo[j].Icon
+			Card.Parent = Template.Pages
+		end
+
+		local Card = Template.Pages.Frame:Clone()
+		Card.Visible = true
+		Card.AppName.Text = string.format(Utilities.Translate("admin.ranks.Others"), AppCount - 5)
+		Card.Parent = Template.Pages
+	else
+		for k, App in UsableAppInfo do
+			if type(App) == "boolean" then continue end
+
+			local Card = Template.Pages.Frame:Clone()
+
+			Card.Visible = true
+			Card.AppName.Text = App.Name
+			Card.ImageLabel.Image = App.Icon
+			Card.Parent = Template.Pages
+		end
+	end
+
+	xpcall(function()
+		Template.ColorBG.BackgroundColor3 = Color3.fromHex(RankData.Color)
+	end, function()
+		--// invalid hex code
+		Template.ColorBG.BackgroundColor3 = Color3.new(0.239, 0.643, 1)
+	end)
+
+	Template.Parent = ParentFrame
+	Template.Visible = true
+
+	local UserNames = {}
+	local MoveTI = TweenInfo.new(Var.AnimationSpeed * .3)
+
+	for i = 1, 3 do
+		local User = RankData.Members[i]
+
+		if User == nil then break end
+		if User.MemberType == "User" then
+			pcall(function()
+				Template.ProfilePictures[i].Visible = true
+				Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
+					User.ID,
+					Enum.ThumbnailType.HeadShot,
+					Enum.ThumbnailSize.Size100x100
+				)
+
+				table.insert(UserNames, Var.Services.Players:GetNameFromUserIdAsync(User.ID))
+			end)
+		else
+			local Success, GroupInfo = pcall(function()
+				return game:GetService("GroupService"):GetGroupInfoAsync(User.ID)
+			end)
+
+			if Success then
+				Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
+				Template.ProfilePictures[i].Visible = true
+
+				Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
+
+				table.insert(UserNames, GroupInfo.Name)
+			end
+
+		end
+	end
+
+	if UserNames[1] == nil then
+		Template.MembersText.Text = string.format(Utilities.Translate("admin.ranks.members.one"), Utilities.Translate("generic.User"))
+
+		return Template
+	end
+
+	Template.MembersText.Text = (
+		#UserNames == 3 and string.format(
+			"<b>%s</b>, <b>%s</b>, <b>%s</b>, and <b>%d %s</b>",
+			UserNames[1],
+			UserNames[2],
+			UserNames[3],
+			#RankData.Members - 3,
+			Utilities.Translate(#RankData.Members - 3 == 1 and "admin.ranks.members.one" or "admin.ranks.members.more"):format(#RankData.Members - 3)
+		)
+			or #UserNames == 2 and string.format(
+				"<b>%s</b> and <b>%s</b> %s",
+				UserNames[1],
+				UserNames[2],
+				Utilities.Translate("admin.ranks.members.two")
+			)
+			or string.format(
+				"<b>%s</b> %s",
+				UserNames[1],
+				Utilities.Translate("admin.ranks.members.one")
+			)
+	)
+
+	if IsDummyCard then 
+		return Template 
+	end
+
+	table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
+		if Var.RankCreatorOpen then return end
+
+		Var.Services.TweenService:Create(Template.RankName, MoveTI, {
+			Position = UDim2.fromScale(0.1, 0.036),
+			Size = UDim2.fromScale(0.858, 0.126)
+		}):Play()
+
+		Var.Services.TweenService:Create(Template.Configure, MoveTI, {
+			ImageTransparency = 0
+		}):Play()
+	end))
+
+	table.insert(Connections, Template.EditTrigger.MouseLeave:Connect(function()
+		Var.Services.TweenService:Create(Template.RankName, MoveTI, {
+			Position = UDim2.fromScale(0.025, 0.036),
+			Size = UDim2.fromScale(0.955, 0.126)
+		}):Play()
+
+		Var.Services.TweenService:Create(Template.Configure, MoveTI, {
+			ImageTransparency = 1
+		}):Play()
+	end))
+
+	if RankData.Protected then
+		Template.Configure.Image = Utilities.Icon "lock"
+
+		table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
+			if Var.RankCreatorOpen then return end
+
+			Frontend.Toast({
+				Icon = Utilities.Icon "triangle-warning",
+				Text = Utilities.Translate("admin.ranks.protected.Detail"),
+				Subtext = Utilities.Translate("admin.ranks.protected.Body"),
+				Timeout = 5
+			})
+		end))
+	else
+		local Env = require(script.Parent.UI.AdminHelperEnv)
+
+		table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
+			if Var.RankCreatorOpen then
+				Frontend.Toast({
+					Icon = Utilities.Icon "triangle-warning",
+					Text = Utilities.Translate("editrank.disabled.creatoropen.Header"),
+					Subtext = Utilities.Translate("editrank.disabled.creatoropen.Body"),
+					Timeout = 5
+				})
+
+				return
+			end
+
+			Env.EditMode = true
+			Env.EditModeMembers = RankData.Members
+			Env.EditModeApps = RankData.Apps
+			Env.EditModeName = RankData.Name
+			Env.EditModeColor = RankData.Color
+
+			Admins.OpenCreator()
+		end))
+	end
+
+	return Template
+end
+
 function Admins.Load(): ()
 	for _, Item in RanksFrame:GetChildren() do
 		if Item:IsA("Frame") and Item.Name ~= "Template" then Item:Destroy() end
@@ -67,221 +304,7 @@ function Admins.Load(): ()
 			return "Something went wrong"
 		else
 			for i, v in List do
-				local Template = RanksFrame.Template:Clone()
-				local CreatorName = v.CreatorID == 1 and Utilities.Translate("admin.ranktype.System") or Var.Services.Players:GetNameFromUserIdAsync(v.CreatorID)
-				Template.Name = v.Name
-				Template.RankName.Text = v.Name
-				Template.Info.Text = string.format(Utilities.Translate("Configuration.Admins.Container.Ranks.Content.Template.Info"),
-					v.RankID,
-					v.Apps.SuperAdmin and Utilities.Translate("Configuration.Admins.Ranks.HasSuperAdmin") or string.format(Utilities.Translate("Configuration.Admins.Ranks.HasApps"), #v.Apps),
-					CreatorName,
-					Utilities.FormatRelativeTime(v.Modified)
-				)
-
-				if v.Apps.SuperAdmin then
-					local Card = Template.Pages.Frame:Clone()
-					local Tip = Instance.new("TextButton")
-
-					Card.Visible = true
-					Card.AppName.Text = Utilities.Translate("admin.ranks.superadmin.Detail")
-					Card.ImageLabel.Image = Utilities.Icon "user-shield"
-					Card.Parent = Template.Pages
-
-					Tip.Size = UDim2.new(1,0,1,0)
-					Tip.BackgroundTransparency = 1
-					Tip.BorderSizePixel = 0
-					Tip.Parent = Card
-					Tip.Text = ""
-
-					table.insert(Connections, Tip.MouseButton1Click:Connect(function()
-						Frontend.Popup.new(
-							{
-								Icon = Utilities.Icon "administer",
-								Name = "Administer",
-								Subheader = "Information"
-							},
-							{
-								Primary = Utilities.Icon "user-shield"
-							},
-							Utilities.Translate("admin.ranks.superadmin.Detail"),
-							Utilities.Translate("admin.ranks.superadmin.Body"),
-							{
-								{
-									Text = Utilities.Translate("generic.Done"),
-									Icon = Utilities.Icon "check-plain",
-									Callback = function(c) c() end
-								}
-							}
-						)
-					end))
-				end
-
-				local UsableAppInfo = {}
-				local AppCount = 0
-
-				for App, IsVisible in v.Apps do
-					if App == "CachedData" or App == "AdmHomepage" or App == "SuperAdmin" then continue end
-
-					if IsVisible then
-						AppCount += 1
-						table.insert(UsableAppInfo, v.Apps.CachedData[App])
-					end
-				end
-
-				if AppCount > 6 then
-					for j = 1, 5 do
-						if type(v.Apps[j]) == "boolean" then continue end
-
-						local Card = Template.Pages.Frame:Clone()
-
-						Card.Visible = true
-						Card.AppName.Text = UsableAppInfo[j].Name
-						Card.ImageLabel.Image = UsableAppInfo[j].Icon
-						Card.Parent = Template.Pages
-					end
-
-					local Card = Template.Pages.Frame:Clone()
-					Card.Visible = true
-					Card.AppName.Text = string.format(Utilities.Translate("admin.ranks.Others"), AppCount - 5)
-					Card.Parent = Template.Pages
-				else
-					for k, App in UsableAppInfo do
-						if type(App) == "boolean" then continue end
-
-						local Card = Template.Pages.Frame:Clone()
-
-						Card.Visible = true
-						Card.AppName.Text = App.Name
-						Card.ImageLabel.Image = App.Icon
-						Card.Parent = Template.Pages
-					end
-				end
-
-				xpcall(function()
-					Template.ColorBG.BackgroundColor3 = Color3.fromHex(v.Color)
-				end, function()
-					--// Invalid hex code
-					Template.ColorBG.BackgroundColor3 = Color3.new(0.239, 0.643, 1)
-				end)
-
-				Template.Parent = RanksFrame
-				Template.Visible = true
-
-				local UserNames = {}
-				local MoveTI = TweenInfo.new(Var.AnimationSpeed * .3)
-
-				for i = 1, 3 do
-					local User = v.Members[i]
-
-					if User == nil then break end
-					if User.MemberType == "User" then
-						pcall(function()
-							Template.ProfilePictures[i].Visible = true
-							Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
-								User.ID,
-								Enum.ThumbnailType.HeadShot,
-								Enum.ThumbnailSize.Size100x100
-							)
-
-							table.insert(UserNames, Var.Services.Players:GetNameFromUserIdAsync(User.ID))
-						end)
-					else
-						local Success, GroupInfo = pcall(function()
-							return game:GetService("GroupService"):GetGroupInfoAsync(User.ID)
-						end)
-
-						if Success then
-							Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
-							Template.ProfilePictures[i].Visible = true
-
-							Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
-
-							table.insert(UserNames, GroupInfo.Name)
-						end
-
-					end
-				end
-
-				if UserNames[1] == nil then
-					Template.MembersText.Text = string.format(Utilities.Translate("admin.ranks.members.one"), Utilities.Translate("generic.User"))
-
-					continue
-				end
-
-				Template.MembersText.Text = (
-					#UserNames == 3 and string.format(
-						"<b>%s</b>, <b>%s</b>, <b>%s</b>, and <b>%d %s</b>",
-						UserNames[1],
-						UserNames[2],
-						UserNames[3],
-						#v.Members - 3,
-						Utilities.Translate(#v.Members - 3 == 1 and "admin.ranks.members.one" or "admin.ranks.members.more"):format(#v.Members - 3)
-					)
-						or #UserNames == 2 and string.format(
-							"<b>%s</b> and <b>%s</b> %s",
-							UserNames[1],
-							UserNames[2],
-							Utilities.Translate("admin.ranks.members.two")
-						)
-						or string.format(
-							"<b>%s</b> %s",
-							UserNames[1],
-							Utilities.Translate("admin.ranks.members.one")
-						)
-				)
-
-				table.insert(Connections, Template.EditTrigger.MouseEnter:Connect(function()
-					if Var.RankCreatorOpen then return end
-
-					Var.Services.TweenService:Create(Template.RankName, MoveTI, {
-						Position = UDim2.fromScale(0.1, 0.036),
-						Size = UDim2.fromScale(0.858, 0.126)
-					}):Play()
-
-					Var.Services.TweenService:Create(Template.Configure, MoveTI, {
-						ImageTransparency = 0
-					}):Play()
-				end))
-
-				table.insert(Connections, Template.EditTrigger.MouseLeave:Connect(function()
-					Var.Services.TweenService:Create(Template.RankName, MoveTI, {
-						Position = UDim2.fromScale(0.025, 0.036),
-						Size = UDim2.fromScale(0.955, 0.126)
-					}):Play()
-
-					Var.Services.TweenService:Create(Template.Configure, MoveTI, {
-						ImageTransparency = 1
-					}):Play()
-				end))
-
-				if v.Protected then
-					Template.Configure.Image = Utilities.Icon "lock"
-
-					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
-						if Var.RankCreatorOpen then return end
-
-						Frontend.Toast({
-							Icon = Utilities.Icon "triangle-warning",
-							Text = Utilities.Translate("admin.ranks.protected.Detail"),
-							Subtext = Utilities.Translate("admin.ranks.protected.Body"),
-							Timeout = 5
-						})
-					end))
-				else
-					local Env = require(script.Parent.UI.AdminHelperEnv)
-
-					table.insert(Connections, Template.EditTrigger.MouseButton1Click:Connect(function()
-						if Var.RankCreatorOpen then return end
-
-						Env.EditMode = true
-						Env.EditModeMembers = v.Members
-						Env.EditModeApps = v.Apps
-						Env.EditModeName = v.Name
-						Env.EditModeColor = v.Color
-
-						Admins.OpenCreator()
-					end))
-				end
+				NewCard(v, RanksFrame, false)
 			end
 		end
 
@@ -364,7 +387,7 @@ local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 	Dots.AProgress.Text = string.format(
 		Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.StepLabel"),
 		Page,
-		"5"
+		CreatorStepCount
 	)
 
 	ET.Completed:Wait() --// stop the animation from being too quick
@@ -387,9 +410,9 @@ end
 
 function Admins.GetEditState()
 	local Clone = table.clone(require(script.Parent.UI.AdminHelperEnv))
-	
+
 	Clone.Strings = nil
-	
+
 	return Clone
 end
 
@@ -432,7 +455,7 @@ function Admins.CloseCreator()
 		elseif Page == 4 then
 			SwapPages(Frames.Page4, Frames.Page1, "rbxassetid://18151072839", false, 1)
 		elseif Page == 5 then
-			SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
+			SwapPages(Frames.Page6, Frames.Page1, "rbxassetid://18151072839", false, 1)
 		end
 	end)
 end
@@ -440,6 +463,7 @@ end
 function Admins.RunCreatorApp()
 	local CanGoBack = true
 	local Env = require(script.Parent.UI.AdminHelperEnv)
+	local Dots = Frames.BottomData.Controls.Dots
 
 	--// buttons
 	local ConnectionsTable
@@ -459,11 +483,17 @@ function Admins.RunCreatorApp()
 
 	Frames.Page4.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page4.LogoWordmark")
 	Frames.Page4.PageHdr.Text = Utilities.Translate("Configuraton.Admins.NewAdmin.Page4.PageHdr")
-	
+
+	Dots.AProgress.Text = string.format(
+		Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.StepLabel"),
+		"1",
+		"5"
+	)
+
 	for _, Label in Frames:GetDescendants() do
 		if not Label:IsA("TextLabel") then continue end
 		if Label.Text ~= "Continue" then continue end
-		
+
 		Label.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page1.NextPage.LogoWordmark")
 	end
 
@@ -479,14 +509,14 @@ function Admins.RunCreatorApp()
 		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true, 1)
 
 		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
-		
+
 		print("hi")
 
 		--// Verify the filtering service is online
 		local Success, FilterResult = pcall(function()
 			return Var.Remotes.FilterString:InvokeServer("test string")
 		end)
-		
+
 		print(Success, FilterResult)
 
 		if Success and FilterResult[1] then
@@ -516,10 +546,10 @@ function Admins.RunCreatorApp()
 			Frames.Page2.TextInput.Text = Env.EditModeName
 			Frames.Page2.ColorInput.Text = Env.EditModeColor
 		else
-			Frames.Page5.Header.Text = Utilities.Translate("admin.rankcreator.failed.Detail")
-			Frames.Page5.Body.Text = string.format(Utilities.Translate("admin.rankcreator.errors.filter.Body"), FilterResult[2])
+			Frames.Page6.Header.Text = Utilities.Translate("admin.rankcreator.failed.Detail")
+			Frames.Page6.Body.Text = string.format(Utilities.Translate("admin.rankcreator.errors.filter.Body"), FilterResult[2])
 
-			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://14147040290", false, 5)
+			SwapPages(Frames.Loading, Frames.Page6, "rbxassetid://14147040290", false, 5)
 		end
 	end)
 
@@ -568,7 +598,7 @@ function Admins.RunCreatorApp()
 			Clone.Visible = true
 			Clone:SetAttribute("IsTemplate", false)
 			Clone:SetAttribute("TemplateType", "Group")
-			
+
 			Clone.Label.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.GroupTemplate.Label")
 
 			local CheckTask = function()
@@ -615,7 +645,7 @@ function Admins.RunCreatorApp()
 
 			Clone:SetAttribute("IsTemplate", false)
 			Clone:SetAttribute("TemplateType", "User")
-			
+
 			Clone.Label.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.PlayerTemplate.Label")
 
 			local function CheckTask()
@@ -660,7 +690,7 @@ function Admins.RunCreatorApp()
 			Frames.Page3.AddPane.AddGroup.Click.MouseButton1Click:Connect(NewGroupCard),
 			Frames.Page3.AddPane.AddUser.Click.MouseButton1Click:Connect(NewUserCard)
 		}
-		
+
 		Frames.Page3.AddPane.AddGroup.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.GroupTemplate.Label")
 		Frames.Page3.AddPane.AddUser.LogoWordmark.Text = Utilities.Translate("Configuration.Admins.EditRank.People.Content.PlayerTemplate.Label")
 
@@ -905,15 +935,67 @@ function Admins.RunCreatorApp()
 		end
 
 		SwapPages(Frames.Loading, Frames.Page4, "rbxassetid://14865439768", false, 4)
+
 		Env.HasPopulatedApps = true
 	end)
 
-
 	Frames.Page4.NextPage.MouseButton1Click:Connect(function()
+		SwapPages(Frames.Page4, Frames.Loading, "", true, 4)
+
+		--// Reset
+		if Frames.Page5:FindFirstChildWhichIsA("Frame") then
+			Frames.Page5:FindFirstChildWhichIsA("Frame"):Destroy()
+		end
+
+		local Members, AllowedPages = {}, {}
+
+		for i, v in Frames.Page3.Members.Members:GetChildren() do
+			if not v:IsA("Frame") then continue end
+			if v:GetAttribute("IsTemplate") then continue end
+
+			if v:GetAttribute("TemplateType") == "Group" then
+				table.insert(Members, {
+					MemberType = "Group",
+					ID = v.TextInput.Text or 0,
+					GroupRank = v.GroupRankInput.Text or 0
+				})
+			else
+				table.insert(Members, {
+					MemberType = "User",
+					ID = v.TextInput.Text or 0
+				})
+			end
+		end
+
+		if Var.RankCreatorApps.SuperAdmin == nil then
+			Var.RankCreatorApps.SuperAdmin = false
+		end 
+
+		NewCard({
+			--// we have to adapt the data slightly bc the server schema is different
+			Name = Var.Remotes.FilterString:InvokeServer(Frames.Page2.TextInput.Text)[2],
+			Protected = false, --// may be configurable soon
+			Members = Members,
+
+			Apps = Var.RankCreatorApps,
+
+			CreatorID = game.Players.LocalPlayer.UserId,
+			Color = Frames.Page2.ColorInput.Text,
+			CreationReason = "Created in the Rank Creator",
+			Modified = os.time(),
+			RankID = -1
+		}, Frames.Page5, true)
+			.Position = UDim2.fromScale(.156, .319)
+
+		SwapPages(Frames.Loading, Frames.Page5, Utilities.Icon "check-plain", false, 5)
+	end)
+
+
+	Frames.Page5.NextPage.MouseButton1Click:Connect(function()
 		CanGoBack = false
 
 		--// Start packaging the data
-		SwapPages(Frames.Page4, Frames.Loading, "rbxassetid://11102397100", true, 4)
+		SwapPages(Frames.Page5, Frames.Loading, "", true, 5)
 
 		local Members, AllowedPages = {}, {}
 
@@ -953,23 +1035,23 @@ function Admins.RunCreatorApp()
 
 		local Result = Var.Remotes.NewRank:InvokeServer(FinalData)
 		if Result[1] then
-			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
-			Frames.Page5.Header.Text = Env.Strings.FinHeaderSucc
-			Frames.Page5.Body.Text = Env.Strings.FinBodyNew
+			SwapPages(Frames.Loading, Frames.Page6, "rbxassetid://13531414092", false, 6)
+			Frames.Page6.Header.Text = Env.Strings.FinHeaderSucc
+			Frames.Page6.Body.Text = Env.Strings.FinBodyNew
 		else
-			SwapPages(Frames.Loading, Frames.Page5, "rbxassetid://13531414092", false, 5)
-			Frames.Page5.Header.Text = Env.Strings.FinHeaderError
-			Frames.Page5.Body.Text =
+			SwapPages(Frames.Loading, Frames.Page6, "rbxassetid://13531414092", false, 6)
+			Frames.Page6.Header.Text = Env.Strings.FinHeaderError
+			Frames.Page6.Body.Text =
 				string.format(Env.Strings.FinBodyNewError, Result[2])
 		end
 	end)
 
-	Frames.Page5.NextPage.MouseButton1Click:Connect(function()
+	Frames.Page6.NextPage.MouseButton1Click:Connect(function()
 		Admins.Load()
 		Admins.CloseCreator()
 		Admins.ClearEditState(Env)
 
-		SwapPages(Frames.Page5, Frames.Page1, "rbxassetid://18151072839", false, 1)
+		SwapPages(Frames.Page6, Frames.Page1, "rbxassetid://18151072839", false, 1)
 
 		Frames.BottomData.RankTitle.Text = Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.RankTitle")
 		CanGoBack = true

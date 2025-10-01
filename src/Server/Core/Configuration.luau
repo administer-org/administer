@@ -25,13 +25,13 @@ local Settings: SettingsType = {
 
 		Major = 2,
 		Minor = 1,
-		Tweak = 0,
+		Tweak = 1,
 
-		Extra = "dev",
-		String = "2.1.0-rc2",
-		GitRevision = "b915738",
+		Extra = "",
+		String = "2.1.1",
+		GitRevision = "efebd95",
 
-		NoExtraData = "2.0.0",
+		NoExtraData = "2.1.1",
 		APIRevision = "2.0.0",
 
 		ID = "org.admsoftware.Core"
@@ -100,13 +100,13 @@ local Settings: SettingsType = {
 			Job    = "product testing"
 		},
 		{
-			UserID = 462102164,
-			Name   = "MCJ_RB",
+			UserID = 2612956684,
+			Name   = "swaggyerror",
 			Job    = "product testing"
 		},
 		{
-			UserID = 24692976,
-			Name   = "ByteRac",
+			UserID = 5158433259,
+			Name   = "Kuromi69",
 			Job    = "product testing"
 		},
 		{

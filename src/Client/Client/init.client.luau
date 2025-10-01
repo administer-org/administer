@@ -81,10 +81,6 @@ Var.Remotes.SettingsLoaded.OnClientEvent:Wait()
 
 
 local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand", "ForceMobile", "ForceAcrylic"})
-
-print(essentialSettings)
-
-
 local KeybindRegisterTimeframe = essentialSettings.KeybindRegisterTime
 
 Var.Mobile = essentialSettings.ForceMobile == true
@@ -120,6 +116,10 @@ task.defer(function()
 
 		SubIcons = {}
 	})
+	
+	--// update the base header for funsies
+	Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = Utilities.Icon "home"
+	Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> · {t("Apps.MainFrame.Home.Title")}`
 
 	Apps.AddAppDrawerButton({
 		AppName = t("Apps.MainFrame.Config.Title"),
@@ -369,22 +369,23 @@ xpcall(function(...)
 		Card.Parent = Info.Credits.Users
 		Card.Visible = true
 	end
+	
+	Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text = Utilities.Translate("Configuration.InfoPage.Donate.Message")
 
 	--// We need to do this last because it's a possible failure point so we should load the actual content first
 	for _, Pass in Var.Remotes.GetPasses:InvokeServer() do
 		local Cloned = Var.MainFrame.Configuration.InfoPage.Donate.Buttons.Temp:Clone()
 
 		Cloned.Label.Text = Pass["price"]
+		Cloned.Visible = true
+		Cloned.Parent = Var.MainFrame.Configuration.InfoPage.Donate.Buttons
 		Cloned.MouseButton1Click:Connect(function()
 			IsDonating = true
 			Var.Services.MarketplaceService:PromptGamePassPurchase(Var.Services.Players.LocalPlayer, Pass["id"])
 		end)
-		Cloned.Visible = true
-		Cloned.Parent = Var.MainFrame.Configuration.InfoPage.Donate.Buttons
 
 		if Var.Services.MarketplaceService:UserOwnsGamePassAsync(Var.Services.Players.LocalPlayer.UserId, Pass["id"]) then
-			Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text =
-				`Thank you for your support, {Var.Services.Players.LocalPlayer.DisplayName}! Your donation helps ensure future Administer updates for years to come ^^`
+			Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text = string.format(Utilities.Translate("donations.Done"), game.Players.LocalPlayer.DisplayName)
 		end
 
 		table.insert(Passes, Pass["id"])
@@ -439,6 +440,32 @@ if essentialSettings.EnableClickEffects then
 		end
 	end)
 end
+
+--// Translations \\--
+
+--// Marketplace
+Var.MainFrame.Configuration.Marketplace.ASidebar.Head.Text = Utilities.Translate("Configuration.Marketplace.Header.Head")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.AAFeatured.Title.Text = Utilities.Translate("apps.sidebar.Featured")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.Apps.Title.Text = Utilities.Translate("Configuration.Marketplace.Header.Plugins")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.XLibrary.Resources.Content.Title.Text = Utilities.Translate("apps.sidebar.Library")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Searchbar.Title.Text = Utilities.Translate("Configuration.Marketplace.Searchbar.Searchbar.Label")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.Head.Text = Utilities.Translate("apps.featured.TopInstalled")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.MainHot.HotLabel.Title.Text = Utilities.Translate("apps.Hot")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.Head.Text = Utilities.Translate("apps.library.Header")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.Text = Utilities.Translate("apps.library.Subheader")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.LogoWordmark.Text = Utilities.Translate("apps.InstallServer")
+
+--// Ranks
+Var.MainFrame.Configuration.Admins.Header.Head.Text = Utilities.Translate("Configuration.Admins.Container.Ranks.Header.TLabel")
+Var.MainFrame.Configuration.Admins.Header.Subheader.Text = Utilities.Translate("Configuration.Admins.Container.Ranks.Subheader")
+
+--// Info
+Var.MainFrame.Configuration.InfoPage.VersionDetails.AdmSoftware.Text = Utilities.Translate("Configuration.InfoPage.License.Prompt")
+Var.MainFrame.Configuration.InfoPage.UpdateCenter.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.VersionDetails.Header")
+Var.MainFrame.Configuration.InfoPage.UpdateCenter.CreditHeader.Text = Utilities.Translate("Configuration.InfoPage.VersionDetails.Updated")
+Var.MainFrame.Configuration.InfoPage.UpdateCenter.Temp.Label.Text = Utilities.Translate("Configuration.InfoPage.VersionDetails.Update")
+Var.MainFrame.Configuration.InfoPage.Donate.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.Donate.title")
+Var.MainFrame.Configuration.InfoPage.Credits.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.Credits.title")
 
 if KeybindRegisterTimeframe == "safe" then
 	Frontend.RegisterPanelKeybind()

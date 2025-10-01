@@ -157,7 +157,7 @@ function App.Initialize(): boolean
 
 	if Utils.GetSetting("LoadApps") == false then
 		Utils.Logging.Print(`App Bootstrapping disabled due to configuration, please disable!`)
-		
+
 		--// switch this to true just in case
 		Var.DidBootstrap = true
 		return false
@@ -260,7 +260,6 @@ function App.GetAll(Source: string): Types.TableWildcard
 end
 
 function App.Install(AppID: number, InstallContext: string, AppName: string): Types.Response
-	print(AppID, InstallContext, AppName)
 	Utils.Logging.Print(`[-] Attempting to load app`)
 	local _, res = xpcall(function(): Types.Response
 		App.LoadLocal(AppID, {
@@ -273,7 +272,7 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 	end, function(e): Types.Response
 		Utils.Logging.Warn(`[x] This does not seem to be an Administer app or the initial build failed.\n\n{e}`)
 
-		return { false, "This app isn't valid, check the log." }
+		return { false, `Failure: {e}` }
 	end)
 
 	if res[1] == false then return res end
@@ -312,7 +311,7 @@ function App.ServerAPI.GetList(
 
 	for i, Server in (SpecificServer ~= nil and {{ ServerURL = SpecificServer }} or Var.DataStores.AppDB:GetAsync("AppServerList")) do
 		local FullList = {}
-		
+
 		local InstanceName = HTTP.GetRoute(Server.ServerURL, "/pub/.administer", function(D, _)
 			return D.instance_name
 		end, function(x)
@@ -337,7 +336,7 @@ function App.ServerAPI.GetList(
 end
 
 function App.ServerAPI.New(URL: string, ActingUser: number?): Types.Response
-	Utils.Logging.Print("Installing app server...")
+	Utils.Logging.Print(`Installing AOS instance @ {URL}...`)
 
 	return HTTP.GetRoute(URL, "/pub/.administer", function(Data, Info)
 		if Data.server ~= "AdministerAppServer" then
@@ -441,9 +440,18 @@ function App.ServerAPI.GetServerStatuses(): Types.Response
 	return { true, Resps }
 end
 
-function App.ServerAPI.UninstallServer(ServerURL, IsStatic): Types.Response
+function App.ServerAPI.UninstallServer(ServerURL, IsStatic, Force): Types.Response
 	local Done = false
 	Utils.Logging.SWarn(`Uninstalling app server {ServerURL}`)
+
+	local i = 0
+	for _, _ in Var.AppServers do
+		i += 1
+	end
+
+	if i == 1 then
+		return { false, "You must always have at least one server installed" }
+	end
 
 	for i, Server in Var.AppServers do
 		if Server.ServerURL == ServerURL then
@@ -469,13 +477,18 @@ end
 
 function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
+		Data.Unprocessed = true
+
 		xpcall(function()
 			local RichConfig = require(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
 
 			Data.CannotDownload = false
+			Data.Unprocessed = false
 			Data.RichConfig = RichConfig
 		end, function(e)
+			warn("------------", e)
 			Utils.Logging.Warn(e)
+
 			Data.CannotDownload = true
 		end)
 
@@ -490,10 +503,15 @@ function App.ServerAPI.InstallFromServer(
 	AppID: string
 ): Types.Response
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
-		local RealID = Content["InstallID"]
+		local RealID = Content.InstallID
 		if RealID == 0 then
 			return { false, "This server gave us bad data, please report the error to the server owner." }
 		end
+
+		--// Basic checks
+		--if not IsVersionSupported(Var.Config.VersData.String, Content.Metadata.AppAPIPreferredVersion) then
+		--	return {false, "Administer is too old to support this app. Please update your Administer installation."}
+		--end
 
 		local Result: Types.Response = App.Install(RealID, ServerURL, Content["Name"])
 

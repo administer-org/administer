@@ -5,9 +5,12 @@ local AR = { Ranks = {} }
 
 --// Dependencies
 local Root = script.Parent
-local Config = require(Root.Parent.Core.Configuration)
-local Types = require(Root.Parent.Core.Types)
+
 local Util = require(Root.Utilities)
+local Frontend = require(Root.Frontend)
+
+local Types = require(Root.Parent.Core.Types)
+local Config = require(Root.Parent.Core.Configuration)
 local Var = require(Root.Parent.Core.Variables)
 
 type Response = Types.Response
@@ -28,8 +31,6 @@ function AR.Bootstrap(Player: Player, AdminRankID: string): ()
 	end
 
 	NewPanel.Parent = Player.PlayerGui
-
-	--// TODO
 
 	Util.NewNotification(
 		Player,

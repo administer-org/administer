@@ -451,9 +451,7 @@ function Utils.GetGameMedia()
 end
 
 function Utils.GetGameIcon()
-	return `rbxassetid://{Var.Services.HttpService:JSONDecode(
-		Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v1/games/{game.GameId}/icon`)
-	)["imageId"] or Utils.Icon("book")}`
+	return `rbxthumb://type=GameIcon&id={game.GameId}&w=512&h=512`
 end
 
 function Utils.GetServerRegion()
@@ -563,7 +561,9 @@ function Utils.UpdateCallback(Services: { string })
 					IsError = true,
 					Misc = ...
 				}
-			end)
+			end, {
+				Debug = false
+			})
 		else
 			--// ...
 		end	

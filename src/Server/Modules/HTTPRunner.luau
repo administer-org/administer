@@ -66,14 +66,19 @@ function Http.GetRoute(
 	Route, 
 	OnOK, 
 	OnError, 
-	Options: {Timeout: number, DontLookForAlts: boolean}
+	Options: {
+		Timeout: number, 
+		DontLookForAlts: boolean, 
+		Headers: { any },
+		Debug: boolean
+	}
 ): Types.Response
 	if AppServer == nil or AppServer == "" then
 		AppServer = Var.PrimaryAppServer ~= "" and Var.PrimaryAppServer ~= nil and Var.PrimaryAppServer or Var.DefaultAppServer 
 	end
 
-	local ST = tick()
 	local Response
+	local ST = tick()
 	local IsAOS = string.match(AppServer, "^https://aos%-.+%.admsoftware%.org$") ~= nil
 
 	Options = Options or {}
@@ -82,16 +87,32 @@ function Http.GetRoute(
 
 	if AppServer == "" then error() end
 
+	Options.Headers = Options.Headers or {}
+
+	Options.Headers["X-Adm-Version"] = Config.VersData.NoExtraData
+	Options.Headers["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName) --// this is mostly just used for /versions but idc
+	
+	if Options.Debug then
+		print(
+			"---- AdmHttpGet Debug ----",
+			"Headers", Options.Headers,
+			"URL", AppServer,
+			"Route", Route
+		)
+	end
+
 	xpcall(function()
 		local function DoRequest()
+			if Options.Debug then print("Sending http request") end
 			Response = Var.Services.HttpService:RequestAsync({
 				Url = `{AppServer}{Route}`,
 				Method = "GET",
-				Headers = {
-					["X-Adm-Version"] = Config.VersData.NoExtraData,
-					["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName) --// this is mostly just used for /versions but idc
-				}
+				Headers = Options.Headers
 			})
+			
+			if Options.Debug then
+				print("Got reply:", Response)
+			end
 		end
 
 		local Thread = task.spawn(DoRequest)
@@ -128,15 +149,15 @@ function Http.GetRoute(
 			Code = 200
 		})
 	else
-		if (IsAOS and not Options.DontLookForAlts) or ActiveFailoverDomain == AppServer and string.sub(tostring(Response.StatusCode), 1, 1) ~= "4" then
-			print("[Administer] You Primary AOS instance is currently offline, selecting another")
+		if ((IsAOS and not Options.DontLookForAlts) or ActiveFailoverDomain == AppServer)
+			and string.sub(tostring(Response.StatusCode), 1, 1) ~= "4" then
+			warn("[Administer] You Primary AOS instance is currently offline, selecting another")
 			print(Response)
 
 			table.insert(KnownOfflineInstances, AppServer)
 
 			local AvailableServers = FindAOSInstances()
 			local LowestPing = 999999
-			print(AvailableServers)
 
 			--// find lowest ping and set it as primary for now
 			for _, Server in AvailableServers do
@@ -184,7 +205,10 @@ function Http.PostRoute(
 			FinalHeaders[Key] = Header
 		end
 	else
-		FinalHeaders = { ["X-Administer-Version"] = Config.VersData.String }
+		FinalHeaders = { 
+			["X-Adm-Version"] = Config.VersData.String,
+			["X-Adm-Branch"] = string.lower(Var.CurrentBranch.BranchName)
+		}
 	end
 
 	local Response = Var.Services.HttpService:RequestAsync({

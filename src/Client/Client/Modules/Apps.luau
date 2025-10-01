@@ -188,6 +188,17 @@ function Apps.Show(ServerURL, ID, Reason): string
 	end
 
 	Data = Data[2]
+	
+	if Data.CannotDownload then
+		Frontend.Toast({
+			Text = "Invalid app",
+			Subtext = "Cannot fetch MainModule, please inform the developer.",
+			Timeout = 5,
+			Icon = Utilities.Icon "x"
+		})
+		
+		return
+	end
 
 	NewInfoBox(
 		"calendar",
