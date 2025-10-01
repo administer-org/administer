@@ -290,5 +290,10 @@
     "apps.featured.TopInstalled": "أعلى مثبتة من خوادمك",
     "apps.library.Header": "مكتبتي",
     "apps.library.Subheader": "تطبيقات أو أوامر مفقودة؟ <font color='rgb(37, 72, 194)'>تحقق من تكوين رتبتك.</font>",
-    "apps.InstallServer": "تثبيت الخادم"
+    "apps.InstallServer": "تثبيت الخادم",
+    "Configuration.InfoPage.VersionDetails.Header": "مركز التحديث",
+    "Configuration.InfoPage.VersionDetails.Updated": "الإدارة وتطبيقاتك محدثة!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "لوحة الإدارة قديمة!",
+    "apps.New": "إصدار جديد",
+    "Configuration.InfoPage.License.Prompt": "© إدارة البرامج، 2022 - 2025.\n<font color='#2e48a6'><b>الترخيص والمعلومات...</b></font>"
 }

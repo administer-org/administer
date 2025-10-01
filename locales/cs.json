@@ -283,5 +283,10 @@
     "apps.InstallServer": "Instalace serveru",
     "apps.sidebar.Library": "Knihovna",
     "apps.Hot": "HOT",
-    "apps.featured.TopInstalled": "Nejlépe nainstalovaný z vašich serverů"
+    "apps.featured.TopInstalled": "Nejlépe nainstalovaný z vašich serverů",
+    "Configuration.InfoPage.VersionDetails.Header": "Centrum aktualizací",
+    "Configuration.InfoPage.VersionDetails.Updated": "Administrace a vaše aplikace jsou aktuální!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administrace je zastaralá!",
+    "Configuration.InfoPage.License.Prompt": "© Administrační software, 2022 - 2025.\n<font color='#2e48a6'><b>Licence a informace..</b></font>",
+    "apps.New": "Nová verze"
 }

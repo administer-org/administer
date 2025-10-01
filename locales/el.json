@@ -283,5 +283,10 @@
     "apps.featured.TopInstalled": "Κορυφή εγκατεστημένη από τους διακομιστές σας",
     "apps.library.Header": "Η βιβλιοθήκη μου",
     "apps.library.Subheader": "Λείπουν εφαρμογές ή εντολές; <font color='rgb(37, 72, 194)'>Ελέγξτε τη διαμόρφωση της ιεραρχίας σας.</font>",
-    "apps.InstallServer": "Εγκατάσταση διακομιστή"
+    "apps.InstallServer": "Εγκατάσταση διακομιστή",
+    "Configuration.InfoPage.VersionDetails.Header": "Κέντρο ενημερώσεων",
+    "Configuration.InfoPage.VersionDetails.Updated": "Διαχειριστείτε και οι εφαρμογές σας είναι ενημερωμένες!",
+    "Configuration.InfoPage.License.Prompt": "© Λογισμικό διαχείρισης, 2022 - 2025.\n<font color='#2e48a6'><b>Αδειοδότηση και πληροφορίες..</b></font>",
+    "apps.New": "Νέα έκδοση",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Το Administer είναι ξεπερασμένο!"
 }

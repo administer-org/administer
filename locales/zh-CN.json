@@ -330,5 +330,10 @@
     "apps.featured.TopInstalled": "从您的服务器顶端安装",
     "apps.library.Header": "我的资料库",
     "apps.library.Subheader": "缺少应用程序或命令？<font color='rgb(37, 72, 194)'>检查您的等级配置。</font>",
-    "apps.InstallServer": "安装服务器"
+    "apps.InstallServer": "安装服务器",
+    "Configuration.InfoPage.VersionDetails.Header": "更新中心",
+    "Configuration.InfoPage.VersionDetails.Updated": "管理并更新您的应用程序！",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "管理员已过期！",
+    "Configuration.InfoPage.License.Prompt": "管理软件，2022 - 2025 年。\n<font color='#2e48a6'><b>许可和信息</b></font>",
+    "apps.New": "新版本"
 }

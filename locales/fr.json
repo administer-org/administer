@@ -327,5 +327,10 @@
     "apps.Hot": "HOT",
     "apps.featured.TopInstalled": "Top installé depuis vos serveurs",
     "apps.library.Subheader": "Il manque des applications ou des commandes ? <font color='rgb(37, 72, 194)'>Vérifiez la configuration de votre rang.</font>",
-    "apps.InstallServer": "Installer le serveur"
+    "apps.InstallServer": "Installer le serveur",
+    "Configuration.InfoPage.VersionDetails.Header": "Centre de mise à jour",
+    "Configuration.InfoPage.VersionDetails.Updated": "Administrez et vos applications sont à jour !",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer n'est plus à jour !",
+    "Configuration.InfoPage.License.Prompt": "Logiciel d'administration de Roblox, 2022 - 2025.\n<font color='#2e48a6'><b>Licences et informations..</b></font>",
+    "apps.New": "Nouvelle version"
 }

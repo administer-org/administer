@@ -290,5 +290,10 @@
     "apps.sidebar.Featured": "Featured",
     "apps.sidebar.Library": "Library",
     "apps.Hot": "HOT",
-    "apps.featured.TopInstalled": "Top installed from your servers"
+    "apps.featured.TopInstalled": "Top installed from your servers",
+    "Configuration.InfoPage.VersionDetails.Header": "Update Center",
+    "Configuration.InfoPage.VersionDetails.Updated": "Administer and your apps are up to date!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer is out of date!",
+    "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n<font color='#2e48a6'><b>Licensing and information..</b></font>",
+    "apps.New": "New Release"
 }

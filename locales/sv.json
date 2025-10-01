@@ -283,5 +283,10 @@
     "widgets.Corrupted": "Den verkar ha blivit skadad.",
     "apps.sidebar.Featured": "Utvalda",
     "apps.sidebar.Library": "Biblioteket",
-    "apps.Hot": "HOT"
+    "apps.Hot": "HOT",
+    "Configuration.InfoPage.VersionDetails.Header": "Uppdateringscenter",
+    "Configuration.InfoPage.VersionDetails.Updated": "Administrera och dina appar är uppdaterade!",
+    "Configuration.InfoPage.License.Prompt": "© Administrera programvara, 2022 - 2025.\n<font color='#2e48a6'><b>Licensiering och information.</b></font>",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administrera är föråldrad!",
+    "apps.New": "Ny utgåva"
 }

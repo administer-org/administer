@@ -290,5 +290,10 @@
     "editrank.disabled.creatoropen.Body": "Lopeta luominen ennen kuin aloitat uuden.",
     "widgets.Corrupted": "Se on ilmeisesti vioittunut.",
     "apps.Hot": "HOT",
-    "apps.featured.TopInstalled": "Top asennettu palvelimiltasi"
+    "apps.featured.TopInstalled": "Top asennettu palvelimiltasi",
+    "Configuration.InfoPage.VersionDetails.Header": "Päivityskeskus",
+    "Configuration.InfoPage.VersionDetails.Updated": "Hallinnoi ja sovelluksesi ovat ajan tasalla!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer on vanhentunut!",
+    "Configuration.InfoPage.License.Prompt": "© Hallintaohjelmistot, 2022 - 2025.\n<font color='#2e48a6'><b>Lisensointi ja tiedot..</b></font>",
+    "apps.New": "Uusi julkaisu"
 }

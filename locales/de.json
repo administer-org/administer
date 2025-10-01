@@ -330,5 +330,10 @@
     "apps.featured.TopInstalled": "Top installiert von Ihren Servern",
     "apps.library.Header": "Meine Bibliothek",
     "apps.library.Subheader": "Fehlende Anwendungen oder Befehle? <font color='rgb(37, 72, 194)'>Überprüfen Sie Ihre Rangkonfiguration.</font>",
-    "apps.InstallServer": "Server installieren"
+    "apps.InstallServer": "Server installieren",
+    "Configuration.InfoPage.VersionDetails.Header": "Update-Center",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer ist veraltet!",
+    "apps.New": "Neue Version",
+    "Configuration.InfoPage.VersionDetails.Updated": "Verwalten und deine Apps sind auf dem neuesten Stand!",
+    "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n<font color='#2e48a6'><b>Lizenzierung und Informationen...</b></font>"
 }

@@ -327,5 +327,10 @@
     "apps.featured.TopInstalled": "Top geïnstalleerd vanaf uw servers",
     "apps.library.Header": "Mijn Bibliotheek",
     "apps.library.Subheader": "Mis je apps of commando's? <font color='rgb(37, 72, 194)'>Controleer je rangconfiguratie.</font>",
-    "apps.InstallServer": "Server installeren"
+    "apps.InstallServer": "Server installeren",
+    "Configuration.InfoPage.VersionDetails.Header": "Update Centrum",
+    "Configuration.InfoPage.VersionDetails.Updated": "Beheer en je apps zijn up-to-date!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Beheer is verouderd!",
+    "Configuration.InfoPage.License.Prompt": "© Administratiesoftware, 2022 - 2025.\n<font color='#2e48a6'><b>Licenties en informatie...</b></font>",
+    "apps.New": "Nieuwe versie"
 }

@@ -331,5 +331,10 @@
     "apps.featured.TopInstalled": "Top instalado a partir de seus servidores",
     "apps.library.Header": "Minha biblioteca",
     "apps.library.Subheader": "Faltam aplicativos ou comandos? <font color='rgb(37, 72, 194)'>Verifique a configuração de sua classificação.</font>",
-    "apps.InstallServer": "Instalar o servidor"
+    "apps.InstallServer": "Instalar o servidor",
+    "Configuration.InfoPage.VersionDetails.Header": "Central de atualizações",
+    "Configuration.InfoPage.VersionDetails.Updated": "Administre e seus aplicativos estarão atualizados!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "O Administer está desatualizado!",
+    "apps.New": "Nova versão",
+    "Configuration.InfoPage.License.Prompt": "© Administrar software, 2022 - 2025.\n<font color='#2e48a6'><b>Licenciamento e informações...</b></font>"
 }

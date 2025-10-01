@@ -329,5 +329,10 @@
     "apps.featured.TopInstalled": "Top instalado desde sus servidores",
     "apps.library.Header": "Mi biblioteca",
     "apps.library.Subheader": "¿Faltan aplicaciones o comandos? <font color='rgb(37, 72, 194)'>Comprueba la configuración de tu rango.</font>",
-    "apps.InstallServer": "Instalar servidor"
+    "apps.InstallServer": "Instalar servidor",
+    "Configuration.InfoPage.VersionDetails.Header": "Centro de actualización",
+    "Configuration.InfoPage.VersionDetails.Updated": "¡Administre y sus aplicaciones estarán al día!",
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Administrar no está actualizado",
+    "Configuration.InfoPage.License.Prompt": "© Administrar Software, 2022 - 2025.\n<font color='#2e48a6'><b>Licencias e información..</b></font>",
+    "apps.New": "Nueva versión"
 }
