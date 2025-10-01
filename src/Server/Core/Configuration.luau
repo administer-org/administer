@@ -29,7 +29,7 @@ local Settings: SettingsType = {
 
 		Extra = "",
 		String = "2.1.1",
-		GitRevision = "efebd95",
+		GitRevision = "a13118d",
 
 		NoExtraData = "2.1.1",
 		APIRevision = "2.0.0",
@@ -546,7 +546,7 @@ local Settings: SettingsType = {
 					Default = false
 				}
 			},
-			
+
 			ForceMobile = {
 				Description = "Forces Vars.Mobile to be true",
 				SettingType = "Boolean",
@@ -558,7 +558,7 @@ local Settings: SettingsType = {
 					Default = false
 				}
 			},
-			
+
 			ForceAcrylic = {
 				Description = "Forces Vars.UseAcrylic to be true",
 				SettingType = "Boolean",
