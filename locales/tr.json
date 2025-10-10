@@ -286,5 +286,7 @@
     "reltime.Week": "bir hafta önce",
     "reltime.Weeks": "haftalar önce",
     "reltime.Month": "bir ay önce",
-    "reltime.Format": "%s %s"
+    "reltime.Format": "%s %s",
+    "_locale": "tr_TR",
+    "_locale_display": "Turkish"
 }
