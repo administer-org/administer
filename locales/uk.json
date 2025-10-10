@@ -1,5 +1,5 @@
 {
-    "_locale_display_localized": "Англійська (США)",
+    "_locale_display_localized": "українська (Україна)",
     "Apps.MainFrame.Config.Desc": "Налаштуйте адміністрування, адміністраторів та встановіть нові програми.",
     "Apps.MainFrame.Config.Title": "Конфігурація",
     "Apps.MainFrame.Home.Desc": "Все, що вам потрібно, на одному екрані.",
@@ -14,8 +14,8 @@
     "setting.Accessibility.DisplayHours.Description": "Якщо ця опція увімкнена, години будуть відображатися на всіх часових мітках, але в деяких випадках можуть ігноруватися.",
     "setting.Accessibility.ShortNumberDecimals.DisplayName": "ShortNumberDecimals",
     "setting.Accessibility.TopbarPlus.DisplayName": "TopbarPlus",
-    "_locale": "en_US",
-    "_locale_display": "Англійська (США)",
+    "_locale": "uk_UK",
+    "_locale_display": "Ukrainian (Ukraine)",
     "reltime.Format": "%s %s",
     "Configuration.Admins.Ranks.Unprotected": "Не захищено",
     "Configuration.Admins.Ranks.HasApps": "%s Додатки",
