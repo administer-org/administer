@@ -22,5 +22,6 @@
         "Shime",
         "superadmin",
         "Wordmark"
-    ]
+    ],
+    "stylua.targetReleaseVersion": "latest"
 }
