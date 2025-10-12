@@ -555,6 +555,25 @@ function App.ServerAPI.Vote(
 	})
 end
 
+function App.ServerAPI.GetVote(
+	ServerURL: string,
+	AppID: string
+)
+	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}/vote`, function(Data, _)
+		return Data["data"]
+	end, function(...)
+		Utils.Logging.Warn(...)
+		
+		return {
+			liked = false,
+			dislined = false,
+			favorited = false
+		}
+	end, {
+		Debug = false
+	})
+end
+
 
 function App.ServerAPI.GetAOSInstances(
 	DoStatusChecks: boolean

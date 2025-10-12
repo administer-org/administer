@@ -67,7 +67,9 @@ function Frontend.ToggleFullscreen(
 	end	
 end
 
-function Frontend.Open(WaitForCompletion): ()
+function Frontend.Open(
+	WaitForCompletion: boolean
+): ()
 	local AS = Var.AnimationSpeed
 	local X = 0.85
 	local Y = 0.7
@@ -83,8 +85,6 @@ function Frontend.Open(WaitForCompletion): ()
 	end
 
 	local PopupTween
-	
-	print(Var.Mobile)
 
 	if not Var.Mobile then
 		script.Parent.Parent.Assets.PanelOpen:Play()
@@ -139,7 +139,11 @@ function Frontend.Open(WaitForCompletion): ()
 	end
 end
 
-function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForCompletion, Frame): ()
+function Frontend.Close(
+	Instant: boolean? | CanvasGroup? | Frame?, 
+	WaitForCompletion, 
+	Frame: CanvasGroup? | Frame?
+): ()
 	if typeof(Instant) ~= "boolean" then
 		Frame = Instant	
 		Instant = false
@@ -192,7 +196,7 @@ function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForComple
 
 	task.delay(Duration, function()
 		Frame.Visible = false
-		
+
 		if Frame == Var.MainFrame then
 			Var.IsPanelAnimating = false
 			Var.MainFrame.Visible = false
@@ -249,8 +253,56 @@ function Frontend.Drawer.Open(): ()
 
 	Apps.AppHolder.Position = UDim2.new(0, 0, 0.45, 0)
 
+	local function AppOver(AppConfig, ButtonConfig, AppVisible)
+		local ShouldBind
+
+		xpcall(function()
+			Card = Apps.AppDrawerCover.Card
+			ShouldBind = true
+		end, function()
+			--// It is already open, no need for concern
+			Card = Var.MainFrame.Parent.Card
+			ShouldBind = AppVisible
+		end)
+
+		if AppVisible then
+			Card.AppPrimary.Image = AppConfig.Icon
+			Card.AppMenu.Image = ButtonConfig.Icon
+
+			Card.Title.Text = AppConfig.AppName
+			Card.SubTitle.Text = ButtonConfig.Name
+			Card.Desc.Text = AppConfig.Description
+
+			Card.Parent = Var.MainFrame.Parent
+
+			game:GetService("TweenService"):Create(Card, TweenInfo.new(Var.AnimationSpeed * .15), { GroupTransparency = 0 }):Play()
+
+			if ShouldBind then
+				DrawerConnections[`CardMovement`] = game:GetService("RunService").RenderStepped:Connect(function(dt)
+					if Card.Visible == false then return end
+
+					local Mouse = game:GetService("UserInputService"):GetMouseLocation()
+					local Pos = Vector2.new(Mouse.X, Mouse.Y - game:GetService("GuiService"):GetGuiInset().Y)
+
+					game:GetService("TweenService"):Create(Card, TweenInfo.new(Var.AnimationSpeed * .25), { 
+						Position = UDim2.fromOffset(Pos.X, Pos.Y)
+					}):Play()
+				end)
+			end
+		else
+			game:GetService("TweenService"):Create(Card, TweenInfo.new(Var.AnimationSpeed * .15), { GroupTransparency = 1 }):Play()
+
+			DrawerConnections["CardMovement"]:Disconnect()
+		end
+	end
+
 	for _, Child in Var.MainFrame:GetChildren() do
-		if (Child:IsA("Frame") or Child:IsA("CanvasGroup")) and Child.Name ~= "AppDrawer" then
+		if 
+			(Child:IsA("Frame") or Child:IsA("CanvasGroup")) 
+			and Child.Name == Var.ActivePage.Name 
+			or Child.Name == "Header"
+			or Child:FindFirstChild(Var.ActivePage.Name)
+		then
 			Child.Parent = Container 
 
 			if Child.Name == Var.ActivePage.Name then
@@ -285,46 +337,8 @@ function Frontend.Drawer.Open(): ()
 	for _, Button in Apps.AppHolder:GetDescendants() do
 		if Button.Name ~= "Activator" or Button:FindFirstAncestor("MultiThread") or Button:FindFirstAncestor("SingleThread") then continue end
 
-		local function AppOver(AppConfig, ButtonConfig, AppVisible)
-			local ShouldBind
-
-			xpcall(function()
-				Card = Apps.AppDrawerCover.Card
-				ShouldBind = true
-			end, function()
-				--// It is already open, no need for concern
-				Card = Var.MainFrame.Parent.Card
-				ShouldBind = AppVisible
-			end)
-
-			if AppVisible then
-				Card.AppPrimary.Image = AppConfig.Icon
-				Card.AppMenu.Image = ButtonConfig.Icon
-
-				Card.Title.Text = AppConfig.AppName
-				Card.SubTitle.Text = ButtonConfig.Name
-				Card.Desc.Text = AppConfig.Description
-
-				Card.Parent = Var.MainFrame.Parent
-				game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 0 }):Play()
-
-				if ShouldBind then
-					DrawerConnections[`CardMovement`] = game:GetService("RunService").RenderStepped:Connect(function(dt)
-						if Card.Visible == false then return end
-
-						local Mouse = game:GetService("UserInputService"):GetMouseLocation()
-						local Pos = Vector2.new(Mouse.X, Mouse.Y - game:GetService("GuiService"):GetGuiInset().Y)
-
-						Card.Position = UDim2.fromOffset(Pos.X, Pos.Y)
-					end)
-				end
-			else
-				game:GetService("TweenService"):Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 }):Play()
-				DrawerConnections["CardMovement"]:Disconnect()
-			end
-		end
-
 		DrawerConnections[`Over-{math.random(1,10000)}`] = Button.MouseEnter:Connect(function()
+
 			--// Recursively find the frame bc idk!!
 			for _, Object in Var.CombinedButtonConfig do
 				for _, SubIcon in Object.SubIcons do
@@ -355,11 +369,9 @@ end
 function Frontend.Drawer.Close(): ()
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Apps.AppDrawerCover.CanvasGroup
-	local TimeToComplete
+	local TimeToComplete = Var.AnimationSpeed
 
 	ShouldAnimate = false
-
-	TimeToComplete = Var.AnimationSpeed
 
 	Container.Parent.Parent = Var.MainFrame
 	Container.Parent.Size = UDim2.new(.75,0,1,0)
@@ -379,7 +391,7 @@ function Frontend.Drawer.Close(): ()
 		:Play()
 
 	Var.Services.TweenService
-		:Create(Container.Parent, TweenInfo.new(TimeToComplete * .6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
+		:Create(Container.Parent, TweenInfo.new(TimeToComplete * 0, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false), {
 			Position = UDim2.new(0.5,0,0.5,0),
 			Size = UDim2.new(1,0,1,0),
 
@@ -389,11 +401,13 @@ function Frontend.Drawer.Close(): ()
 		:Play()
 
 	pcall(function()
-		Var.Services.TweenService:Create(Card, TweenInfo.new(.15), { GroupTransparency = 1 })
+		Var.Services.TweenService:Create(Card, TweenInfo.new(TimeToComplete * .15), { GroupTransparency = 1 })
 			:Play()
+
+		DrawerConnections["CardMovement"]:Disconnect()
 	end)
 
-	task.wait(TimeToComplete * .6)
+	--task.wait(TimeToComplete * .6)
 
 	Var.Services.TweenService
 		:Create(Container, TweenInfo.new(TimeToComplete * 0.5, Enum.EasingStyle.Quart), {
@@ -457,7 +471,6 @@ function Frontend.Drawer.HoverEnd()
 	}):Play()
 end
 
---// TODO
 function Frontend.Toast(Config: {
 	Text: string,
 	Subtext: string,
@@ -465,7 +478,7 @@ function Frontend.Toast(Config: {
 	Timeout: number,
 
 	OnClick: () -> ()?
-})
+	})
 	local Toast = Var.MainFrame.administer.Toast
 	local Close = nil
 
@@ -516,33 +529,26 @@ function Frontend.Toast(Config: {
 	return Close
 end
 
-Frontend.Popup.OriginalStates = {}
-
 function Frontend.Popup.Open(): ()
 	local BGTweenInfo = TweenInfo.new(Var.AnimationSpeed * .65, Enum.EasingStyle.Cubic)
 
 	Frontend.Popup.OriginalStates = {}
 
-	for _, descendant in Var.MainFrame:GetChildren() do
-		if descendant:IsA("Frame") or descendant:IsA("CanvasGroup") then
-			if descendant:GetAttribute("AdmDoNotMove") then continue end
+	local descendant = Var.ActivePage
+	local original = {
+		Size = descendant.Size,
+		Position = descendant.Position,
+		Color = descendant.BackgroundColor3,
+		AnchorPoint = descendant.AnchorPoint
+	}
+	Frontend.Popup.OriginalStates[descendant] = original
 
-			local original = {
-				Size = descendant.Size,
-				Position = descendant.Position,
-				Color = descendant.BackgroundColor3,
-				AnchorPoint = descendant.AnchorPoint
-			}
-			Frontend.Popup.OriginalStates[descendant] = original
-
-			Var.Services.TweenService:Create(descendant, BGTweenInfo, {
-				Size = UDim2.new(original.Size.X.Scale * 0.75, 0, original.Size.Y.Scale * 0.75, 0),
-				Position = UDim2.fromScale(0.5, 0.5),
-				AnchorPoint = Vector2.new(.5,.5),
-				BackgroundColor3 = original.Color:lerp(Color3.fromRGB(16, 17, 20), 0.6),
-			}):Play()
-		end
-	end
+	Var.Services.TweenService:Create(descendant, BGTweenInfo, {
+		Size = UDim2.new(original.Size.X.Scale * 0.75, 0, original.Size.Y.Scale * 0.75, 0),
+		Position = UDim2.fromScale(0.5, 0.5),
+		AnchorPoint = Vector2.new(.5,.5),
+		BackgroundColor3 = original.Color:lerp(Color3.fromRGB(16, 17, 20), 0.6),
+	}):Play()
 
 	local Popup = Var.MainFrame.administer.MessageBox
 
@@ -556,15 +562,13 @@ function Frontend.Popup.Open(): ()
 	Popup.GroupTransparency = 0.5
 	Popup.Visible = true
 
-	Utilities.Logging.Print("Calculated, proceeding")
-
 	local PopupTween = Var.Services.TweenService:Create(Popup, TweenInfo.new(Var.AnimationSpeed, Enum.EasingStyle.Cubic), {
 		Position = UDim2.fromScale(0.5, 0.5),
 		GroupTransparency = 0
 	})
 
 	PopupTween:Play()
-	Utilities.Logging.Print("All done apparently...")
+	Utilities.Logging.Print("Popup animation complete")
 
 	Var.Services.TweenService:Create(Popup, TweenInfo.new(Var.AnimationSpeed * 0.85, Enum.EasingStyle.Cubic), {
 		Size = PopupOriginalSize
@@ -678,7 +682,7 @@ function Frontend.Popup.new(
 	MessageBox.PrimaryText.Text = Header
 	MessageBox.SubText.Text = BodyText
 
-	MessageBox.AppLogo.LogoImage.Image = Icons.Primary
+	MessageBox.AppLogo.LogoImage.Image = Icons.Primary or App.Icon
 	MessageBox.SubIcon.Image = Icons.SubIcon and Icons.SubIcon or ""
 
 	MessageBox.AppLogo.LogoImage.Position = not Icons.SubIcon and UDim2.fromScale(0.5, 0.5) or UDim2.fromScale(0.047, 0.149)
@@ -765,7 +769,9 @@ function Frontend.SwapAppBasic(
 	repeat task.wait() until Var.MainFrame:FindFirstChild("Header")
 
 	pcall(function()
-		Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> · {NewConfig.Name}`
+		--Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> · {NewConfig.Name}`
+		Var.MainFrame.Header.Mark.HeaderTitle.Text = "<b>Administer</b>"
+		Var.MainFrame.Header.Mark.HeaderSubapp.Text = NewConfig.Name
 		Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = NewConfig.Icon
 		Var.MainFrame.Header.Mark.Logo.Image = Utilities.Icon "administer"
 
@@ -813,9 +819,10 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number)
 	repeat task.wait() until Var.MainFrame:FindFirstChild("Header") --// close animation 
 
 	xpcall(function()
-		Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>{Clicked ~= 0 and `{AppConfig.AppName}` or "Administer"}</b> · {Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name}`
+		Var.MainFrame.Header.Mark.HeaderTitle.Text = Clicked ~= 0 and AppConfig.AppName or "Administer"
+		Var.MainFrame.Header.Mark.HeaderSubapp.Text = Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name
 		Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = AppConfig.Icon
-		Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and "rbxassetid://116599744136879" or AppConfig.SubIcons[Clicked].Icon
+		Var.MainFrame.Header.Mark.Logo.Image = Clicked == 0 and Utilities.Icon "administer" or AppConfig.SubIcons[Clicked].Icon
 
 		Var.Services.TweenService:Create(NewFrame, TInfo, { Position = NewFramePos, AnchorPoint = NewFrameAP}):Play()
 	end, function()
@@ -824,62 +831,8 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number)
 end
 
 function Frontend.InitGestureBar()
-	--// Legacy code
-	local Connection
-
-	Var.MainFrame.Header.GestureBar.InputBegan:Connect(function(Input)
-		if Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) and 
-			Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-			Frontend.Close()
-		end
-
-		if Var.IsPanelFullSize then return end
-
-		if Connection then
-			Connection:Disconnect()
-		end
-
-		if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-			local StartPos = Input.Position
-			local StartSize = Var.MainFrame.Size
-
-			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
-				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
-					local Delta = -(MoveInput.Position - StartPos)
-
-					local NewX = math.clamp(StartSize.X.Offset + -Delta.X, MinX, MaxX)
-					local NewY = math.clamp(StartSize.Y.Offset + Delta.Y, MinY, MaxY)
-
-					Var.MainFrame.Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, NewY)
-				end
-			end)
-		elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
-			local StartPos, StartPanelPos = Input.Position, Var.MainFrame.Position
-
-			Connection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
-				if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
-					local Delta = MoveInput.Position - StartPos
-
-					Var.MainFrame.Position = UDim2.new(StartPanelPos.X.Scale, StartPanelPos.X.Offset + Delta.X, StartPanelPos.Y.Scale, StartPanelPos.Y.Offset + Delta.Y)
-				end
-			end)
-		end
-	end)
-
-	Var.MainFrame.Header.GestureBar.InputEnded:Connect(function(Input)
-		if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.MouseButton2 then
-			repeat 
-				task.wait()
-			until not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) 
-				and not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-
-			if Connection then
-				Connection:Disconnect()
-			end
-
-			--// Insurance soontm
-		end
-	end)
+	Utilities.Logging.Warn("attempt to use deprecated method (Frontend.InitGestureBar)")
+	return { false, "This method is deprecated" }
 end
 
 local MinX, MinY = -350, -300
@@ -887,8 +840,7 @@ local MaxX, MaxY = workspace.Camera.ViewportSize.X, workspace.Camera.ViewportSiz
 local OverlayConnections: { [string]: RBXScriptConnection } = {}
 
 function Frontend.SpawnOverlay(
-	Frame: Frame | CanvasGroup,
-	IsMainFrame: boolean
+	Frame: Frame | CanvasGroup
 )
 	local Speed = Var.AnimationSpeed
 	local ButtonsOpen = false
@@ -912,6 +864,16 @@ function Frontend.SpawnOverlay(
 		OverlayClone.AnchorPoint = Frame.AnchorPoint
 	end)
 
+	Frame:GetPropertyChangedSignal("BackgroundTransparency"):Connect(function()
+		OverlayClone.Grabber.BackgroundTransparency = Frame.BackgroundTransparency
+	end)
+
+	--// ?
+	Frame:GetPropertyChangedSignal("GroupTransparency"):Connect(function()
+		OverlayClone.Grabber.BackgroundTransparency = Frame.GroupTransparency
+		OverlayClone.Visible = OverlayClone.Grabber.BackgroundTransparency ~= 1
+	end)
+
 	if Frame:FindFirstChild("UISizeConstraint") then
 		local SizeConstraint = Frame:FindFirstChild("UISizeConstraint"):Clone()
 
@@ -921,6 +883,14 @@ function Frontend.SpawnOverlay(
 	OverlayClone.AnchorPoint = Frame.AnchorPoint
 	OverlayClone.Position = Frame.Position
 	OverlayClone.Size = Frame.Size
+
+	Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Var.AnimationSpeed * .3), {
+		BackgroundTransparency = (Frame.GroupTransparency ~= nil and Frame.GroupTransparency or Frame.BackgroundTransparency)
+	}):Play()
+
+	task.delay(Var.AnimationSpeed * .3, function()
+		OverlayClone.Visible = false
+	end)
 
 	OverlayClone.Visible = true
 
@@ -946,6 +916,9 @@ function Frontend.SpawnOverlay(
 		local Controls = OverlayClone.Grabber.Controls
 
 		if ButtonsOpen then return end
+		if OverlayClone.Visible == false then 
+			return 
+		end
 
 		ButtonsOpen = true
 
@@ -998,12 +971,18 @@ function Frontend.SpawnOverlay(
 			if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 				local Delta = MoveInput.Position - StartPos
 
-				Var.MainFrame.Position = UDim2.new(StartPanelPos.X.Scale, StartPanelPos.X.Offset + Delta.X, StartPanelPos.Y.Scale, StartPanelPos.Y.Offset + Delta.Y)
+				Var.Services.TweenService:Create(Frame, TweenInfo.new(Var.AnimationSpeed * .2, Enum.EasingStyle.Quart), {
+					Position = UDim2.new(StartPanelPos.X.Scale, StartPanelPos.X.Offset + Delta.X, StartPanelPos.Y.Scale, StartPanelPos.Y.Offset + Delta.Y)
+				}):Play()
 			end
 		end)
 	end)
 
 	Grabber.InputEnded:Connect(function()
+		repeat 
+			task.wait() 
+		until not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+
 		if GrabMove then GrabMove:Disconnect() end
 
 		Var.Services.TweenService:Create(OverlayClone.Grabber, TweenInfo.new(Speed * .5, Enum.EasingStyle.Quart), {
@@ -1026,6 +1005,10 @@ function Frontend.SpawnOverlay(
 			):Play()
 
 			if MovementConnection then
+				repeat 
+					task.wait() 
+				until not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+
 				MovementConnection:Disconnect()
 			end
 		elseif Type == "Grip" then
@@ -1052,6 +1035,7 @@ function Frontend.SpawnOverlay(
 		end
 	end
 
+	local RecentClick = false
 	local function DoResize(Input, Axis)
 		if MovementConnection then MovementConnection:Disconnect() end
 		if InputEnded then InputEnded:Disconnect() end
@@ -1059,7 +1043,20 @@ function Frontend.SpawnOverlay(
 		local StartPos = Var.Services.UserInputService:GetMouseLocation()
 		local StartSize = Frame.Size
 
+		if RecentClick then
+			Frontend.Open(true)
+
+			return
+		else
+			RecentClick = true
+			task.delay(.2, function()
+				RecentClick = false
+			end)
+		end
+
 		MovementConnection = Var.Services.UserInputService.InputChanged:Connect(function(MoveInput)
+			local Size
+
 			if MoveInput.UserInputType == Enum.UserInputType.MouseMovement then
 				local MousePos = Var.Services.UserInputService:GetMouseLocation()
 				local Delta = MousePos - StartPos
@@ -1068,30 +1065,65 @@ function Frontend.SpawnOverlay(
 				local NewY = StartSize.Y.Offset + Delta.Y * 1.5
 
 				if Axis == "X" then
-					Frame.Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, StartSize.Y.Offset)
+					Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, StartSize.Y.Offset)
 				elseif Axis == "Y" then
-					Frame.Size = UDim2.new(StartSize.X.Scale, StartSize.X.Offset, StartSize.Y.Scale, NewY)
+					Size = UDim2.new(StartSize.X.Scale, StartSize.X.Offset, StartSize.Y.Scale, NewY)
 				elseif Axis == "XY" then
-					Frame.Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, NewY)
+					Size = UDim2.new(StartSize.X.Scale, NewX, StartSize.Y.Scale, NewY)
 				end
+
+				Var.Services.TweenService:Create(Frame, TweenInfo.new(Var.AnimationSpeed * .2, Enum.EasingStyle.Quart), {
+					Size = Size
+				}):Play()
 			end
 		end)
 
 		InputEnded = Var.Services.UserInputService.InputEnded:Connect(function(EndInput)
+			warn(EndInput)
 			if EndInput.UserInputType == Enum.UserInputType.MouseButton1 then
-				if MovementConnection then MovementConnection:Disconnect() end
+				if MovementConnection then 
+					MovementConnection:Disconnect()
+
+					repeat 
+						task.wait() 
+					until not Var.Services.UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+				end
 				if InputEnded then InputEnded:Disconnect() end
 				GripAnimation("Release", Axis)
 			end
 		end)
 	end
 
+	local function ToggleGripperVisibility(ForceState)
+		local Opacity = Utilities.GetSetting("GripperIdleOpacity")
+		local Idle = 
+			Opacity == "visible" and 0 or
+			Opacity == "faint" and 0.5 or
+			1
+
+		Var.Services.TweenService:Create(
+			OverlayClone.CornerGripper.Grabber,
+			TweenInfo.new(
+				Speed * 0.3,
+				Enum.EasingStyle.Quart,
+				Enum.EasingDirection.In,
+				0,
+				false,
+				ForceState == false and 2 or 0
+			),
+			{ ImageTransparency = ForceState and 0 or Idle }
+		):Play()
+	end
+
+	ToggleGripperVisibility()
 
 	OverlayClone.CornerGripper.Trigger.MouseEnter:Connect(function()
+		ToggleGripperVisibility(true)
 		GripAnimation("Hover", "XY")
 	end)
 
 	OverlayClone.CornerGripper.Trigger.MouseLeave:Connect(function()
+		ToggleGripperVisibility(false)
 		GripAnimation("Release", "XY")
 	end)
 
@@ -1103,10 +1135,12 @@ function Frontend.SpawnOverlay(
 	end)
 
 	OverlayClone.CornerGripper.TriggerHoriz.MouseEnter:Connect(function()
+		ToggleGripperVisibility(true)
 		GripAnimation("Hover", "X")
 	end)
 
 	OverlayClone.CornerGripper.TriggerHoriz.MouseLeave:Connect(function()
+		ToggleGripperVisibility(false)
 		GripAnimation("Release", "X")
 	end)
 
@@ -1118,10 +1152,12 @@ function Frontend.SpawnOverlay(
 	end)
 
 	OverlayClone.CornerGripper.TriggerVert.MouseEnter:Connect(function()
+		ToggleGripperVisibility(true)
 		GripAnimation("Hover", "Y")
 	end)
 
 	OverlayClone.CornerGripper.TriggerVert.MouseLeave:Connect(function()
+		ToggleGripperVisibility(false)
 		GripAnimation("Release", "Y")
 	end)
 
@@ -1278,6 +1314,8 @@ function Frontend.AddButtonAnimation(Button: TextButton | ImageButton)
 
 	Button.AutoButtonColor = false
 
+	--Button.HoverHapticEffect = script.Parent.Parent.Assets.HoverHaptic
+
 	UICorner.Parent = Button
 
 	local function Lighten(color, amount)
@@ -1345,15 +1383,353 @@ function Frontend.AddButtonAnimation(Button: TextButton | ImageButton)
 
 	Button.MouseButton1Click:Connect(function()
 		script.Parent.Parent.Assets.ClickSound:Play()
-		
+		script.Parent.Parent.Assets.ClickHaptic:Play()
+
 		Ripple(Button, game.Players.LocalPlayer:GetMouse(), Var.AnimationSpeed * .4, Color3.fromRGB(255,255,255))
 	end)
 
 	Button.MouseButton2Click:Connect(function()
 		script.Parent.Parent.Assets.ClickSound:Play()
-		
+
 		Ripple(Button, game.Players.LocalPlayer:GetMouse(), Var.AnimationSpeed * .4, Color3.fromRGB(255,255,255))
 	end)
+end
+
+
+function Frontend.PrepTheme()
+	local Dark = require(script.Parent.Parent.Assets.Themes.DefaultDark)
+
+	local ForceSimilarity = Utilities.GetSetting("ThemeForceSimilarity") == true
+	local Debug = Utilities.GetSetting("ThemeDebug") == true
+	local Threshold = Utilities.GetSetting("ThemeSimilarityThreshold") or 12
+
+
+	--// Helpers
+	local function ColorDistance(a, b)
+		if not a or not b then return math.huge end
+		local DistanceRed = (a.R - b.R) * 255
+		local DistanceGreen = (a.G - b.G) * 255
+		local DistanceBlue = (a.B - b.B) * 255
+
+		return math.sqrt(DistanceRed*DistanceRed + DistanceGreen*DistanceGreen + DistanceBlue * DistanceBlue)
+	end
+
+	local function FindClosestInGroup(Color, Group, GroupName)
+		local BestName, BestColor, BestDistance = nil, nil, math.huge
+
+		for ColorName, Data in pairs(Group or {}) do
+			local cand = (type(Data) == "table" and Data.Color) or (typeof(Data) == "Color3" and Data)
+			if not cand then continue end
+
+			local success, _ = xpcall(function()
+				local d = ColorDistance(Color, cand)
+
+				if d < BestDistance then
+					BestName = (GroupName and (GroupName .. "." .. tostring(ColorName))) or tostring(ColorName)
+					BestColor = cand
+					BestDistance = d
+				end
+			end, Utilities.Logging.Warn)
+		end
+
+		return BestName, BestColor, BestDistance
+	end
+
+	local function FindClosestAcrossPriority(Color, Groups)
+		if not Color then return nil, nil, math.huge end
+		local Name, BestColor, Distance = nil, nil, math.huge
+
+		for _, g in Groups do
+			local n, c, d = FindClosestInGroup(Color, g.tbl, g.Name)
+
+			if c and d < Distance then
+				Name, BestColor, Distance = n, c, d
+			end
+		end
+
+		return Name, BestColor, Distance
+	end
+
+	local function DebugLabel(Descendant, ColorName)
+		if Debug then 
+			local NewTL = Instance.new("TextLabel")
+
+			NewTL.Size = UDim2.fromScale(1,1) 
+			NewTL.Parent = Descendant 
+			NewTL.BackgroundTransparency = .25 
+			NewTL.Text = ColorName 
+		end
+	end
+
+	local IconIndex = {}
+	for Name, Icon in Var.Icons do
+		if Name == "administer" then continue end
+
+		IconIndex[Icon] = Icon
+	end
+
+	local function Process(Descendant: GuiObject)
+		if Descendant:GetAttribute("_AdmStyleText") or Descendant:GetAttribute("_AdmStyleBackground") then return end
+
+		--// Text
+		if Descendant:IsA("TextLabel") or Descendant:IsA("TextButton") or Descendant:IsA("TextBox") then
+			local Found = false
+
+			for ColorName, Data in Dark.Colors.Text do
+				local cand = (type(Data) == "table" and Data.Color) or (typeof(Data) == "Color3" and Data)
+
+				if cand and Descendant.TextColor3 == cand then
+					Found = ColorName
+
+					break
+				end
+			end
+
+			if not Found and ForceSimilarity then
+				local ColorName, Color, Distance = FindClosestInGroup(Descendant.TextColor3, Dark.Colors.Text, "Text")
+
+				if Color and Distance <= (Threshold * 2) then --// dumb hack
+					Descendant.TextColor3 = Color
+					Found = ColorName
+				else
+					--print(`{Descendant:GetFullName()} not styled; {Distance} too far from {Threshold * 2}`)
+				end
+			end
+
+			DebugLabel(Descendant, Found or "NoMatch")
+
+			if Found then 
+				Descendant:SetAttribute("_AdmStyleText", Found)
+			end
+		end
+
+		--// Images / Icons
+		if Descendant:IsA("ImageLabel") or Descendant:IsA("ImageButton") then
+			--// force icons individually 
+			if IconIndex[Descendant.Image:match("%d+$")] then
+				Descendant.ImageColor3 = Dark.Colors.Text.Primary.Color
+
+				Descendant:SetAttribute("_AdmStyleText", "Primary")
+				Descendant:SetAttribute("_AdmIsIcon", true)
+
+				return
+			else
+				Descendant:SetAttribute("_AdmIsIcon", false)
+			end
+
+			if ForceSimilarity then
+				local Name, DataType, Distance = FindClosestAcrossPriority(Descendant.ImageColor3, {
+					{ Name = "Text", tbl = Dark.Colors.Text },
+					{ Name = "Colors", tbl = Dark.Colors.Colors },
+					{ Name = "Buttons", tbl = Dark.Colors.Buttons },
+				})
+
+				if DataType and Distance <= Threshold then
+					Descendant.ImageColor3 = DataType
+					Descendant:SetAttribute("_AdmStyleText", string.gsub(Name, "Text.", ""))
+				end
+			end
+		end
+
+		--// Button backgrounds
+		if Descendant:IsA("TextButton") or Descendant:IsA("ImageButton") then
+			if Descendant.BackgroundTransparency ~= 1 then
+				local Found = false
+
+				for ColorName, Data in Dark.Colors.Buttons do
+					local DataType = (type(Data) == "table" and Data.Color) or (typeof(Data) == "Color3" and Data)
+					if DataType and Descendant.BackgroundColor3 == DataType then
+
+						Found = ColorName
+						break
+					end
+				end
+
+				if not Found and ForceSimilarity then
+					local Name, DataType, Distance = FindClosestInGroup(Descendant.BackgroundColor3, Dark.Colors.Buttons, "Buttons")
+					if DataType and Distance <= Threshold then
+						Descendant.BackgroundColor3 = DataType
+
+						Found = Name
+					end
+				end
+
+				DebugLabel(Descendant, Found or "NoMatch")
+
+				if Found then 
+					Descendant:SetAttribute("_AdmStyleBackground", Found) 
+				end
+			end
+		end
+
+		--// Generic GuiObjects (Background)
+		if Descendant:IsA("GuiObject") then
+			if Descendant.BackgroundTransparency ~= 1 then
+				local Found = false
+
+				for ColorName, Data in Dark.Colors.Background do
+					local DataType = (type(Data) == "table" and Data.Color) or (typeof(Data) == "Color3" and Data)
+
+					if DataType and Descendant.BackgroundColor3 == DataType then
+						Found = ColorName
+
+						break
+					end
+				end
+
+				if not Found and ForceSimilarity then
+					local Name, Type, Distance = FindClosestInGroup(Descendant.BackgroundColor3, Dark.Colors.Background, "Background")
+					if Type and Distance <= Threshold then
+						Descendant.BackgroundColor3 = Type
+
+						Found = Name
+					end
+				end
+
+				DebugLabel(Descendant, Found or "NoMatch")
+
+				if Found then 
+					Descendant:SetAttribute("_AdmStyleBackground", Found) 
+				end
+			end
+		end
+	end
+
+	--// Main loop
+	for _, Descendant in Var.MainFrame.Parent:GetDescendants() do
+		Process(Descendant)
+	end
+
+	Process(Var.MainFrame)
+
+	if Var.ThemeAddedEvent then
+		Var.ThemeAddedEvent:Disconnect()
+	end
+
+	Var.ThemeAddedEvent = Var.MainFrame.Parent.DescendantAdded:Connect(function(Child)
+		if not Child:IsA("GuiObject") then return end
+
+		Process(Child)
+	end)
+end
+
+function Frontend.LoadTheme(ThemeTable)
+	Utilities.Logging.Print(`Loading theme`, ThemeTable)
+
+	Var.UseAcrylic = ThemeTable.EnableAcrylic
+	if ThemeTable.EnableAcrylic then
+		require(Libraries.Neon):BindFrame(Var.MainFrame, {
+			Transparency = 0.95,
+			BrickColor = BrickColor.new("Institutional white")
+		})
+
+		if not game.Lighting:FindFirstChild("AdministerAcrylic") then
+			local NewEffect = Instance.new("DepthOfFieldEffect")
+			NewEffect.FarIntensity = 0
+			NewEffect.FocusDistance = 51.6
+			NewEffect.InFocusRadius = 50
+			NewEffect.NearIntensity = 1
+
+			NewEffect.Parent = game.Lighting
+			NewEffect.Name = "AdministerAcrylic"
+		end
+	else
+		require(Libraries.Neon):UnbindFrame(Var.MainFrame)
+	end
+
+	local function Style(Descendant: GuiObject)
+		if Descendant:IsA("GuiObject") then
+			if Descendant:GetAttribute("_AdmStyleText") then
+				for Name, Color in ThemeTable.Colors.Text do
+					if Name == Descendant:GetAttribute("_AdmStyleText") then
+						if Descendant:IsA("TextBox") or Descendant:IsA("TextLabel") then
+							Descendant.TextColor3 = Color.Color
+
+							Descendant.FontFace = ThemeTable.General.Fonts[Name]
+
+							if Descendant.TextTransparency ~= 1 then
+								Descendant.TextTransparency = Color.Transparency
+							end
+						elseif Descendant:IsA("ImageLabel") or Descendant:IsA("ImageButton") then	
+							if Descendant:GetAttribute("_AdmIsIcon") or ThemeTable.ForceStyleImages == true then
+								Descendant.ImageColor3 = Color.Color
+
+								if Descendant.ImageTransparency ~= 1 then
+									Descendant.ImageTransparency = Color.Transparency
+								end
+							else
+								--print(Descendant:GetFullName(), ThemeTable.ForceStyleImages)
+							end
+						end
+					end
+				end
+			end
+
+			if Descendant:GetAttribute("_AdmStyleBackground") then
+				for Name, Color in ThemeTable.Colors.Background do
+					if Name == Descendant:GetAttribute("_AdmStyleBackground") then
+						Descendant.BackgroundColor3 = Color.Color
+
+						if Descendant.BackgroundTransparency ~= 1 then
+							Descendant.BackgroundTransparency = Color.Transparency
+						end
+					end
+				end
+
+				for Name, Color in ThemeTable.Colors.Colors do
+					if Name == Descendant:GetAttribute("_AdmStyleBackground") then
+						Descendant.BackgroundColor3 = Color.Color
+
+						if Descendant.BackgroundTransparency ~= 1 then
+							Descendant.BackgroundTransparency = Color.Transparency
+						end
+					end
+				end
+
+				for Name, Color in ThemeTable.Colors.Buttons do
+					if Name == Descendant:GetAttribute("_AdmStyleBackground") then
+						Descendant.BackgroundColor3 = Color.Color
+
+						if Descendant.BackgroundTransparency ~= 1 then
+							Descendant.BackgroundTransparency = Color.Transparency
+						end
+					end
+				end
+			end
+		elseif Descendant:IsA("UICorner") then
+			for _, Overrides in ThemeTable.General.RoundingOverrides do
+				if Overrides[1] == Descendant.CornerRadius then
+					Descendant.CornerRadius = Overrides[2]
+				end
+			end
+		end
+
+		if ThemeTable.General.AdditionalProperties[Descendant.ClassName] then
+			for Property, Value in ThemeTable.General.AdditionalProperties[Descendant.ClassName] do
+				xpcall(function()
+					Descendant[Property] = Value
+				end, function()
+					Utilities.Logging.Warn(`[ThemeValidation] prop {Descendant.ClassName}/{Property} is locked or hidden`)
+				end)
+			end
+		end
+	end
+
+	Style(Var.MainFrame)
+
+	for _, Descendant in Var.MainFrame.Parent:GetDescendants() do
+		Style(Descendant)
+	end
+
+	if Var.ThemeUpdateEvent then
+		Var.ThemeUpdateEvent:Disconnect()
+	end
+
+	Var.ThemeUpdateEvent = (Var.MainFrame.Parent :: CanvasGroup).DescendantAdded:Connect(function(Child)
+		Style(Child)
+	end)
+	
+	ThemeTable.OnStyle()
 end
 
 return Frontend
