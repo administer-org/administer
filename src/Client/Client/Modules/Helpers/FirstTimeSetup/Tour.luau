@@ -181,15 +181,15 @@ function tour.BeginTour()
 	tour.Step(marketPlace.AAFeatured.MainHot.Stats.DownloadButton, [[Click the Get button to view this app.
 	<b>Click Get to continue</b>]]
 	)
-	tour.Step(marketPlace.InstallBox.Details.Downloads.Install, [[Click the Install button to install this app.
+	tour.Step(marketPlace.InstallBox.MainContent.TopHeader.Details.Downloads, [[Click the Install button to install this app.
 	<b>Click Install to continue</b>]])
 
 	repeat task.wait() until Var.MainFrame.administer.MessageBox.Visible or Var.MainFrame.administer.Toast.Visible
 	repeat task.wait() until not Var.MainFrame.administer.MessageBox.Visible and not Var.MainFrame.administer.Toast.Visible
 
-	tour.Step(marketPlace.InstallBox.Details.Votes.Likes:WaitForChild("TextButton"), [[And you can click here to give the app a like.
+	tour.Step(marketPlace.InstallBox.MainContent.TopHeader.Details.Votes.Likes:WaitForChild("TextButton"), [[And you can click here to give the app a like.
 	<b>Press Like to continue</b>]])
-	tour.Step(marketPlace.Parent.Sidebar.Buttons.XLibrary:WaitForChild("TextButton"), [[You can view your installed apps here.
+	tour.Step(marketPlace.Parent.ASidebar.Buttons.XLibrary:WaitForChild("TextButton"), [[You can view your installed apps here.
 	<b>Press library to continue</b>]])
 	repeat task.wait() until #marketPlace.XLibrary.Content:GetChildren() > 3
 	task.wait(3)
