@@ -24,14 +24,14 @@ local Settings: SettingsType = {
 		},
 
 		Major = 2,
-		Minor = 1,
-		Tweak = 1,
+		Minor = 2,
+		Tweak = 0,
 
-		Extra = "",
-		String = "2.1.1",
-		GitRevision = "a13118d",
+		Extra = "dev",
+		String = "2.2.0",
+		GitRevision = "3fe24a1",
 
-		NoExtraData = "2.1.1",
+		NoExtraData = "2.2.0",
 		APIRevision = "2.0.0",
 
 		ID = "org.admsoftware.Core"
@@ -568,6 +568,42 @@ local Settings: SettingsType = {
 				Value = {
 					Value = false,
 					Default = false
+				}
+			},
+			
+			ThemeDebug = {
+				Description = "Enabled test labels to see what Administer auto-classifies GuiObjects as",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false
+				}
+			},
+			
+			ThemeForceSimilarity = {
+				Description = "If enabled, colors will be snapped to the nearest theme color unless it is super different",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = true,
+					Default = true
+				}
+			},
+			
+			ThemeSimilarityThreshold = {
+				Description = "How similar a color has to be to be overridden with a theme color",
+				SettingType = "Integer",
+				SettingDisplayType = "InputBox",
+				RequiresRestart = true,
+
+				Value = {
+					Value = 12,
+					Default = 12
 				}
 			}
 		}
