@@ -338,5 +338,6 @@
     "editrank.disabled.creatoropen.Body": "Vui lòng hoàn tất việc tạo trước khi bạn bắt đầu một cái mới.",
     "Configuration.InfoPage.License": "Quản trị được tạo bởi Administer Software, một nhóm các nhà phát triển hiện đại hóa trải nghiệm quản trị Roblox. \nTất cả các tác phẩm công cộng của chúng tôi đáng tự hào là phần mềm miễn phí theo giấy phép GNU AGPL 3.0. \nViệc sử dụng, phân phối lại và sửa đổi Quản trị viên, ứng dụng thị trường của bên thứ nhất và dịch vụ web chịu sự điều chỉnh của các điều khoản này.\nĐể có được bản sao của các điều khoản này, vui lòng truy cập kho lưu trữ GitHub. Để xem chính sách quyền riêng tư của AOS, vui lòng truy cập liên kết trong bài đăng trên DevForum.\n\nAdminister Software %s",
     "Configuration.Apps.Description": "%S\n\n%s bởi @%s từ %s",
-    "apps.RunningSince": "Chạy kể từ"
+    "apps.RunningSince": "Chạy kể từ",
+    "setting.Locale.Swapped.Body": "Giao diện của bạn bây giờ là tiếng Anh Mỹ. Để áp dụng các thay đổi, vui lòng khởi động lại trò chơi.\nNgôn ngữ vẫn là một tính năng beta. Nếu bạn nhận thấy bất kỳ điều gì không chính xác hoặc muốn thêm ngôn ngữ mới, vui lòng truy cập Cổng thông tin quản lý dịch thuật để khắc phục."
 }
