@@ -76,7 +76,7 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 		}
 	end
 
-	Utils.Logging.Print("Proceeding with bootstrap")
+	-- Utils.Logging.Print("Proceeding with bootstrap")
 	local Modules = {}
 
 	for _, Request in Config.Dependencies.AdministerModules do
@@ -105,20 +105,35 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 end
 
 --// Core App functions
+
 function App.LoadLocal(
 	Path: number | Instance,
-	AppMeta: { InstallDate: number, InstallSource: string, AppID: number }
+	AppMeta: { InstallDate: number, InstallSource: string, AppID: number },
+	Debug
 ): Types.Response
 	Utils.Logging.Print(
 		`[-] Loading app from source {string.lower(typeof(Path))}_{(typeof(Path) == "Instance" and Path:GetFullName() or Path)}`
 	)
+
+	local function DWarn(Msg)
+		if Debug then
+			warn(`[{Path}] [{(tick() - Ticks[Path]) * 1000}ms]: {Msg}`)
+		end
+	end
 
 	Ticks[Path] = tick()
 	local Extras = {
 		RunContext = typeof(Path) == "Instance" and "LocalAppsFolder" or "AOSDownload", 
 		TechID = Path
 	}
-	local TargetApp, RealApp = {}, require(Path)(App.InvocationAPI, Extras) :: { Success: boolean, RichConfig: Types.RichConfig }
+
+	DWarn("Requiring app")
+
+	local TargetApp, RealApp = {}, require(Path)
+
+	DWarn("Loading app")
+
+	RealApp = RealApp(App.InvocationAPI, Extras) :: { Success: boolean, RichConfig: Types.RichConfig }
 
 	if not RealApp[1] then
 		Utils.Logging.Warn("This app cannot be loaded as it has failed a test, this is probably due to an outdated Administer version. The server says: ", App[2])
@@ -127,6 +142,8 @@ function App.LoadLocal(
 	end
 
 	--// Construct UI here
+
+	DWarn("Getting data")
 
 	xpcall(function()
 		TargetApp.AppID = (typeof(Path) == "number") and Path or AppMeta.AppID
@@ -150,58 +167,60 @@ function App.LoadLocal(
 end
 
 function App.Initialize(): boolean
+	local Start = tick()
 	local DelaySetting, Apps = Utils.GetSetting("AppLoadDelay"), Var.DataStores.AppDB:GetAsync("AppList") or {}
-	local AppsCount, i, TotalAttempts, Start = #Apps, 0, 0, tick()
-
-	Utils.Logging.Print("Bootstrapping apps...")
-
-	if Utils.GetSetting("LoadApps") == false then
-		Utils.Logging.Print(`App Bootstrapping disabled due to configuration, please disable!`)
-
-		--// switch this to true just in case
-		Var.DidBootstrap = true
-		return false
-	end
-
-	if DelaySetting == "InStudio" and Var.Services.RunService:IsStudio() or DelaySetting == "All" then
-		task.wait(3)
-	end
-
-	for i, App in script.Parent.Parent.Parent.LocalApps:GetChildren() do
+	
+	for _, AppInstance in script.Parent.Parent.Parent.LocalApps:GetChildren() do
 		table.insert(Apps, {
-			ID = App,
+			ID = AppInstance,
 			InstallDate = 0,
 			InstallSource = "",
 			IsPhysicalApp = true
 		})
 	end
 
-	for _, AppObj in Apps do
-		Utils.Logging.Print(`Importing app:`, AppObj)
-		task.defer(function()
-			App.LoadLocal(AppObj.ID, {
-				InstallDate = AppObj.InstallDate,
-				InstallSource = AppObj.InstallSource,
-				AppID = AppObj.ID
-			})
+	if Utils.GetSetting("LoadApps") == false then
+		Utils.Logging.Print("App Bootstrapping disabled due to configuration, please disable!")
+		
+		Var.DidBootstrap = true
+		
+		return false
+	end
+	
+	if DelaySetting == "InStudio" and Var.Services.RunService:IsStudio() or DelaySetting == "All" then
+		task.wait(3)
+	end
 
-			i += 1
+	Utils.Logging.Print("Bootstrapping apps...")
+
+	local Total = 0
+	local Completed = 0
+	local DoneSignal = Instance.new("BindableEvent")
+
+	for _, AppObj in Apps do
+		Total += 1
+		--print('obj', AppObj, Completed, Total)
+		
+		task.spawn(function()
+			pcall(function() --// we don't care if an app bootstrap fails out
+				App.LoadLocal(AppObj.ID, {
+					InstallDate = AppObj.InstallDate,
+					InstallSource = AppObj.InstallSource,
+					AppID = AppObj.ID
+				}, false)
+			end)
+
+			Completed += 1
+
+			if Completed >= Total then
+				DoneSignal:Fire()
+			end
 		end)
 	end
 
-	repeat
-		task.wait(0.05)
-		TotalAttempts += 1
-	until i >= AppsCount or TotalAttempts == Var.AppPollingLimit
-
-	if TotalAttempts == Var.AppPollingLimit then
-		Utils.Logging.Warn(
-			`[thread APPS] Failed to initialize some apps after the polling limit! Try looking for faulty apps or increasing the limit if you have a heavy app. {i / AppsCount}% of {AppsCount} cloud apps loaded in {TotalAttempts} tries/{tick() - Start}s.`
-		)
-	end
+	DoneSignal.Event:Wait()
 
 	Utils.Logging.Print(`Finished bootstrapping apps! ({Utils.RoundMS(tick() - Start)}ms)`)
-
 	Var.DidBootstrap = true
 
 	return true
@@ -309,6 +328,7 @@ function App.ServerAPI.GetList(
 		return {}
 	end
 
+
 	for i, Server in (SpecificServer ~= nil and {{ ServerURL = SpecificServer }} or Var.DataStores.AppDB:GetAsync("AppServerList")) do
 		local FullList = {}
 
@@ -318,7 +338,7 @@ function App.ServerAPI.GetList(
 			return "Unknown"
 		end)
 
-		return HTTP.GetRoute(Server.ServerURL, `/api/directory?asset_type={Area}`, function(Apps, ResponseData): {}
+		return HTTP.GetRoute(Server.ServerURL, `/api/directory?asset_type={string.upper(Area)}`, function(Apps, ResponseData): {}
 			for i, v in Apps do
 				v["Server"] = Server.ServerURL
 				v["ServerName"] = InstanceName
@@ -477,35 +497,100 @@ end
 
 function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 	return HTTP.GetRoute(AppServer, `/api/asset/{AppID}`, function(Data)
-		Data.Unprocessed = true
+		if Data.Metadata.AssetType == "app" then
+			Data.Unprocessed = true
 
-		xpcall(function()
-			local RichConfig = require(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
+			xpcall(function()
+				local RichConfig = require(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
 
-			Data.CannotDownload = false
-			Data.Unprocessed = false
-			Data.RichConfig = RichConfig
-		end, function(e)
-			warn("------------", e)
-			Utils.Logging.Warn(e)
+				Data.CannotDownload = false
+				Data.Unprocessed = false
+				Data.RichConfig = RichConfig
+			end, function(e)
+				warn("------------", e)
+				Utils.Logging.Warn(e)
 
-			Data.CannotDownload = true
-		end)
+				Data.CannotDownload = true
+			end)
 
-		return { true, Data }
+			return { true, Data }
+		else
+			return { true, Data }
+		end
 	end, function(...)
 		return { false, ... }
 	end)
 end
 
+function App.InstallTheme(
+	Player: Player,
+	Source: "AOS" | "Local",
+	Data: table | number,
+	ServerURL: string?
+): Types.Response
+	if Source == "AOS" then
+		if Data.RequirePayment then
+			if not Var.Services.MarketplaceService:UserOwnsGamePassAsync(Player.UserId, Data.GamePassID) then
+				print(`does not own {Data.GamePassID}`)
+
+				local Result = "Waiting"
+
+				Var.Services.MarketplaceService:PromptGamePassPurchase(Player, Data.GamePassId)
+				Var.Services.MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(Plr, GamePassID, WasPurchased)
+					if Plr ~= Player or GamePassID ~= Data.GamePassID then return end
+
+					Result = WasPurchased and "Purchased" or "NotPurchased"
+				end)
+
+				while Result == "Waiting" do
+					task.wait(.1)
+				end
+
+				if Result == "NotPurchased" then
+					return {false, "Purchased cancelled by user"}
+				else
+					--// we now own it, wow!!!
+				end
+			else
+				print("owned!!")
+			end
+
+			return App.InstallTheme(Player, "Local", Data.InstallID, ServerURL)
+		end
+	else
+		local ThemeList = Var.DataStores.AppDB:GetAsync("ThemeList") or {}
+
+		table.insert(ThemeList, {
+			ID = Data,
+			InstallDate = os.time(),
+			InstallSource = ServerURL
+		})
+
+		Var.DataStores.AppDB:SetAsync("ThemeList", ThemeList)
+
+		return {true, "Theme successfully installed!"}
+	end
+end
+
 function App.ServerAPI.InstallFromServer(
+	Player: Player,
 	ServerURL: string,
 	AppID: string
 ): Types.Response
+	if typeof(Player) == "string" then
+		--// backwards compat
+		ServerURL = Player
+		AppID = ServerURL
+	end
+
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
 		local RealID = Content.InstallID
 		if RealID == 0 then
 			return { false, "This server gave us bad data, please report the error to the server owner." }
+		end
+
+		if Content.Metadata.AssetType == "theme" then
+			return App.InstallTheme(Player, "AOS", Content, ServerURL)
 		end
 
 		--// Basic checks
@@ -563,7 +648,7 @@ function App.ServerAPI.GetVote(
 		return Data["data"]
 	end, function(...)
 		Utils.Logging.Warn(...)
-		
+
 		return {
 			liked = false,
 			dislined = false,
