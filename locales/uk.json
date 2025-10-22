@@ -295,5 +295,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Адмініструйте, і ваші програми будуть оновлені!",
     "apps.New": "Нова версія",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer застаріло!",
-    "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n Ліцензування та інформація про<font color='#2e48a6'><b>.</b></font>"
+    "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n Ліцензування та інформація про<font color='#2e48a6'><b>.</b></font>",
+    "themes.desc.Delete": "Видалити",
+    "themes.desc.LoadStyle": "Застосувати стиль",
+    "themes.desc.SaveAsDark": "Зберегти як бажану темну схему",
+    "themes.desc.SaveAsLight": "Зберегти як бажану світлу схему",
+    "themes.ManageTheme": "Керувати темою"
 }

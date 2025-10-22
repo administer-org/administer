@@ -335,5 +335,10 @@
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer ist veraltet!",
     "apps.New": "Neue Version",
     "Configuration.InfoPage.VersionDetails.Updated": "Administer und deine Apps sind auf dem neuesten Stand!",
-    "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n<font color='#2e48a6'><b>Lizenzierung und Informationen...</b></font>"
+    "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n<font color='#2e48a6'><b>Lizenzierung und Informationen...</b></font>",
+    "themes.desc.Delete": "Löschen",
+    "themes.desc.LoadStyle": "Stil anwenden",
+    "themes.desc.SaveAsDark": "Als bevorzugtes dunkles Schema speichern",
+    "themes.desc.SaveAsLight": "Als bevorzugtes Helligkeitsschema speichern",
+    "themes.ManageTheme": "Thema verwalten"
 }

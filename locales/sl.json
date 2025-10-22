@@ -295,5 +295,10 @@
     "Configuration.InfoPage.VersionDetails.Header": "Center za posodobitve",
     "Configuration.InfoPage.VersionDetails.Updated": "Upravljajte in vaše aplikacije bodo posodobljene!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer je zastarel!",
-    "apps.New": "Nova izdaja"
+    "apps.New": "Nova izdaja",
+    "themes.desc.Delete": "Izbriši",
+    "themes.desc.LoadStyle": "Uporabi slog",
+    "themes.desc.SaveAsDark": "Shranite kot želeno temno shemo",
+    "themes.desc.SaveAsLight": "Shranite kot želeno svetlo shemo",
+    "themes.ManageTheme": "Upravljanje teme"
 }

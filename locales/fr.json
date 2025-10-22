@@ -332,5 +332,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Administrez et vos applications seront à jour !",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer est obsolète !",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n Licence et informations sur<font color='#2e48a6'><b>.</b></font>",
-    "apps.New": "Nouvelle version"
+    "apps.New": "Nouvelle version",
+    "themes.desc.Delete": "Supprimer",
+    "themes.desc.LoadStyle": "Appliquer le style",
+    "themes.desc.SaveAsDark": "Enregistrer comme thème sombre préféré",
+    "themes.desc.SaveAsLight": "Enregistrer comme thème clair préféré",
+    "themes.ManageTheme": "Gérer le thème"
 }

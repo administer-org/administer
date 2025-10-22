@@ -336,5 +336,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Administre e as suas aplicações estarão atualizadas!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer está desatualizado!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n<font color='#2e48a6'><b>Licenciamento e informações.</b></font>",
-    "apps.New": "Nova versão"
+    "apps.New": "Nova versão",
+    "themes.desc.Delete": "Eliminar",
+    "themes.desc.LoadStyle": "Aplicar estilo",
+    "themes.desc.SaveAsDark": "Guardar como esquema escuro preferido",
+    "themes.desc.SaveAsLight": "Guardar como esquema de luz preferido",
+    "themes.ManageTheme": "Gerir Tema"
 }

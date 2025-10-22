@@ -335,5 +335,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "管理好您的应用，确保它们始终保持最新状态！",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "\"Administer\"已过时！",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.<font color='#2e48a6'><b>许可与信息..</b></font>",
-    "apps.New": "新版本发布"
+    "apps.New": "新版本发布",
+    "themes.desc.Delete": "删除",
+    "themes.desc.LoadStyle": "应用样式",
+    "themes.desc.SaveAsDark": "保存为首选深色主题",
+    "themes.desc.SaveAsLight": "保存为首选浅色主题",
+    "themes.ManageTheme": "管理主题"
 }

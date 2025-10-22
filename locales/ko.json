@@ -336,5 +336,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "관리하면 앱이 최신 상태로 유지됩니다!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer는 구식 표현입니다!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.<font color='#2e48a6'><b>라이선싱 및 정보..</b></font>",
-    "apps.New": "신규 출시"
+    "apps.New": "신규 출시",
+    "themes.desc.Delete": "삭제",
+    "themes.desc.LoadStyle": "스타일 적용",
+    "themes.desc.SaveAsDark": "선호하는 다크 테마로 저장",
+    "themes.desc.SaveAsLight": "선호하는 밝은 테마로 저장",
+    "themes.ManageTheme": "테마 관리"
 }

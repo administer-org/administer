@@ -288,5 +288,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Διαχειριστείτε και οι εφαρμογές σας θα είναι ενημερωμένες!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.\n Άδεια χρήσης και πληροφορίες για το<font color='#2e48a6'><b>.</b></font>",
     "apps.New": "Νέα έκδοση",
-    "Configuration.InfoPage.VersionDetails.OutOfDate": "Το «Administer» είναι ξεπερασμένο!"
+    "Configuration.InfoPage.VersionDetails.OutOfDate": "Το «Administer» είναι ξεπερασμένο!",
+    "themes.desc.Delete": "Διαγραφή",
+    "themes.desc.LoadStyle": "Εφαρμογή στυλ",
+    "themes.desc.SaveAsDark": "Αποθήκευση ως προτιμώμενο σκούρο σχήμα",
+    "themes.desc.SaveAsLight": "Αποθήκευση ως προτιμώμενο σχήμα φωτισμού",
+    "themes.ManageTheme": "Διαχείριση θέματος"
 }

@@ -288,5 +288,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Spravujte a vaše aplikace budou vždy aktuální!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer je zastaralý výraz!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022–2025.\nLicence a informace o<font color='#2e48a6'><b>.</b></font>",
-    "apps.New": "Nová verze"
+    "apps.New": "Nová verze",
+    "themes.desc.Delete": "Smazat",
+    "themes.desc.LoadStyle": "Použít styl",
+    "themes.desc.SaveAsDark": "Uložit jako preferované tmavé schéma",
+    "themes.desc.SaveAsLight": "Uložit jako preferované světlé schéma",
+    "themes.ManageTheme": "Spravovat téma"
 }

@@ -332,5 +332,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Beheer en je apps zijn up-to-date!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer is verouderd!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022 - 2025.<font color='#2e48a6'><b>licenties en informatie.</b></font>",
-    "apps.New": "Nieuwe release"
+    "apps.New": "Nieuwe release",
+    "themes.desc.Delete": "Verwijderen",
+    "themes.desc.LoadStyle": "Stijl toepassen",
+    "themes.desc.SaveAsDark": "Opslaan als voorkeursdonker schema",
+    "themes.desc.SaveAsLight": "Opslaan als voorkeurslichtschema",
+    "themes.ManageTheme": "Thema beheren"
 }

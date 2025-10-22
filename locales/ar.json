@@ -295,5 +295,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "قم بالإدارة وستصبح تطبيقاتك محدثة!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "كلمة \"إدارة\" عفا عليها الزمن!",
     "apps.New": "إصدار جديد",
-    "Configuration.InfoPage.License.Prompt": "© Administer Software، 2022 - 2025.<font color='#2e48a6'><b>الترخيص والمعلومات.</b></font>"
+    "Configuration.InfoPage.License.Prompt": "© Administer Software، 2022 - 2025.<font color='#2e48a6'><b>الترخيص والمعلومات.</b></font>",
+    "themes.desc.Delete": "حذف",
+    "themes.desc.LoadStyle": "تطبيق النمط",
+    "themes.desc.SaveAsDark": "احفظ كنظام ألوان داكن مفضل",
+    "themes.desc.SaveAsLight": "حفظ كنظام ألوان مفضل",
+    "themes.ManageTheme": "إدارة السمة"
 }

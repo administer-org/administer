@@ -288,5 +288,10 @@
     "Configuration.Marketplace.Searchbar.Searchbar.Popup.Label": "Sisestage käsk...",
     "Configuration.Admins.Container.Ranks.Header.TLabel": "Auastmed",
     "Configuration.Admins.EditRank.People.Header.TLabel": "Liikmed",
-    "widgets.concurrent.Body": "Palun lõpetage muutmine enne uuesti proovimist."
+    "widgets.concurrent.Body": "Palun lõpetage muutmine enne uuesti proovimist.",
+    "themes.desc.Delete": "Kustuta",
+    "themes.desc.LoadStyle": "Kohalda stiili",
+    "themes.desc.SaveAsDark": "Salvesta eelistatud tumeda skeemina",
+    "themes.desc.SaveAsLight": "Salvesta eelistatud heleda skeemina",
+    "themes.ManageTheme": "Teema haldamine"
 }

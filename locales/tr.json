@@ -288,5 +288,10 @@
     "reltime.Month": "bir ay önce",
     "reltime.Format": "%s %s",
     "_locale": "tr_TR",
-    "_locale_display": "Turkish"
+    "_locale_display": "Turkish",
+    "themes.desc.Delete": "Sil",
+    "themes.desc.LoadStyle": "Stil uygulayın",
+    "themes.desc.SaveAsDark": "Tercih edilen koyu renk şeması olarak kaydet",
+    "themes.desc.SaveAsLight": "Tercih edilen ışık şeması olarak kaydet",
+    "themes.ManageTheme": "Tema Yönetimi"
 }

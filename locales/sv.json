@@ -288,5 +288,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Administrera så hålls dina appar uppdaterade!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022–2025.<font color='#2e48a6'><b>-licensiering och information.</b></font>",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer är föråldrat!",
-    "apps.New": "Ny release"
+    "apps.New": "Ny release",
+    "themes.desc.Delete": "Radera",
+    "themes.desc.LoadStyle": "Tillämpa stil",
+    "themes.desc.SaveAsDark": "Spara som önskat mörkt tema",
+    "themes.desc.SaveAsLight": "Spara som önskat ljusschema",
+    "themes.ManageTheme": "Hantera tema"
 }

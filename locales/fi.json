@@ -295,5 +295,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Hallinnoi ja sovelluksesi ovat ajan tasalla!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Administer on vanhentunut!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022–2025.<font color='#2e48a6'><b>-lisensointi ja tiedot.</b></font>",
-    "apps.New": "Uusi julkaisu"
+    "apps.New": "Uusi julkaisu",
+    "themes.desc.SaveAsDark": "Tallenna haluamallasi tummalla teemalla",
+    "themes.desc.SaveAsLight": "Tallenna valittuna valoisana teemana",
+    "themes.ManageTheme": "Hallitse teemaa",
+    "themes.desc.Delete": "Poista",
+    "themes.desc.LoadStyle": "Käytä tyyliä"
 }

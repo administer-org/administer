@@ -295,5 +295,10 @@
     "Configuration.InfoPage.VersionDetails.Updated": "Zarządzaj, a Twoje aplikacje będą zawsze aktualne!",
     "Configuration.InfoPage.VersionDetails.OutOfDate": "Słowo „administer” jest przestarzałe!",
     "Configuration.InfoPage.License.Prompt": "© Administer Software, 2022–2025.\n Licencjonowanie i informacje dotyczące<font color='#2e48a6'><b>.</b></font>",
-    "apps.New": "Nowa wersja"
+    "apps.New": "Nowa wersja",
+    "themes.desc.Delete": "Usuń",
+    "themes.desc.LoadStyle": "Zastosuj styl",
+    "themes.desc.SaveAsDark": "Zapisz jako preferowany ciemny schemat",
+    "themes.desc.SaveAsLight": "Zapisz jako preferowany schemat kolorów",
+    "themes.ManageTheme": "Zarządzaj motywem"
 }
