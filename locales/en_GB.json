@@ -124,7 +124,7 @@
     "apps.DupeDetected": "You may only install an application once!",
     "apps.Downloaded": "Successfully installed an application!",
     "apps.BadID": "Bad application ID! This app server is returning bad data.",
-    "apps.server.Down": "Failed reaching out to the Application Server. Perhaps it's offline?",
+    "apps.server.Down": "Failed reaching out to the AOS instance. Perhaps it's offline?",
     "apps.server.NotAdminister": "This is not an AOS instance! Check logs for more info.",
     "apps.pulled.Bad": "Something went wrong with this module: %s",
     "betas.Mobile.body": "",
@@ -300,5 +300,15 @@
     "themes.desc.LoadStyle": "Apply style",
     "themes.desc.SaveAsDark": "Save as preferred dark scheme",
     "themes.desc.SaveAsLight": "Save as preferred light scheme",
-    "themes.ManageTheme": "Manage Theme"
+    "themes.ManageTheme": "Manage Theme",
+    "themes.uninstall.Header": "Would you like to uninstall %s?",
+    "themes.uninstall.Body": "Whoever has purchased this theme will have to install it again.",
+    "themes.uninstalled.success.Header": "Theme successfully uninstalled!",
+    "themes.uninstalled.success.Body": "Anybody who had it applied will now see the default theme",
+    "themes.applied.session.Header": "Theme successfully applied for this session",
+    "themes.applied.session.Body": "Click this notification to revert",
+    "theme.applied.Dark": "% is now your preferred dark scheme",
+    "theme.applied.Light": "% is now your preferred light scheme",
+    "theme.installed.Header": "Theme purchased successfully!",
+    "theme.installed.Body": "You can now apply it in your Collection."
 }

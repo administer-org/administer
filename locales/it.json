@@ -160,7 +160,7 @@
     "apps.DupeDetected": "È possibile installare un'app solo una volta!",
     "apps.Downloaded": "App installata con successo!",
     "apps.BadID": "ID app non valido! Il server di questa app sta restituendo dati non validi.",
-    "apps.server.Down": "Impossibile raggiungere il server dell'app. Forse è offline?",
+    "apps.server.Down": "Impossibile raggiungere l'istanza AOS. Forse è offline?",
     "apps.server.NotAdminister": "Questa non è un'istanza AOS! Controlla i log per ulteriori informazioni.",
     "apps.pulled.Bad": "Si è verificato un errore con questo modulo: %s",
     "betas.Mobile.body": "",
@@ -300,5 +300,15 @@
     "themes.desc.LoadStyle": "Applica stile",
     "themes.desc.SaveAsDark": "Salva come schema scuro preferito",
     "themes.desc.SaveAsLight": "Salva come schema di colori chiaro preferito",
-    "themes.ManageTheme": "Gestisci tema"
+    "themes.ManageTheme": "Gestisci tema",
+    "themes.uninstall.Header": "Desideri disinstallare %s?",
+    "themes.uninstall.Body": "Chiunque abbia acquistato questo tema dovrà installarlo nuovamente.",
+    "themes.uninstalled.success.Header": "Tema disinstallato con successo!",
+    "themes.uninstalled.success.Body": "Chiunque lo avesse applicato ora vedrà il tema predefinito.",
+    "themes.applied.session.Header": "Tema applicato con successo per questa sessione",
+    "themes.applied.session.Body": "Clicca su questa notifica per ripristinare",
+    "theme.applied.Dark": "% è ora il tuo tema scuro preferito",
+    "theme.applied.Light": "% è ora il tuo schema di colori chiaro preferito",
+    "theme.installed.Header": "Tema acquistato con successo!",
+    "theme.installed.Body": "Ora puoi applicarlo nella tua raccolta."
 }

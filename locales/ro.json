@@ -101,7 +101,7 @@
     "generic.ThankYou": "Mulțumesc",
     "generic.UI": "UI",
     "onboarding.Welcome": "%s încărcat! Ești un(n) %s. Apăsați %s pentru a intra în panou.",
-    "apps.server.Down": "Nu a reușit să ajungă la serverul de aplicații. Poate că este offline?",
+    "apps.server.Down": "Nu s-a putut stabili conexiunea cu instanța AOS. Poate că este offline?",
     "donations.Done": "Vă mulțumim pentru sprijin, %s! Donația dvs. vă ajută să vă asigurați că viitoarele actualizări de Administer pentru anii următori ^^",
     "setting.Apps.LoadDelay.Description": "Permite o întârziere de 3s înainte de a încărca administratorii. Utilizarea acesteia va rezolvă problema aplicațiilor care nu se inițializează.",
     "setting.Accessibility.MobileOpenGesture.Description": "Controlează cât de mare este gestul deschis mobil din partea dreaptă. Dacă valoarea este dezactivată, veți avea nevoie de comanda de chat, fie de topbar+ setare activată.",
@@ -294,5 +294,15 @@
     "themes.desc.LoadStyle": "Aplicați stilul",
     "themes.desc.SaveAsDark": "Salvați ca schemă întunecată preferată",
     "themes.desc.SaveAsLight": "Salvați ca schemă de culori preferată",
-    "themes.ManageTheme": "Gestionați tema"
+    "themes.ManageTheme": "Gestionați tema",
+    "themes.uninstall.Header": "Doriți să dezinstalați %s?",
+    "themes.uninstall.Body": "Oricine a achiziționat această temă va trebui să o instaleze din nou.",
+    "themes.uninstalled.success.Header": "Tema a fost dezinstalată cu succes!",
+    "themes.uninstalled.success.Body": "Oricine l-a aplicat va vedea acum tema implicită.",
+    "themes.applied.session.Header": "Tema aplicată cu succes pentru această sesiune",
+    "themes.applied.session.Body": "Faceți clic pe această notificare pentru a reveni.",
+    "theme.applied.Dark": "% este acum schema întunecată preferată",
+    "theme.applied.Light": "% este acum schema de culori preferată.",
+    "theme.installed.Header": "Tema a fost achiziționată cu succes!",
+    "theme.installed.Body": "Acum îl puteți aplica în colecția dvs."
 }

@@ -144,7 +144,7 @@
     "apps.DupeDetected": "لا يمكنك تثبيت التطبيق إلا مرة واحدة فقط!",
     "apps.Downloaded": "تم تثبيت التطبيق بنجاح!",
     "apps.BadID": "معرف التطبيق غير صحيح! خادم التطبيق هذا يعرض بيانات غير صحيحة.",
-    "apps.server.Down": "فشل الاتصال بخادم التطبيق. ربما يكون غير متصل بالإنترنت؟",
+    "apps.server.Down": "فشل الاتصال بمثيل AOS. ربما يكون غير متصل بالإنترنت؟",
     "apps.server.NotAdminister": "هذه ليست حالة AOS! تحقق من السجلات لمزيد من المعلومات.",
     "apps.pulled.Bad": "حدث خطأ ما في هذا النموذج: %s",
     "betas.Mobile.body": "",
@@ -300,5 +300,15 @@
     "themes.desc.LoadStyle": "تطبيق النمط",
     "themes.desc.SaveAsDark": "احفظ كنظام ألوان داكن مفضل",
     "themes.desc.SaveAsLight": "حفظ كنظام ألوان مفضل",
-    "themes.ManageTheme": "إدارة السمة"
+    "themes.ManageTheme": "إدارة السمة",
+    "themes.uninstall.Header": "هل تريد إلغاء تثبيت %s؟",
+    "themes.uninstall.Body": "سيتعين على كل من اشترى هذا الموضوع تثبيته مرة أخرى.",
+    "themes.uninstalled.success.Header": "تم إلغاء تثبيت السمة بنجاح!",
+    "themes.uninstalled.success.Body": "أي شخص قام بتطبيقه سيشاهد الآن السمة الافتراضية",
+    "themes.applied.session.Header": "تم تطبيق السمة بنجاح على هذه الجلسة",
+    "themes.applied.session.Body": "انقر على هذا الإشعار للرجوع",
+    "theme.installed.Header": "تم شراء السمة بنجاح!",
+    "theme.installed.Body": "يمكنك الآن تطبيقه في مجموعتك.",
+    "theme.applied.Dark": "% هو الآن مخطط الألوان الداكن المفضل لديك",
+    "theme.applied.Light": "% هو الآن نظام الإضاءة المفضل لديك"
 }

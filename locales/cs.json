@@ -171,7 +171,7 @@
     "apps.DupeDetected": "Aplikaci můžete nainstalovat pouze jednou!",
     "apps.Downloaded": "Aplikace byla úspěšně nainstalována!",
     "apps.BadID": "Chybné ID aplikace! Tento server aplikace vrací chybná data.",
-    "apps.server.Down": "Nepodařilo se navázat spojení s aplikačním serverem. Možná je offline?",
+    "apps.server.Down": "Nepodařilo se navázat spojení s instancí AOS. Možná je offline?",
     "apps.server.NotAdminister": "Toto není instance AOS! Další informace najdete v protokolech.",
     "apps.pulled.Bad": "V tomto modulu došlo k chybě: %s",
     "apps.aos.Down": "AOS nevrátil stavový kód OK.",
@@ -293,5 +293,15 @@
     "themes.desc.LoadStyle": "Použít styl",
     "themes.desc.SaveAsDark": "Uložit jako preferované tmavé schéma",
     "themes.desc.SaveAsLight": "Uložit jako preferované světlé schéma",
-    "themes.ManageTheme": "Spravovat téma"
+    "themes.ManageTheme": "Spravovat téma",
+    "themes.uninstall.Header": "Chcete odinstalovat %s?",
+    "themes.uninstall.Body": "Kdokoli si zakoupil tento motiv, bude jej muset nainstalovat znovu.",
+    "themes.uninstalled.success.Header": "Téma bylo úspěšně odinstalováno!",
+    "themes.uninstalled.success.Body": "Každý, kdo jej použil, nyní uvidí výchozí téma.",
+    "themes.applied.session.Header": "Téma bylo úspěšně použito pro tuto relaci.",
+    "themes.applied.session.Body": "Kliknutím na toto oznámení se vrátíte zpět.",
+    "theme.applied.Dark": "% je nyní vaše preferované tmavé schéma",
+    "theme.applied.Light": "% je nyní vaše preferované světlé schéma",
+    "theme.installed.Header": "Téma bylo úspěšně zakoupeno!",
+    "theme.installed.Body": "Nyní jej můžete použít ve své sbírce."
 }

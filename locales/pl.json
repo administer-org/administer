@@ -153,7 +153,7 @@
     "apps.DupeDetected": "Aplikację można zainstalować tylko raz!",
     "apps.Downloaded": "Aplikacja została pomyślnie zainstalowana!",
     "apps.BadID": "Nieprawidłowy identyfikator aplikacji! Serwer tej aplikacji zwraca nieprawidłowe dane.",
-    "apps.server.Down": "Nie udało się połączyć z serwerem aplikacji. Być może jest on offline?",
+    "apps.server.Down": "Nie udało się połączyć z instancją AOS. Być może jest ona offline?",
     "apps.server.NotAdminister": "To nie jest instancja AOS! Sprawdź logi, aby uzyskać więcej informacji.",
     "apps.pulled.Bad": "Wystąpił błąd w tym module: %s",
     "betas.Mobile.body": "",
@@ -300,5 +300,15 @@
     "themes.desc.LoadStyle": "Zastosuj styl",
     "themes.desc.SaveAsDark": "Zapisz jako preferowany ciemny schemat",
     "themes.desc.SaveAsLight": "Zapisz jako preferowany schemat kolorów",
-    "themes.ManageTheme": "Zarządzaj motywem"
+    "themes.ManageTheme": "Zarządzaj motywem",
+    "themes.uninstall.Header": "Czy chcesz odinstalować %s?",
+    "themes.uninstall.Body": "Każdy, kto zakupił ten motyw, będzie musiał zainstalować go ponownie.",
+    "themes.uninstalled.success.Header": "Motyw został pomyślnie odinstalowany!",
+    "theme.installed.Header": "Motyw został pomyślnie zakupiony!",
+    "theme.installed.Body": "Możesz teraz zastosować to w swojej kolekcji.",
+    "themes.uninstalled.success.Body": "Każdy, kto go zastosował, zobaczy teraz domyślny motyw.",
+    "themes.applied.session.Header": "Motyw został pomyślnie zastosowany dla tej sesji.",
+    "themes.applied.session.Body": "Kliknij to powiadomienie, aby przywrócić poprzedni stan.",
+    "theme.applied.Dark": "% jest teraz preferowanym ciemnym schematem",
+    "theme.applied.Light": "% jest teraz preferowanym schematem jasnym."
 }

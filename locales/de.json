@@ -160,7 +160,7 @@
     "apps.DupeDetected": "Sie dürfen eine App nur einmal installieren!",
     "apps.Downloaded": "App erfolgreich installiert!",
     "apps.BadID": "Ungültige App-ID! Dieser App-Server gibt ungültige Daten zurück.",
-    "apps.server.Down": "Verbindung zum App-Server fehlgeschlagen. Ist er möglicherweise offline?",
+    "apps.server.Down": "Die Verbindung zur AOS-Instanz konnte nicht hergestellt werden. Möglicherweise ist sie offline?",
     "apps.server.NotAdminister": "Dies ist keine AOS Instanz! Überprüfen Sie die Protokolle auf weitere Informationen.",
     "apps.pulled.Bad": "Etwas ist mit diesem Modul schief gelaufen: %s",
     "betas.Mobile.body": "Sie haben sich erfolgreich für die Administer Mobile Beta angemeldet.",
@@ -340,5 +340,15 @@
     "themes.desc.LoadStyle": "Stil anwenden",
     "themes.desc.SaveAsDark": "Als bevorzugtes dunkles Schema speichern",
     "themes.desc.SaveAsLight": "Als bevorzugtes Helligkeitsschema speichern",
-    "themes.ManageTheme": "Thema verwalten"
+    "themes.ManageTheme": "Thema verwalten",
+    "themes.uninstalled.success.Body": "Jeder, der es angewendet hat, sieht nun das Standarddesign.",
+    "themes.applied.session.Header": "Thema für diese Sitzung erfolgreich angewendet",
+    "themes.applied.session.Body": "Klicken Sie auf diese Benachrichtigung, um den Vorgang rückgängig zu machen.",
+    "themes.uninstall.Header": "Möchten Sie %s deinstallieren?",
+    "themes.uninstall.Body": "Wer dieses Theme gekauft hat, muss es erneut installieren.",
+    "themes.uninstalled.success.Header": "Thema erfolgreich deinstalliert!",
+    "theme.applied.Dark": "% ist jetzt Ihr bevorzugtes dunkles Schema.",
+    "theme.applied.Light": "% ist jetzt Ihr bevorzugtes Helligkeitsschema.",
+    "theme.installed.Header": "Thema erfolgreich gekauft!",
+    "theme.installed.Body": "Sie können es nun in Ihrer Sammlung anwenden."
 }

@@ -149,7 +149,7 @@
     "apps.DupeDetected": "Aplikacijo lahko namestite samo enkrat!",
     "apps.Downloaded": "Aplikacija je uspešno nameščena!",
     "apps.BadID": "Napačna identifikacijska številka aplikacije! Ta strežnik aplikacij vrača napačne podatke.",
-    "apps.server.Down": "Povezava z aplikacijskim strežnikom ni uspela. Morda je strežnik offline?",
+    "apps.server.Down": "Povezava z AOS ni uspela. Morda je offline?",
     "apps.server.NotAdminister": "To ni primer AOS! Za več informacij preverite dnevnike.",
     "apps.pulled.Bad": "Pri tem modulu je prišlo do napake: %s",
     "betas.Mobile.body": "",
@@ -300,5 +300,15 @@
     "themes.desc.LoadStyle": "Uporabi slog",
     "themes.desc.SaveAsDark": "Shranite kot želeno temno shemo",
     "themes.desc.SaveAsLight": "Shranite kot želeno svetlo shemo",
-    "themes.ManageTheme": "Upravljanje teme"
+    "themes.ManageTheme": "Upravljanje teme",
+    "themes.uninstall.Header": "Želite odstraniti %s?",
+    "themes.uninstall.Body": "Vsi, ki so kupili to temo, jo bodo morali ponovno namestiti.",
+    "themes.uninstalled.success.Header": "Tema je bila uspešno odstranjena!",
+    "themes.uninstalled.success.Body": "Vsi, ki so ga uporabili, bodo zdaj videli privzeto temo.",
+    "themes.applied.session.Header": "Tema je bila uspešno uporabljena za to sejo.",
+    "themes.applied.session.Body": "Kliknite to obvestilo, da se vrnete nazaj.",
+    "theme.installed.Header": "Tema je bila uspešno kupljena!",
+    "theme.applied.Dark": "% je zdaj vaša prednostna temna shema",
+    "theme.applied.Light": "% je zdaj vaša prednostna svetla shema",
+    "theme.installed.Body": "Zdaj ga lahko uporabite v svoji zbirki."
 }

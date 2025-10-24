@@ -161,7 +161,7 @@
     "admin.rankcreator.error.Generic": "Me ei saanud seda taotlust praegu töödelda, proovi hiljem uuesti.\\n\\n%s",
     "donations.Done": "Täname teid toetuse eest, %s! Teie annetus aitab tagada Administer'i uuendused veel mitmeks aastaks ^^",
     "Configuration.Admins.EditRank.Header.Finish.HeaderLabel": "Lõpeta",
-    "apps.server.Down": "Rakendusserveriga ühenduse loomine ebaõnnestus. Võib-olla on see offline-režiimis?",
+    "apps.server.Down": "AOS-i instantsiga ühenduse loomine ebaõnnestus. Võib-olla on see võrgust väljas?",
     "setting.Accessibility.DisplayHours.Description": "Kui see on aktiveeritud, kuvatakse kõikidel ajamärgistel kellaajad, mõnel juhul võib seda ignoreerida.",
     "generic.Registration": "Registreerimine",
     "donations.DonationProcessed": "Teie annetus aitab avatud lähtekoodiga kogukonnale tagasi anda ja tagab: - palju uuendusi tulevikus - arendusrahastuse rohkemate rakenduste jaoks - rakenduste serverite hostingu Teie annetus tähendab meile väga palju! Näidake seda meile, et saada oma annetaja soodustused.",
@@ -293,5 +293,15 @@
     "themes.desc.LoadStyle": "Kohalda stiili",
     "themes.desc.SaveAsDark": "Salvesta eelistatud tumeda skeemina",
     "themes.desc.SaveAsLight": "Salvesta eelistatud heleda skeemina",
-    "themes.ManageTheme": "Teema haldamine"
+    "themes.ManageTheme": "Teema haldamine",
+    "themes.uninstall.Header": "Kas soovite %s eemaldada?",
+    "themes.uninstalled.success.Header": "Teema on edukalt eemaldatud!",
+    "themes.uninstall.Body": "Kõik, kes on selle teema ostnud, peavad selle uuesti installima.",
+    "themes.uninstalled.success.Body": "Kõik, kes seda kasutasid, näevad nüüd vaikimisi teemat.",
+    "themes.applied.session.Header": "Teema on selle sessiooni jaoks edukalt rakendatud.",
+    "themes.applied.session.Body": "Klõpsake sellele teavitamisele, et taastada",
+    "theme.applied.Dark": "% on nüüd teie eelistatud tume skeem",
+    "theme.applied.Light": "% on nüüd teie eelistatud valgusskeem",
+    "theme.installed.Header": "Teema osteti edukalt!",
+    "theme.installed.Body": "Nüüd saate seda oma kogus kasutada."
 }
