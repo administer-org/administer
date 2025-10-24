@@ -33,7 +33,7 @@ function Utilities.ShortNumber(Number: number): string
 		((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3))
 			* 10 ^ (Var.ShortNumberDecimals)
 	) / 10 ^ (Var.ShortNumberDecimals) .. (({
-		"k",
+		"K",
 		"M",
 		"B",
 		"T",
@@ -44,6 +44,21 @@ function Utilities.ShortNumber(Number: number): string
 		"Oc",
 		"N"
 	})[math.floor(math.log10(Number) / 3)] or "")
+end
+
+function Utilities.DeepCopy(Table: {any}): {any}
+	if typeof(Table) ~= "table" then
+		return {false, "DeepCopy must be used to copy a table"}
+	end
+	
+	--// implementaiton stolen from player management
+	local copy = {}
+
+	for key, value in Table do
+		copy[key] = type(value) == "table" and Utilities.DeepCopy(value) or value
+	end
+
+	return copy
 end
 
 function Utilities.FormatRelativeTime(Unix: number): string

@@ -103,7 +103,7 @@ function Http.GetRoute(
 
 	xpcall(function()
 		local function DoRequest()
-			if Options.Debug then print("Sending http request") end
+			if Options.Debug then print(`Sending http request to {AppServer} - {Route}`) end
 			Response = Var.Services.HttpService:RequestAsync({
 				Url = `{AppServer}{Route}`,
 				Method = "GET",
@@ -194,13 +194,13 @@ function Http.PostRoute(
 	Body: {},
 	OnOK: (any, { ProcTime: number, RespMessage: string, Code: number }) -> any,
 	OnError: (any, any) -> any,
-	MiscConfig: nil | { Headers: {} },
-	DoAnyways: nil | (any) -> any
+	MiscConfig: { Headers: {}?, Debug: boolean? }?,
+	DoAnyways: (() -> ())?
 )
 	local ST = tick()
 	local FinalHeaders = {}
 
-	if MiscConfig ~= nil then
+	if MiscConfig ~= nil and MiscConfig.Headers ~= nil then
 		for Key, Header in MiscConfig.Headers do
 			FinalHeaders[Key] = Header
 		end
@@ -210,6 +210,10 @@ function Http.PostRoute(
 			["X-Adm-Branch"] = string.lower(Var.CurrentBranch.BranchName)
 		}
 	end
+	
+	if MiscConfig ~= nil and MiscConfig.Debug then
+		print(`[Administer HttpRunner] Issuing request to {AppServer}{Route} with headers`, FinalHeaders, "and data", Body)
+	end
 
 	local Response = Var.Services.HttpService:RequestAsync({
 		Url = `{AppServer}{Route}`,
@@ -217,6 +221,8 @@ function Http.PostRoute(
 		Headers = FinalHeaders,
 		Body = Var.Services.HttpService:JSONEncode(Body)
 	})
+	
+	if MiscConfig.Debug then print(Response) end
 
 	if DoAnyways ~= nil then DoAnyways(Response) end
 

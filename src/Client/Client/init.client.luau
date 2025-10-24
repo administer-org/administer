@@ -2,16 +2,16 @@
 --// pyxfluff 2022-2025
 
 local SharedLibs = script.Libraries
-local Assets = script.Assets
-local Modules = script.Modules
+local Assets     = script.Assets
+local Modules    = script.Modules
 
-local Var       = require(Modules.Variables)
+local Var        = require(Modules.Variables)
 
-local Admins    = require(Modules.Admins)
-local Apps      = require(Modules.Apps)
-local Frontend  = require(Modules.Frontend)
-local Utilities = require(Modules.Utilities)
-local Widgets   = require(Modules.Widgets)
+local Admins     = require(Modules.Admins)
+local Apps       = require(Modules.Apps)
+local Frontend   = require(Modules.Frontend)
+local Utilities  = require(Modules.Utilities)
+local Widgets    = require(Modules.Widgets)
 
 local t = Utilities.Translate
 
@@ -19,7 +19,7 @@ Frontend.Close(true)
 
 local function CacheSettings()
 	local settingData = Utilities.GetSettings({"AnimationSpeed", "ShortNumberDecimals", "Verbosity"})
-	
+
 	Var.AnimationSpeed = tonumber(settingData["AnimationSpeed"])
 	Var.ShortNumberDecimals = tonumber(settingData["ShortNumberDecimals"])
 	Var.Verbosity = settingData["Verbosity"]
@@ -40,7 +40,7 @@ end)
 
 if not success then
 	print(errormsg)
-	Utilities.NewNotification("Administer", "", Utilities.Translate("error.NoPing"), "Startup failed", 999)
+	Utilities.NewNotification("Administer", "", t("error.NoPing"), "Startup failed", 999)
 
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
@@ -62,8 +62,8 @@ task.delay(5, function()
 		Utilities.NewNotification(
 			"Administer", 
 			Utilities.Icon "triangle-warning", 
-			Utilities.Translate("updater.Failed.Body"), 
-			Utilities.Translate("updater.Failed.Header"), 
+			t("updater.Failed.Body"), 
+			t("updater.Failed.Header"), 
 			999
 		)
 	end
@@ -79,7 +79,6 @@ end)
 
 Var.Remotes.SettingsLoaded.OnClientEvent:Wait()
 
-
 local essentialSettings = Utilities.GetSettings({"KeybindRegisterTime", "HomepageGreeting", "AssistiveClose", "EnableClickEffects", "ChatCommand", "ForceMobile", "ForceAcrylic"})
 local KeybindRegisterTimeframe = essentialSettings.KeybindRegisterTime
 
@@ -90,21 +89,10 @@ if KeybindRegisterTimeframe == "optimistic" then
 	Frontend.RegisterPanelKeybind()
 end
 
-if Var.UseAcrylic then
-	--// blast from the past
-	local NewEffect = Instance.new("DepthOfFieldEffect")
-	NewEffect.FarIntensity = 0
-	NewEffect.FocusDistance = 51.6
-	NewEffect.InFocusRadius = 50
-	NewEffect.NearIntensity = 1
-
-	NewEffect.Parent = game.Lighting
-	NewEffect.Name = "AdministerAcrylic"
-end
-
-Widgets.Initialize()
 
 task.defer(function()
+	Widgets.Initialize()
+	
 	Apps.AddAppDrawerButton({
 		AppName = t("Apps.MainFrame.Home.Title"),
 		Description = t("Apps.MainFrame.Template.Desc"),
@@ -116,10 +104,10 @@ task.defer(function()
 
 		SubIcons = {}
 	})
-	
+
 	--// update the base header for funsies
 	Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = Utilities.Icon "home"
-	Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> · {t("Apps.MainFrame.Home.Title")}`
+	Var.MainFrame.Header.Mark.HeaderSubapp.Text = t("Apps.MainFrame.Home.Title")
 
 	Apps.AddAppDrawerButton({
 		AppName = t("Apps.MainFrame.Config.Title"),
@@ -158,6 +146,19 @@ task.defer(function()
 			}
 		}
 	})
+	
+	Var.ThemeData = Var.Services.HttpService:JSONDecode(script.Parent:GetAttribute("ThemePreferences"))
+
+	--// Load the theme file now, for some reason previously it was leaving Configuration out
+	Frontend.PrepTheme()
+
+	local Themes = Var.Remotes.GetApplicableThemes:InvokeServer()
+	
+	for _, Theme in Themes do
+		if Theme.AdministerID == Var.ThemeData[Var.ThemeData.CurrentMode] then
+			Frontend.LoadTheme(Theme.Source)
+		end
+	end
 end)
 
 --// Homepage, app drawer, header connections
@@ -228,7 +229,7 @@ xpcall(function()
 	task.defer(function()
 		pcall(Admins.Load)
 	end)
-	
+
 	Var.MainFrame.Configuration.Admins.Header.NewRank.Server.Text = t("Configuration.Admins.NewAdmin.Start")
 
 	Admins.RunCreatorApp()
@@ -236,7 +237,7 @@ xpcall(function()
 	Var.MainFrame.Configuration.Admins.Header.NewRank.MouseButton1Click:Connect(function()
 		Admins.OpenCreator()
 	end)
-	
+
 	Var.MainFrame.Configuration.Admins.Header.NewRank.MouseButton2Click:Connect(function()
 		Frontend.Popup.new(
 			{
@@ -245,7 +246,7 @@ xpcall(function()
 				Subheader = "RankCreator Debug Info"
 			},
 			{
-				
+
 			},
 			"Admin Debug Table",
 			game:GetService("HttpService"):JSONEncode(Admins.GetEditState()),
@@ -270,8 +271,8 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 		Utilities.NewNotification(
 			"Administer",
 			Utilities.Icon "iphone-notch",
-			Utilities.Translate("mobile.body"),
-			Utilities.Translate("mobile.detail"),
+			t("mobile.body"),
+			t("mobile.detail"),
 			25
 		)
 	end)
@@ -286,7 +287,7 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 
 	Var.MainFrame.Header.AssistiveClose.Visible = true
 	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
-	
+
 	--// Grid changes
 	Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.MainContent.MainContent.MetadataBox.UIGridLayout.CellSize = UDim2.fromOffset(150, 115)
 else
@@ -317,7 +318,7 @@ xpcall(function(...)
 			Card.Parent = Info.UpdateCenter.ScrollingFrame
 			Card.Name = "Administer"
 
-			Card.Data.Text = Utilities.Translate("updater.failedcomm")
+			Card.Data.Text = t("updater.failedcomm")
 			Card.ServiceName.Text = "Administer"
 			Card.Logo.Image = Utilities.Icon "administer"
 			Card.ServiceRDNN.Text = "org.admsoftware.Core"
@@ -332,13 +333,15 @@ xpcall(function(...)
 		Card.Parent = Info.UpdateCenter.ScrollingFrame
 		Card.Name = Data.Service.Name
 
-		Card.Data.Text = `{Data.IsUpToDate and Utilities.Translate("generic.UpToDate") or Utilities.Translate("generic.OutOfDate")}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
+		Card.Data.Text = `{Data.IsUpToDate and t("generic.UpToDate") or t("generic.OutOfDate")}; {Data.String} installed {Utilities.FormatRelativeTime(Data.InstallDate)}`
 		Card.ServiceName.Text = Data.Service.Name
 		Card.Logo.Image = Data.Service.Icon
 		Card.ServiceRDNN.Text = Data.ID
 
 		Card.Visible = true
 	end
+	
+	local Polls = 0
 
 	repeat
 		Var.Version = Var.Remotes:WaitForChild("GetVersions"):InvokeServer({ "administer" })["administer"]
@@ -349,9 +352,11 @@ xpcall(function(...)
 				IsFail = true
 			}
 		end
+		
+		Polls += 1
 
 		task.wait(1)
-	until Var.Version.IsUpToDate ~= nil or Var.DisableOnlineServices
+	until Var.Version.IsUpToDate ~= nil or Var.DisableOnlineServices or Polls >= 10
 
 	NewVersCard(Var.Version)
 
@@ -369,8 +374,8 @@ xpcall(function(...)
 		Card.Parent = Info.Credits.Users
 		Card.Visible = true
 	end
-	
-	Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text = Utilities.Translate("Configuration.InfoPage.Donate.Message")
+
+	Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text = t("Configuration.InfoPage.Donate.Message")
 
 	--// We need to do this last because it's a possible failure point so we should load the actual content first
 	for _, Pass in Var.Remotes.GetPasses:InvokeServer() do
@@ -385,7 +390,7 @@ xpcall(function(...)
 		end)
 
 		if Var.Services.MarketplaceService:UserOwnsGamePassAsync(Var.Services.Players.LocalPlayer.UserId, Pass["id"]) then
-			Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text = string.format(Utilities.Translate("donations.Done"), game.Players.LocalPlayer.DisplayName)
+			Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text = string.format(t("donations.Done"), game.Players.LocalPlayer.DisplayName)
 		end
 
 		table.insert(Passes, Pass["id"])
@@ -403,11 +408,11 @@ xpcall(function(...)
 				Primary = Utilities.Icon "administer",
 				SubIcon = Utilities.Icon "hammer"
 			},
-			Utilities.Translate("Configuration.InfoPage.License.About"),
-			string.format(Utilities.Translate("Configuration.InfoPage.License"), "2022 - 2025"),
+			t("Configuration.InfoPage.License.About"),
+			string.format(t("Configuration.InfoPage.License"), "2022 - 2025"),
 			{
 				{
-					Text = Utilities.Translate("generic.OK"),
+					Text = t("generic.OK"),
 					Icon = Utilities.Icon "check-plain",
 					Callback = function(c) c() end
 				}
@@ -444,28 +449,33 @@ end
 --// Translations \\--
 
 --// Marketplace
-Var.MainFrame.Configuration.Marketplace.ASidebar.Head.Text = Utilities.Translate("Configuration.Marketplace.Header.Head")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.AAFeatured.Title.Text = Utilities.Translate("apps.sidebar.Featured")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.Apps.Title.Text = Utilities.Translate("Configuration.Marketplace.Header.Plugins")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.XLibrary.Resources.Content.Title.Text = Utilities.Translate("apps.sidebar.Library")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Searchbar.Title.Text = Utilities.Translate("Configuration.Marketplace.Searchbar.Searchbar.Label")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.Head.Text = Utilities.Translate("apps.featured.TopInstalled")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.MainHot.HotLabel.Title.Text = Utilities.Translate("apps.Hot")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.Head.Text = Utilities.Translate("apps.library.Header")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.Text = Utilities.Translate("apps.library.Subheader")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.LogoWordmark.Text = Utilities.Translate("apps.InstallServer")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Head.Text = t("Configuration.Marketplace.Header.Head")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.AAFeatured.Title.Text = t("apps.sidebar.Featured")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.Apps.Title.Text = t("Configuration.Marketplace.Header.Plugins")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.XLibrary.Resources.Content.Title.Text = t("apps.sidebar.Library")
+Var.MainFrame.Configuration.Marketplace.ASidebar.Searchbar.Title.Text = t("Configuration.Marketplace.Searchbar.Searchbar.Label")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.Head.Text = t("apps.featured.TopInstalled")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.MainHot.HotLabel.Title.Text = t("apps.Hot")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.Head.Text = t("apps.library.Header")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.Text = t("apps.library.Subheader")
+Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.LogoWordmark.Text = t("apps.InstallServer")
 
 --// Ranks
-Var.MainFrame.Configuration.Admins.Header.Head.Text = Utilities.Translate("Configuration.Admins.Container.Ranks.Header.TLabel")
-Var.MainFrame.Configuration.Admins.Header.Subheader.Text = Utilities.Translate("Configuration.Admins.Container.Ranks.Subheader")
+Var.MainFrame.Configuration.Admins.Header.Head.Text = t("Configuration.Admins.Container.Ranks.Header.TLabel")
+Var.MainFrame.Configuration.Admins.Header.Subheader.Text = t("Configuration.Admins.Container.Ranks.Subheader")
 
 --// Info
-Var.MainFrame.Configuration.InfoPage.VersionDetails.AdmSoftware.Text = Utilities.Translate("Configuration.InfoPage.License.Prompt")
-Var.MainFrame.Configuration.InfoPage.UpdateCenter.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.VersionDetails.Header")
-Var.MainFrame.Configuration.InfoPage.UpdateCenter.CreditHeader.Text = Utilities.Translate("Configuration.InfoPage.VersionDetails.Updated")
-Var.MainFrame.Configuration.InfoPage.UpdateCenter.Temp.Label.Text = Utilities.Translate("Configuration.InfoPage.VersionDetails.Update")
-Var.MainFrame.Configuration.InfoPage.Donate.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.Donate.title")
-Var.MainFrame.Configuration.InfoPage.Credits.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.Credits.title")
+Var.MainFrame.Configuration.InfoPage.VersionDetails.AdmSoftware.Text = t("Configuration.InfoPage.License.Prompt")
+Var.MainFrame.Configuration.InfoPage.UpdateCenter.TextLogo.Text = t("Configuration.InfoPage.VersionDetails.Header")
+Var.MainFrame.Configuration.InfoPage.UpdateCenter.CreditHeader.Text = t("Configuration.InfoPage.VersionDetails.Updated")
+Var.MainFrame.Configuration.InfoPage.UpdateCenter.Temp.Label.Text = t("Configuration.InfoPage.VersionDetails.Update")
+Var.MainFrame.Configuration.InfoPage.Donate.TextLogo.Text = t("Configuration.InfoPage.Donate.title")
+Var.MainFrame.Configuration.InfoPage.Credits.TextLogo.Text = t("Configuration.InfoPage.Credits.title")
+
+--// Accessibility
+if Var.Services.GUIService.ReducedMotionEnabled then 
+	Var.AnimationSpeed = 0
+end
 
 if KeybindRegisterTimeframe == "safe" then
 	Frontend.RegisterPanelKeybind()

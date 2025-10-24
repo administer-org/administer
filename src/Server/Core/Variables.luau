@@ -11,11 +11,11 @@ local Config = require(script.Parent.Configuration)
 --// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
 Variables.Config                     = require(script.Parent.Configuration) --// Config file location
 Variables.RemotesPath                = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin            = false --// Makes every user a superamdin. Not recommended for anything other than debugging.
+Variables.EnableFreeAdmin            = true --// Makes every user a superadmin. Not recommended for anything other than debugging.
 
 --Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
 Variables.DefaultAppServer           = "https://aos-us-1.admsoftware.org" --// Must be an AOS app server instance.
-Variables.ProxyURL                   = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format {{ domain }}/SUBDOMAIN/path
+Variables.ProxyURL                   = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.pyxfluff.dev/games//docs.
 Variables.Locales                    = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit            = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
 Variables.WaitForBootstrap           = false --// Whether or not we will wait for apps to load before sending out panels.
@@ -26,7 +26,7 @@ Variables.Services = setmetatable({}, {
         self[Service] = game:GetService(Service)
         return self[Service]
     end
-})
+}) :: typeof(game)
 
 --// The scheme is `app\widget-title`, anything will work here
 --// as long as it exists.
@@ -39,6 +39,12 @@ Variables.BaseHomeInfo = {
 		"administer\\version-label",
 		"administer\\server-uptime"
 	}
+}
+
+Variables.DefaultThemePreferences = {
+	Dark = 0,
+	Light = 0,
+	CurrentMode = "Dark"
 }
 
 Variables.DataStores = {
@@ -158,6 +164,7 @@ Variables.AppServers = Variables.DataStores.AppDB:GetAsync("AppServerList") or {
 Variables.Panel.Spawn = function(Rank, Player)
 	local NewPanel = Variables.Panel.Path:Clone()
 	local Tutorials = Variables.DataStores.AdminsDS:GetAsync("__Global_Tutorials") or {}
+	local ThemePrefs = Variables.DataStores.Settings:GetAsync(`{Player.UserId}_ThemeSaves`) or Variables.DefaultThemePreferences
 	
 	xpcall(function()
 		NewPanel:SetAttribute("_AdminRank", Rank.Name)
@@ -180,6 +187,7 @@ Variables.Panel.Spawn = function(Rank, Player)
 	NewPanel:SetAttribute("_CurrentBranch", Variables.Services.HttpService:JSONEncode(Variables.CurrentBranch))
 	NewPanel:SetAttribute("StartID", Variables.Services.HttpService:GenerateGUID(false))
 	NewPanel:SetAttribute("NeedsSetup", Tutorials["FirstTimeSetup"] ~= true)
+	NewPanel:SetAttribute("ThemePreferences", Variables.Services.HttpService:JSONEncode(ThemePrefs))
 	
 	return NewPanel
 end

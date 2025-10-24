@@ -205,10 +205,12 @@ end)
 
 NewRemote("GetAppInfo", true, false, AppsModule.ServerAPI.GetApp)
 NewRemote("GetInstalledApps", true, false, AppsModule.GetAll)
-NewRemote("InstallApp", true, false, AppsModule.ServerAPI.InstallFromServer)
+NewRemote("GetApplicableThemes", true, false, AppsModule.GetApplicableThemes)
+NewRemote("InstallApp", true, true, AppsModule.ServerAPI.InstallFromServer)
 NewRemote("Vote", true, false, AppsModule.ServerAPI.Vote)
 NewRemote("GetVote", true, false, AppsModule.ServerAPI.GetVote)
 NewRemote("ManageApp", true, false, AppsModule.Uninstall)
+NewRemote("ManageTheme", true, true, AppsModule.ModifyThemePreference)
 NewRemote("GetAppServers", true, false, AppsModule.ServerAPI.GetServerStatuses)
 NewRemote("RemoveAppServer", true, false, AppsModule.ServerAPI.UninstallServer)
 NewRemote("GetAppCounts", true, false, AppsModule.GetTotals)
@@ -297,16 +299,18 @@ Utils.Logging.Print(
 	"\n		> Ready in ",
 	Utils.RoundMS(os.clock() - Var.InitClock.RealInit).."ms",
 	"\n		> Apps thread: ",
-	Var.DidBootstrap and "done" or "proc",
+	Var.DidBootstrap and "FinishedBootstrap" or "Loading",
 	"\n		> Using AOS: ",
 	Var.PrimaryAppServer,
 	"\n		> Startup information:",
 	Var.InitClock,
 	"\n		> Environment:",
-	Var,
+	Var.Services.RunService:IsStudio() and Var or Var.Services.HttpService:JSONEncode(Var),
 	Var.EnableFreeAdmin and "\n		> [!] Free admin is enabled, you should probably disable it for a production game." or "",
-	Var.IsFirstBoot and "\n		> [!] First boot mode is enabled!" or ""
+	Var.IsFirstBoot and "\n		> [!] First boot mode is enabled!" or "",
+	not script:IsDescendantOf(game.ServerScriptService) and "\n		> [!] Administer is not a member of ServerScriptService! You need to move it there before you install Apps." or "" 
 )
+
 Utils.Logging.Print(`[-] Running startup jobs!`)
 
 xpcall(

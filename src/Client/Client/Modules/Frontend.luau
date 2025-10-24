@@ -369,7 +369,7 @@ end
 function Frontend.Drawer.Close(): ()
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Apps.AppDrawerCover.CanvasGroup
-	local TimeToComplete = Var.AnimationSpeed
+	local TimeToComplete = Var.AnimationSpeed *.6
 
 	ShouldAnimate = false
 
@@ -577,6 +577,8 @@ function Frontend.Popup.Open(): ()
 	Var.PopupOpen = true
 end
 
+local ActiveShimmer
+
 function Frontend.Popup.Close(): ()
 	local BGTweenInfo = TweenInfo.new(Var.AnimationSpeed * .65, Enum.EasingStyle.Cubic)
 
@@ -589,6 +591,11 @@ function Frontend.Popup.Close(): ()
 				AnchorPoint = original.AnchorPoint
 			}):Play()
 		end
+	end
+
+	if ActiveShimmer then
+		ActiveShimmer:Pause()
+		ActiveShimmer:GetFrame():Destroy()
 	end
 
 	local Box = Var.MainFrame.administer.MessageBox
@@ -691,6 +698,10 @@ function Frontend.Popup.new(
 	MessageBox.Button1.Label.Text = Options[1].Text
 	MessageBox.Button1.Icon.Image = Options[1].Icon
 	PopupButtons[1] = MessageBox.Button1.MouseButton1Click:Connect(function()
+		ActiveShimmer = require(Libraries.Shime).new(MessageBox.Button1)
+
+		ActiveShimmer:Play()
+
 		Options[1].Callback(ClosePopup, {
 			MessageBox.TextInputs[1].Box.Text, 
 			MessageBox.TextInputs[2].Box.Text
@@ -701,6 +712,10 @@ function Frontend.Popup.new(
 		MessageBox.Button2.Label.Text = Options[2].Text
 		MessageBox.Button2.Icon.Image = Options[2].Icon
 		PopupButtons[2] = MessageBox.Button2.MouseButton1Click:Connect(function()
+			ActiveShimmer = require(Libraries.Shime).new(MessageBox.Button2)
+
+			ActiveShimmer:Play()
+
 			Options[2].Callback(ClosePopup, {
 				MessageBox.TextInputs[1].Box.Text, 
 				MessageBox.TextInputs[2].Box.Text
@@ -1557,7 +1572,14 @@ function Frontend.PrepTheme()
 				DebugLabel(Descendant, Found or "NoMatch")
 
 				if Found then 
-					Descendant:SetAttribute("_AdmStyleBackground", Found) 
+					Descendant:SetAttribute("_AdmStyleBackground", Found)
+
+					for _, Child in Descendant:GetDescendants() do
+						if Child:IsA("TextLabel") or Child:IsA("TextBox") then
+							print(`assigning AdmStyleText to {Found}.Text`)
+							Descendant:SetAttribute("_AdmStyleText", `{Found}.Text`)
+						end
+					end
 				end
 			end
 		end
@@ -1613,7 +1635,7 @@ function Frontend.PrepTheme()
 	end)
 end
 
-function Frontend.LoadTheme(ThemeTable)
+function Frontend.LoadTheme(ThemeTable, ForceToItem)
 	Utilities.Logging.Print(`Loading theme`, ThemeTable)
 
 	Var.UseAcrylic = ThemeTable.EnableAcrylic
@@ -1697,6 +1719,8 @@ function Frontend.LoadTheme(ThemeTable)
 				end
 			end
 		elseif Descendant:IsA("UICorner") then
+			if ThemeTable.General.DisableRounding then Descendant:Destroy() end
+
 			for _, Overrides in ThemeTable.General.RoundingOverrides do
 				if Overrides[1] == Descendant.CornerRadius then
 					Descendant.CornerRadius = Overrides[2]
@@ -1715,21 +1739,44 @@ function Frontend.LoadTheme(ThemeTable)
 		end
 	end
 
-	Style(Var.MainFrame)
+	if not ForceToItem then
+		Style(Var.MainFrame)
 
-	for _, Descendant in Var.MainFrame.Parent:GetDescendants() do
-		Style(Descendant)
+		for _, Descendant in Var.MainFrame.Parent:GetDescendants() do
+			Style(Descendant)
+		end
+
+		if Var.ThemeUpdateEvent then
+			Var.ThemeUpdateEvent:Disconnect()
+		end
+
+		Var.ThemeUpdateEvent = (Var.MainFrame.Parent :: CanvasGroup).DescendantAdded:Connect(function(Child)
+			pcall(function()
+				if Child:GetAttribute("_AdmIgnoreAutoStyle") or Child:FindFirstAncestorWhichIsA("CanvasGroup"):GetAttribute("_AdmDoNotAutoStyleChildren") then
+					return
+				end
+
+				Style(Child)
+			end)
+		end)
+
+		for _, Sound in script.Parent.Parent.Assets:GetDescendants() do
+			if Sound:IsA("Sound") and ThemeTable.General.Sounds[Sound.Name] then
+				Sound.SoundId = ThemeTable.General.Sounds[Sound.Name]
+			end
+		end
+
+		Var.AppliedThemeSource = ThemeTable
+	else
+		Style(ForceToItem)
+
+		for _, Descendant in ForceToItem:GetDescendants() do
+			Style(Descendant)
+		end
 	end
 
-	if Var.ThemeUpdateEvent then
-		Var.ThemeUpdateEvent:Disconnect()
-	end
-
-	Var.ThemeUpdateEvent = (Var.MainFrame.Parent :: CanvasGroup).DescendantAdded:Connect(function(Child)
-		Style(Child)
-	end)
-	
-	ThemeTable.OnStyle()
+	--// we dont really care if it fails
+	pcall(ThemeTable.OnStyle)
 end
 
 return Frontend

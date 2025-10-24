@@ -118,11 +118,6 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 	end
 end
 
-function Apps.GetVersionLabel(RequestedAPIVersion: number): string
-	Utilities.Logging.Warn("Attempt to use a deprecated API (Apps.GetVersionLabel)")
-	return
-end
-
 function Apps.Show(ServerURL, ID, Reason): string
 	Utilities.Logging.Print("Downloading full info for that app...")
 
@@ -188,7 +183,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	end
 
 	Data = Data[2]
-	
+
 	if Data.CannotDownload then
 		Frontend.Toast({
 			Text = "Invalid app",
@@ -196,7 +191,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 			Timeout = 5,
 			Icon = Utilities.Icon "x"
 		})
-		
+
 		return
 	end
 
@@ -213,12 +208,6 @@ function Apps.Show(ServerURL, ID, Reason): string
 	)
 
 	NewInfoBox(
-		"administer",
-		"Administer Version", 
-		Data.RichConfig.Dependencies.AppPlatform
-	)
-
-	NewInfoBox(
 		"house-key",
 		"Server URL", 
 		ServerURL
@@ -227,8 +216,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	NewInfoBox(
 		"comment-code",
 		"Asset Type", 
-		--Data.AppType
-		"App"
+		Data.Metadata.AssetType
 	)
 
 	NewInfoBox(
@@ -245,9 +233,21 @@ function Apps.Show(ServerURL, ID, Reason): string
 
 	NewInfoBox(
 		"question-circle",
-		"App ID", 
+		"Asset ID", 
 		Data.Metadata.AdministerID
 	)
+
+	pcall(function()
+		--// App-only stats
+
+		NewInfoBox(
+			"administer",
+			"Administer Version", 
+			Data.RichConfig.Dependencies.AppPlatform
+		)
+	end)
+
+	print(Data)
 
 	if Data.IconID then
 		AppInfoFrame.MainContent.MediaScroller.Template.Visible = true
@@ -255,7 +255,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	else
 		AppInfoFrame.MainContent.MediaScroller.Template.Visible = false
 
-		for _, Image in Data.Media do
+		for _, Image in Data.Images do
 			local NewImage = AppInfoFrame.MainContent.MediaScroller.Template:Clone()
 
 			NewImage.Visible = true
@@ -269,52 +269,65 @@ function Apps.Show(ServerURL, ID, Reason): string
 	AppInfoFrame.TopHeader.MediaBackdrop.Image = `rbxassetid://{Data.BlurredIcon}`
 	AppInfoFrame.TopHeader.Details.Downloads.Value.Text = Utilities.ShortNumber(Data.Downloads)
 
-	local Modules = { Sensitive = {}, Insensitive = {} }
-	for _, Dependency in Data.RichConfig.Dependencies.AdministerModules do
-		if table.find({"AdminRunner", "Apps"}, Dependency.Name) ~= nil then
-			table.insert(Modules.Sensitive, Dependency.Name)
-		else
-			table.insert(Modules.Insensitive, Dependency.Name)
-		end 
-	end
+	xpcall(function()
+		local Modules = { Sensitive = {}, Insensitive = {} }
+		for _, Dependency in Data.RichConfig.Dependencies.AdministerModules do
+			if table.find({"AdminRunner", "Apps"}, Dependency.Name) ~= nil then
+				table.insert(Modules.Sensitive, Dependency.Name)
+			else
+				table.insert(Modules.Insensitive, Dependency.Name)
+			end 
+		end
 
-	if Modules.Sensitive == {} then
-		Modules.Sensitive = {
-			string.format(
-				Utilities.Translate("apps.sensitivity.DoesNotUse"), 
-				Utilities.Translate("apps.sensitivity.Sensitive")
-			)
-		}
-	end
+		if Modules.Sensitive == {} then
+			Modules.Sensitive = {
+				string.format(
+					Utilities.Translate("apps.sensitivity.DoesNotUse"), 
+					Utilities.Translate("apps.sensitivity.Sensitive")
+				)
+			}
+		end
 
-	if Modules.Insensitive == {} then
-		Modules.Insensitive = {
-			string.format(
-				Utilities.Translate("apps.sensitivity.DoesNotUse"), 
-				Utilities.Translate("apps.sensitivity.Insensitive")
-			)
-		}
-	end
+		if Modules.Insensitive == {} then
+			Modules.Insensitive = {
+				string.format(
+					Utilities.Translate("apps.sensitivity.DoesNotUse"), 
+					Utilities.Translate("apps.sensitivity.Insensitive")
+				)
+			}
+		end
 
-	for _, SensitiveModule in Modules.Sensitive do
-		local NewSensitivity = AppInfoFrame.MainContent.PrivacyBoxSensitive.Item:Clone()
+		for _, SensitiveModule in Modules.Sensitive do
+			local NewSensitivity = AppInfoFrame.MainContent.PrivacyBoxSensitive.Item:Clone()
 
-		NewSensitivity.Name = SensitiveModule
-		NewSensitivity.Visible = true
-		NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxSensitive
+			NewSensitivity.Name = SensitiveModule
+			NewSensitivity.Visible = true
+			NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxSensitive
 
-		NewSensitivity.Text = SensitiveModule
-	end
+			NewSensitivity.Text = SensitiveModule
+		end
 
-	for _, SensitiveModule in Modules.Insensitive do
-		local NewSensitivity = AppInfoFrame.MainContent.PrivacyBoxInsensitive.Item:Clone()
+		for _, SensitiveModule in Modules.Insensitive do
+			local NewSensitivity = AppInfoFrame.MainContent.PrivacyBoxInsensitive.Item:Clone()
 
-		NewSensitivity.Name = SensitiveModule
-		NewSensitivity.Visible = true
-		NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxInsensitive
+			NewSensitivity.Name = SensitiveModule
+			NewSensitivity.Visible = true
+			NewSensitivity.Parent = AppInfoFrame.MainContent.PrivacyBoxInsensitive
 
-		NewSensitivity.Text = SensitiveModule
-	end
+			NewSensitivity.Text = SensitiveModule
+		end
+
+		AppInfoFrame.MainContent.PrivacyTitle.Visible = true
+		AppInfoFrame.MainContent.PrivacyIcon.Visible = true
+		AppInfoFrame.MainContent.PrivacyBoxSensitive.Visible = true
+		AppInfoFrame.MainContent.PrivacyBoxInsensitive.Visible = true
+	end, function()
+		--// theme prob
+		AppInfoFrame.MainContent.PrivacyTitle.Visible = false
+		AppInfoFrame.MainContent.PrivacyIcon.Visible = false
+		AppInfoFrame.MainContent.PrivacyBoxSensitive.Visible = false
+		AppInfoFrame.MainContent.PrivacyBoxInsensitive.Visible = false
+	end)
 
 	AppInfoFrame.TopHeader.Details.Creator.Icon.Image = Var.Services.Players:GetUserThumbnailAsync(
 		Data.Developer.ID,
@@ -336,7 +349,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	end
 
 	AppInfoFrame.TopHeader.AppIcon.AppName.Text = Data.Name
-	AppInfoFrame.TopHeader.AppIcon.Subheader.Text = Data.Title
+	AppInfoFrame.TopHeader.AppIcon.Subheader.Text = Data.Title or `Dark theme`
 	AppInfoFrame.MainContent.Description.Text = Data.LongDescription
 
 	AppInfoFrame.TopHeader.Details.Votes.Dislikes.Value.Text = Utilities.ShortNumber(Data["Votes"]["Dislikes"])
@@ -349,7 +362,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 	Connections.DownloadClick = AppInfoFrame.TopHeader.Details.Downloads.MouseButton1Click:Connect(function()
 		if Data.CannotDownload then
 			Frontend.Toast({
-				Icon = Utilities.Icon "triangle-warning",
+				Icon = Utilities.Icon "hand-block",
 				Text = "Downloads disabled",
 				Subtext = "This app may not be downloaded at this time",
 				Timeout = 10
@@ -392,12 +405,21 @@ function Apps.Show(ServerURL, ID, Reason): string
 				}
 			)
 		else
-			Frontend.Toast({
-				Icon = Utilities.Icon "check-plain",
-				Text = Utilities.Translate("generic.Success"),
-				Subtext = Utilities.Translate("apps.installed.Body"),
-				Timeout = 5
-			})
+			if Data.Metadata.AppType == "app" then
+				Frontend.Toast({
+					Icon = Utilities.Icon "check-plain",
+					Text = Utilities.Translate("generic.Success"),
+					Subtext = Utilities.Translate("apps.installed.Body"),
+					Timeout = 5
+				})
+			else
+				Frontend.Toast({
+					Icon = Utilities.Icon "check-plain",
+					Text = "Theme purchased successfully!",
+					Subtext = "You can now apply it in your Collection.",
+					Timeout = 5
+				})
+			end
 		end
 
 		task.delay(2, function()
@@ -425,7 +447,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 			Button.Parent = (i == 1 and AppInfoFrame.TopHeader.Details.Votes.Likes or AppInfoFrame.TopHeader.Details.Votes.Dislikes)
 		end
 	end
-	
+
 	local IsVoting = false
 	local function DoVote(VoteType)
 		if IsVoting then
@@ -435,12 +457,12 @@ function Apps.Show(ServerURL, ID, Reason): string
 				Subtext = "Please slow down.",
 				Timeout = 3
 			})
-			
+
 			return
 		end
-		
+
 		IsVoting = true
-		
+
 		local Response = Var.Remotes.Vote:InvokeServer(ServerURL, ID, VoteType)
 
 		if Response.StatusCode == 400 then
@@ -455,7 +477,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 		for _, Event in Connections do
 			Event:Disconnect()
 		end
-		
+
 		IsVoting = false
 
 		return Apps.Show(ServerURL, ID, Reason)
@@ -556,7 +578,7 @@ function Apps.LoadAppList(List: {}?): ()
 
 	InProgress = true
 
-	task.delay(5, function()
+	task.delay(6, function()
 		--// prevent the UI from locking up
 		InProgress = false
 	end)
@@ -567,19 +589,29 @@ function Apps.LoadAppList(List: {}?): ()
 	end
 
 	local function Card(CardData, ListLoc)
-		xpcall(function()
+		return xpcall(function()
 			local NewCard: Instance = ListLoc.Template:Clone()
 			NewCard.Parent = ListLoc
 			NewCard.Name = CardData.name
 			NewCard.Visible = true
 
 			NewCard.ObjName.Text = CardData.name
-			NewCard.Server.Text = string.format(Utilities.Translate("Configuration.Apps.Description"),
-				`{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}`,
-				Utilities.ToSentenceCase(CardData.object_type),
-				CardData.developer.Name,
-				CardData.ServerName
-			)
+
+			if CardData.object_type == "app" then
+				NewCard.Server.Text = string.format(Utilities.Translate("Configuration.Apps.Description"),
+					`{string.sub(CardData.short_desc, 1, 50)}{string.len(CardData.short_desc) >= 50 and "..." or ""}`,
+					Utilities.ToSentenceCase(CardData.object_type),
+					CardData.developer.Name,
+					CardData.ServerName
+				)
+			else
+				NewCard.Server.Text = string.format(Utilities.Translate("Configuration.Apps.Description"),
+					`Dark modern theme`, --// TODO TODO TODO
+					Utilities.ToSentenceCase(CardData.object_type),
+					CardData.developer.Name,
+					CardData.ServerName
+				)
+			end
 
 			NewCard.Stats.Downloads.Label.Text = Utilities.ShortNumber(CardData.downloads)
 
@@ -645,9 +677,22 @@ function Apps.LoadAppList(List: {}?): ()
 			end)
 		end, function(e)
 			if e == "Unable to assign property Name. string expected, got nil" then
-				Utilities.Logging.Print(`Server spent {CardData}s processing apps!`)
+				if CardData.text == "This AOS instance does not have any objects with the requested type." then
+					return { IsNoResults = true }
+				else
+					Frontend.Toast({
+						Icon = Utilities.Icon "information",
+						Text = Utilities.Translate("Configuration.MenuBar.New.AInfoPage.HeaderLabel"),
+						Subtext = CardData.Text,
+						Timeout = 10
+					})
+				end
+
+				-- Utilities.Logging.Print(`Server spent {CardData}s processing apps!`)
 			else
-				Utilities.Logging.Error(e)
+				Utilities.Logging.Warn(`[thread Apps.Card] [exception] {e}`)
+
+				return e
 			end
 		end)
 	end
@@ -735,8 +780,10 @@ function Apps.LoadAppList(List: {}?): ()
 		local Index = 1
 
 		for _, Item in Market.MainMarketplace.CardGrid:GetChildren() do
-			if Item:IsA("CanvasGroup") and Item.Name ~= "Template" then Item:Destroy() end
+			if Item:IsA("CanvasGroup") and Item.Name ~= "Template" and Item.Name ~= "NoResultsFound" then Item:Destroy() end
 		end
+
+		Market.MainMarketplace.CardGrid.NoResultsFound.Visible = false
 
 		for SUrl, Server in AppList do
 			for _, App in Server do
@@ -745,7 +792,11 @@ function Apps.LoadAppList(List: {}?): ()
 		end
 
 		for _, App in Featured do
-			Card(App, Market.MainMarketplace[Var.Marketplace.ActivePage])
+			local _, Data = Card(App, Market.MainMarketplace[Var.Marketplace.ActivePage])
+
+			if Data ~= nil and Data.IsNoResults then
+				Var.MainFrame.Configuration.Marketplace.MainMarketplace.CardGrid.NoResultsFound.Visible = true
+			end
 		end
 	end
 
@@ -813,7 +864,7 @@ function Apps.InitSerarchbar()
 					})
 				end
 			end
-			
+
 			Shimmer:Pause()
 			Shimmer:GetFrame():Destroy()
 
@@ -833,6 +884,9 @@ function Apps.InitSerarchbar()
 end
 
 local IsLibraryLoading = false
+--local LibraryPage = "ContentApps"
+local LibraryPage = "ContentThemes"
+local PageConnections = {}
 
 function Apps.LoadLibrary()
 	if IsLibraryLoading then return end
@@ -840,211 +894,439 @@ function Apps.LoadLibrary()
 	IsLibraryLoading = true
 
 	local AppsMenu = Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary
-	for i, AppItem: Instance in AppsMenu.Content:GetChildren() do
+	for i, AppItem: Instance in AppsMenu.ContentApps:GetChildren() do --// TODO
 		if not AppItem:IsA("CanvasGroup") or AppItem.Name == "Template" or AppItem.Name == "ServerTemplate" then continue end
 		AppItem:Destroy()
 	end
 
-	Apps.Init(true)
-
-	local AppsList = Var.Remotes.GetInstalledApps:InvokeServer("Bootstrapped")
-
-	for k, App in AppsList[2] do
-		local NewTemplate = AppsMenu.Content.Template:Clone()
-
-		NewTemplate.AppName.Text = k
-		NewTemplate.Name = k
-		NewTemplate.Logo.Image = App["Icon"]
-		NewTemplate.AppShortDesc.Text = App["Description"]
-		NewTemplate.InstallDate.Text = string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
-			App["InstalledSince"] ~= 0 and Utilities.FormatRelativeTime(
-				App["InstalledSince"]
-			) or Utilities.Translate("generic.Locally")
-		)
-
-		if not Var.EnableEditableImages then
-			NewTemplate.BackgroundImage.Image = `rbxassetid://{App["Icon"]}`
-		else
-			NewTemplate.BackgroundImage.ImageContent = Content.fromObject(
-				require(script.Parent.Parent.Libraries.QuickBlur):Blur(
-					Var.Services.AssetService:CreateEditableImageAsync(`rbxassetid://{App["Icon"]}`),
-					10,
-					6
-				)
-			)
-		end
-
-		NewTemplate.Buttons.LongText.Title.Text = `{math.round(App.BuildTime * 1000)}ms`
-
-		NewTemplate.Parent = AppsMenu.Content
-		NewTemplate.Visible = true
-
-		NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
-			Frontend.Popup.new(
-				{
-					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
-					Icon = Utilities.Icon "administer"
-				},
-				{
-					Primary = `rbxassetid://{App["Icon"]}`,
-					SubIcon = Utilities.Icon "warning-filled"
-				},
-				Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(k),
-				Utilities.Translate("Configuration.Apps.MessageBox.Content"),
-				{
-					{
-						Text = Utilities.Translate("generic.Yes"),
-						Icon = Utilities.Icon "trash",
-						Callback = function(_Close)
-							local Response = Var.Remotes.ManageApp:InvokeServer(App.AppID)
-
-							_Close()
-
-							if Response[1] == false then
-								Frontend.Popup.new(
-									{
-										Name = "Administer",
-										Icon = Utilities.Icon "administer"
-									},
-									{
-										Primary = `rbxassetid://{App["Icon"]}`,
-										SubIcon = Utilities.Icon "x"
-									},
-
-									Utilities.Translate("generic.error.Generic"),
-									Response[2],
-
-									{{
-										Text = Utilities.Translate("generic.OK"),
-										Icon = Utilities.Icon "check-plain",
-										Callback = function(Cls)
-											Cls()
-										end
-									}}
-								)
-							else
-								_Close()
-
-								Apps.LoadLibrary()
-							end	
-						end
-					},
-					{
-						Text = Utilities.Translate("generic.Cancel"),
-						Icon = Utilities.Icon "x",
-						Callback = function(_Close)
-							_Close()
-						end
-					}
-				}
-			)
-		end)
+	for _, Connection in PageConnections do
+		Connection:Disconnect()
 	end
 
-	local AppServers = Var.Remotes.GetAppServers:InvokeServer()
+	Apps.Init(true)
 
-	for _, Server in AppServers[2] do
-		local NewTemplate = AppsMenu.Content.ServerTemplate:Clone()
+	if LibraryPage == "ContentApps" then
+		local AppsList = Var.Remotes.GetInstalledApps:InvokeServer("Bootstrapped")
 
-		xpcall(function()
-			NewTemplate.ServerName.Text = Server.Name
-			NewTemplate.Name = Server.Name
-			NewTemplate.Metadata.Text = `{Server.Banner.text}\n\nAOS v{Server.AOSVers}\n\n{Server.IsDev and "Development mode \n\n" or ""}{Server.URL}`
-			string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
-				Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
-					Server.ServerInstall
+		for k, App in AppsList[2] do
+			local NewTemplate = AppsMenu.Content.Template:Clone()
+
+			NewTemplate.AppName.Text = k
+			NewTemplate.Name = k
+			NewTemplate.Logo.Image = App.Icon
+			NewTemplate.AppShortDesc.Text = App.Description
+			NewTemplate.InstallDate.Text = string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+				App["InstalledSince"] ~= 0 and Utilities.FormatRelativeTime(
+					App["InstalledSince"]
 				) or Utilities.Translate("generic.Locally")
 			)
 
-			NewTemplate.BackgroundImage.BackgroundColor3 = Color3.fromHex(Server.Banner.color)
-			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · {Utilities.Translate("apps.RunningSince")} {Utilities.FormatRelativeTime(os.time() - Server.Uptime)}`
-
-		end, function()
-			--// must be an error
-			NewTemplate.ServerName.Text = Server.URL
-			NewTemplate.Name = Server.URL
-			NewTemplate.Metadata.Text = Utilities.Translate("apps.aos.Out")
-			string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
-				Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
-					Server.ServerInstall
-				) or Utilities.Translate("generic.Locally")
-			)
-
-			NewTemplate.Buttons.LongText.Icon.BackgroundColor3 = Color3.fromRGB(255, 108, 110)
-			NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · Error {Server.Code}`	
-		end)
-
-		NewTemplate.Parent = AppsMenu.Content
-		NewTemplate.Visible = true
-
-		NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
-			if #AppServers == 1 then
-				Frontend.Toast({
-					Icon = Utilities.Icon "triangle-warning",
-					Text = Utilities.Translate("apps.aos.install.CantUninstall"),
-					Subtext = Utilities.Translate("apps.aos.install.CantInstall.detail.NotEnoughServers"),
-					Timeout = 10
-				})
-
-				return
+			if not Var.EnableEditableImages then
+				NewTemplate.BackgroundImage.Image = `rbxassetid://{App["Icon"]}`
+			else
+				NewTemplate.BackgroundImage.ImageContent = Content.fromObject(
+					require(script.Parent.Parent.Libraries.QuickBlur):Blur(
+						Var.Services.AssetService:CreateEditableImageAsync(`rbxassetid://{App["Icon"]}`),
+						10,
+						6
+					)
+				)
 			end
-			Frontend.Popup.new(
-				{
-					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
-					Icon = Utilities.Icon "administer"
-				},
-				{
-					Primary = Utilities.Icon "administer",
-					SubIcon = Utilities.Icon "warning-filled"
-				},
-				Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(Server.URL),
-				Utilities.Translate("apps.aos.Uninstall"),
-				{
+
+			NewTemplate.Buttons.LongText.Title.Text = `{math.round(App.BuildTime * 1000)}ms`
+
+			NewTemplate.Parent = AppsMenu.Content
+			NewTemplate.Visible = true
+
+			NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
+				Frontend.Popup.new(
 					{
-						Text = Utilities.Translate("generic.Yes"),
-						Icon = Utilities.Icon "trash",
-						Callback = function(_Close)
-							local Response = Var.Remotes.RemoveAppServer:InvokeServer(Server.URL)
-
-							_Close()
-
-							if Response[1] == false then
-								Frontend.Popup.new(
-									{
-										Name = "Administer",
-										Icon = Utilities.Icon "administer"
-									},
-									{
-										Primary = Utilities.Icon "administer",
-										SubIcon = Utilities.Icon "x"
-									},
-
-									Utilities.Translate("generic.error.Generic"),
-									Response[2],
-
-									{{
-										Text = Utilities.Translate("generic.OK"),
-										Icon = Utilities.Icon "check-plain",
-										Callback = function(Cls)
-											Cls()
-										end
-									}}
-								)
-							else
-								Apps.LoadLibrary()
-							end	
-						end
+						Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
+						Icon = Utilities.Icon "administer"
 					},
 					{
-						Text = Utilities.Translate("generic.Cancel"),
-						Icon = Utilities.Icon "x",
-						Callback = function(_Close)
-							_Close()
-						end
+						Primary = `rbxassetid://{App["Icon"]}`,
+						SubIcon = Utilities.Icon "warning-filled"
+					},
+					Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(k),
+					Utilities.Translate("Configuration.Apps.MessageBox.Content"),
+					{
+						{
+							Text = Utilities.Translate("generic.Yes"),
+							Icon = Utilities.Icon "trash",
+							Callback = function(_Close)
+								local Response = Var.Remotes.ManageApp:InvokeServer(App.AppID)
+
+								_Close()
+
+								if Response[1] == false then
+									Frontend.Popup.new(
+										{
+											Name = "Administer",
+											Icon = Utilities.Icon "administer"
+										},
+										{
+											Primary = `rbxassetid://{App["Icon"]}`,
+											SubIcon = Utilities.Icon "x"
+										},
+
+										Utilities.Translate("generic.error.Generic"),
+										Response[2],
+
+										{{
+											Text = Utilities.Translate("generic.OK"),
+											Icon = Utilities.Icon "check-plain",
+											Callback = function(Cls)
+												Cls()
+											end
+										}}
+									)
+								else
+									_Close()
+
+									Apps.LoadLibrary()
+								end	
+							end
+						},
+						{
+							Text = Utilities.Translate("generic.Cancel"),
+							Icon = Utilities.Icon "x",
+							Callback = function(_Close)
+								_Close()
+							end
+						}
 					}
-				}
-			)
-		end)
+				)
+			end)
+		end
+	elseif LibraryPage == "ContentServers" then
+		local AppServers = Var.Remotes.GetAppServers:InvokeServer()
+
+		for _, Server in AppServers[2] do
+			local NewTemplate = AppsMenu.ContentServers.Template:Clone()
+
+			xpcall(function()
+				NewTemplate.ServerName.Text = Server.Name
+				NewTemplate.Name = Server.Name
+				NewTemplate.Metadata.Text = `{Server.Banner.text}\n\nAOS v{Server.AOSVers}\n\n{Server.IsDev and "Development mode \n\n" or ""}{Server.URL}`
+				string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+					Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
+						Server.ServerInstall
+					) or Utilities.Translate("generic.Locally")
+				)
+
+				NewTemplate.BackgroundImage.BackgroundColor3 = Color3.fromHex(Server.Banner.color)
+				NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · {Utilities.Translate("apps.RunningSince")} {Utilities.FormatRelativeTime(os.time() - Server.Uptime)}`
+
+			end, function()
+				--// must be an error
+				NewTemplate.ServerName.Text = Server.URL
+				NewTemplate.Name = Server.URL
+				NewTemplate.Metadata.Text = Utilities.Translate("apps.aos.Out")
+				string.format(Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+					Server.ServerInstall ~= 0 and Utilities.FormatRelativeTime(
+						Server.ServerInstall
+					) or Utilities.Translate("generic.Locally")
+				)
+
+				NewTemplate.Buttons.LongText.Icon.BackgroundColor3 = Color3.fromRGB(255, 108, 110)
+				NewTemplate.Buttons.LongText.Title.Text = `{math.round(Server.PingTime)}ms · Error {Server.Code}`	
+			end)
+
+			NewTemplate.Parent = AppsMenu.ContentServers
+			NewTemplate.Visible = true
+
+			NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
+				if #AppServers == 1 then
+					Frontend.Toast({
+						Icon = Utilities.Icon "triangle-warning",
+						Text = Utilities.Translate("apps.aos.install.CantUninstall"),
+						Subtext = Utilities.Translate("apps.aos.install.CantInstall.detail.NotEnoughServers"),
+						Timeout = 10
+					})
+
+					return
+				end
+				Frontend.Popup.new(
+					{
+						Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
+						Icon = Utilities.Icon "administer"
+					},
+					{
+						Primary = Utilities.Icon "administer",
+						SubIcon = Utilities.Icon "warning-filled"
+					},
+					Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(Server.URL),
+					Utilities.Translate("apps.aos.Uninstall"),
+					{
+						{
+							Text = Utilities.Translate("generic.Yes"),
+							Icon = Utilities.Icon "trash",
+							Callback = function(_Close)
+								local Response = Var.Remotes.RemoveAppServer:InvokeServer(Server.URL)
+
+								_Close()
+
+								if Response[1] == false then
+									Frontend.Popup.new(
+										{
+											Name = "Administer",
+											Icon = Utilities.Icon "administer"
+										},
+										{
+											Primary = Utilities.Icon "administer",
+											SubIcon = Utilities.Icon "x"
+										},
+
+										Utilities.Translate("generic.error.Generic"),
+										Response[2],
+
+										{{
+											Text = Utilities.Translate("generic.OK"),
+											Icon = Utilities.Icon "check-plain",
+											Callback = function(Cls)
+												Cls()
+											end
+										}}
+									)
+								else
+									Apps.LoadLibrary()
+								end	
+							end
+						},
+						{
+							Text = Utilities.Translate("generic.Cancel"),
+							Icon = Utilities.Icon "x",
+							Callback = function(_Close)
+								_Close()
+							end
+						}
+					}
+				)
+			end)
+		end
+	elseif LibraryPage == "ContentThemes" then
+		local Themes = Var.Remotes.GetApplicableThemes:InvokeServer()
+
+		for _, Theme in Themes do
+			local NewThemeCard = AppsMenu.ContentThemes.Template:Clone()
+
+			NewThemeCard.Name = Theme.Source.Name
+			NewThemeCard.ThemeTitle.Text = Theme.Source.Name
+			NewThemeCard.Description.Text = `Created by @{Theme.Source.Author.Name} • Installed {Utilities.FormatRelativeTime(Theme.DataInstalled)}`
+
+			NewThemeCard.ManageOverlay.ThemeTitle.Text = Utilities.Translate(`themes.ManageTheme`)
+
+			--// Preview UX!!
+			Frontend.LoadTheme(Theme.Source, NewThemeCard.FakePanel)
+
+			NewThemeCard.Visible = true
+			NewThemeCard.Parent = AppsMenu.ContentThemes
+
+			table.insert(PageConnections, NewThemeCard.MouseEnter:Connect(function()
+				NewThemeCard.ManageOverlay.Visible = true
+
+				Var.Services.TweenService:Create(NewThemeCard.ManageOverlay.ThemeTitle, TweenInfo.new(Var.AnimationSpeed * .3), {
+					TextTransparency = 0
+				}):Play()
+
+				Var.Services.TweenService:Create(NewThemeCard.ManageOverlay, TweenInfo.new(Var.AnimationSpeed * .3), {
+					BackgroundTransparency = .3
+				}):Play()
+
+				local IrrelevantInstances = 1
+				for i, Button: Instance in NewThemeCard.ManageOverlay.Options:GetChildren() do
+					if not Button:IsA("TextButton") then
+						IrrelevantInstances += 1
+
+						continue
+					end
+
+					local Speed = Var.AnimationSpeed * ((i - IrrelevantInstances) == 1 and .2 or 0.2 * (i - IrrelevantInstances))
+
+					Var.Services.TweenService:Create(Button, TweenInfo.new(Var.AnimationSpeed * .2, Enum.EasingStyle.Quart, Enum.EasingDirection.In, 0, false, Speed), {
+						BackgroundTransparency = .5
+					}):Play()
+
+					Var.Services.TweenService:Create(Button:FindFirstChildWhichIsA("ImageLabel"), TweenInfo.new(Var.AnimationSpeed * .2, Enum.EasingStyle.Quart, Enum.EasingDirection.In, 0, false, Speed), {
+						ImageTransparency = 0
+					}):Play()
+				end
+			end))
+
+			table.insert(PageConnections, NewThemeCard.MouseLeave:Connect(function()
+				Var.Services.TweenService:Create(NewThemeCard.ManageOverlay.ThemeTitle, TweenInfo.new(Var.AnimationSpeed * .3), {
+					TextTransparency = 1
+				}):Play()
+
+				Var.Services.TweenService:Create(NewThemeCard.ManageOverlay, TweenInfo.new(Var.AnimationSpeed * .3), {
+					BackgroundTransparency = 1
+				}):Play()
+
+				local IrrelevantInstances = 1
+				for i, Button: Instance in NewThemeCard.ManageOverlay.Options:GetChildren() do
+					if not Button:IsA("TextButton") then
+						IrrelevantInstances += 1
+
+						continue
+					end
+
+					local Speed = Var.AnimationSpeed * ((i - IrrelevantInstances) == 1 and .2 or 0.2 * (i - IrrelevantInstances))
+
+					Var.Services.TweenService:Create(Button, TweenInfo.new(Var.AnimationSpeed * .2, Enum.EasingStyle.Quart, Enum.EasingDirection.In, 0, false, Speed), {
+						BackgroundTransparency = 1
+					}):Play()
+
+					Var.Services.TweenService:Create(Button:FindFirstChildWhichIsA("ImageLabel"), TweenInfo.new(Var.AnimationSpeed * .2, Enum.EasingStyle.Quart, Enum.EasingDirection.In, 0, false, Speed), {
+						ImageTransparency = 1
+					}):Play()
+				end
+
+				task.delay(
+					Var.AnimationSpeed * ((#NewThemeCard.ManageOverlay.Options:GetChildren() - IrrelevantInstances) == 1 and 0 or 0.2 * (#NewThemeCard.ManageOverlay.Options:GetChildren() - IrrelevantInstances)), function()
+						NewThemeCard.ManageOverlay.Visible = false
+					end
+				)
+			end))
+
+			--// Button connections
+			local function RegisterForButton(Button: TextButton)
+				table.insert(PageConnections, Button.MouseEnter:Connect(function()
+					Var.Services.TweenService:Create(NewThemeCard.ManageOverlay.ThemeTitle, TweenInfo.new(Var.AnimationSpeed * .1), {
+						TextTransparency = 1
+					}):Play()
+
+					task.wait(.1)
+
+					NewThemeCard.ManageOverlay.ThemeTitle.Text = Utilities.Translate(`themes.desc.{Button.Name}`)
+
+					Var.Services.TweenService:Create(NewThemeCard.ManageOverlay.ThemeTitle, TweenInfo.new(Var.AnimationSpeed * .1), {
+						TextTransparency = 0
+					}):Play()
+				end))
+
+				table.insert(PageConnections, Button.MouseLeave:Connect(function()
+					Var.Services.TweenService:Create(NewThemeCard.ManageOverlay.ThemeTitle, TweenInfo.new(Var.AnimationSpeed * .1), {
+						TextTransparency = 1
+					}):Play()
+
+					task.wait(.1)
+
+					NewThemeCard.ManageOverlay.ThemeTitle.Text = Utilities.Translate(`themes.ManageTheme`)
+
+					Var.Services.TweenService:Create(NewThemeCard.ManageOverlay.ThemeTitle, TweenInfo.new(Var.AnimationSpeed * .1), {
+						TextTransparency = 0
+					}):Play()
+				end))
+
+				table.insert(PageConnections, Button.MouseButton1Click:Connect(function()
+					if Button.Name == "Delete" then
+						Frontend.Popup.new(
+							{
+								Icon = Utilities.Icon "administer",
+								Name = "Administer",
+								Subheader = "Remove theme"
+							}, {
+								Primary = Utilities.Icon "paint-roller",
+								SubIcon = Utilities.Icon "trash"
+							},
+							`Would you like to uninstall {Theme.Source.Name}?`,
+							"Whoever has purchased this theme will have to install it again.",
+							{
+								{
+									Text = "Cancel",
+									Icon = Utilities.Icon "no-entry",
+									Callback = function(Close)
+										Close()
+									end
+								},
+								{
+									Text = "Confirm",
+									Icon = Utilities.Icon "triangle-warning",
+									Callback = function(Close)
+										Utilities.Logging.Print(
+											Var.Remotes.ManageTheme:InvokeServer(
+												"Delete",
+												nil,
+												Theme.AdministerID
+											)
+										)
+
+										--// this is done in a very specific order, dont touch it
+										Close()
+
+										Frontend.Toast({
+											Icon = Utilities.Icon "check-plain",
+											Text = "Theme successfully uninstalled!",
+											Subtext = "Anybody who had it applied will now see the default theme",
+											Timeout = 10
+										})
+
+										Apps.LoadLibrary()
+									end
+								}
+							}
+						)
+					elseif Button.Name == "LoadStyle" then
+						local CurrentCopy = Utilities.DeepCopy(Var.AppliedThemeSource)
+
+						Frontend.LoadTheme(Theme.Source)
+
+						Frontend.Toast({
+							Icon = Utilities.Icon "check-plain",
+							Text = "Theme successfully applied for this session!",
+							Subtext = "Click this notification to revert.",
+							Timeout = 20,
+							OnClick = function()
+								Frontend.LoadTheme(CurrentCopy)
+							end
+						})
+					elseif Button.Name == "SaveAsDark" then
+						Var.Remotes.ManageTheme:InvokeServer(
+							"SetAsPreferred",
+							"Dark",
+							Theme.AdministerID
+						)
+
+						if Var.ThemeData.CurrentMode == "Dark" then
+							Frontend.LoadTheme(Theme.Source)
+						end
+
+						Frontend.Toast({
+							Icon = Utilities.Icon "check-plain",
+							Text = "Successfully saved!",
+							Subtext = `{Theme.Source.Name} is now your perferred dark scheme`,
+							Timeout = 5,
+							OnClick = function() end
+						})
+					elseif Button.Name == "SaveAsLight" then
+						Var.Remotes.ManageTheme:InvokeServer(
+							"SetAsPreferred",
+							"Light",
+							Theme.AdministerID
+						)
+
+						if Var.ThemeData.CurrentMode == "Light" then
+							Frontend.LoadTheme(Theme.Source)
+						end
+
+						Frontend.Toast({
+							Icon = Utilities.Icon "check-plain",
+							Text = "Successfully saved!",
+							Subtext = `{Theme.Source.Name} is now your perferred light scheme`,
+							Timeout = 5,
+							OnClick = function() end
+						})
+					end
+				end))
+			end
+
+			for _, Button in NewThemeCard.ManageOverlay.Options:GetChildren() do
+				if Button:IsA("TextButton") then 
+					RegisterForButton(Button) 
+				end
+			end
+		end
 	end
 
 	IsLibraryLoading = false

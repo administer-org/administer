@@ -19,6 +19,9 @@ Variables.HeartbeatDuration = 10
 Variables.PingTicksLog = 60
 Variables.AnimationSpeed = 1
 
+Variables.AppliedThemeSource = {} 
+Variables.ThemeData = {}
+
 Variables.CombinedButtonConfig = {}
 Variables.Ping = {}
 

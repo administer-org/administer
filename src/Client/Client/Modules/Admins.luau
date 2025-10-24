@@ -128,7 +128,7 @@ local function NewCard(RankData: { any }, ParentFrame, IsDummyCard)
 
 		if User == nil then break end
 		if User.MemberType == "User" then
-			pcall(function()
+			xpcall(function()
 				Template.ProfilePictures[i].Visible = true
 				Template.ProfilePictures[i].Image = Var.Services.Players:GetUserThumbnailAsync(
 					User.ID,
@@ -137,6 +137,8 @@ local function NewCard(RankData: { any }, ParentFrame, IsDummyCard)
 				)
 
 				table.insert(UserNames, Var.Services.Players:GetNameFromUserIdAsync(User.ID))
+			end, function(e)
+				Template.ProfilePictures[i].Image = Utilities.Icon "tear"
 			end)
 		else
 			local Success, GroupInfo = pcall(function()
@@ -147,7 +149,7 @@ local function NewCard(RankData: { any }, ParentFrame, IsDummyCard)
 				Template.ProfilePictures[i].Image = GroupInfo.EmblemUrl
 				Template.ProfilePictures[i].Visible = true
 
-				Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 4)
+				Template.ProfilePictures[i].UICorner.CornerRadius = UDim.new(0, 5)
 
 				table.insert(UserNames, GroupInfo.Name)
 			end

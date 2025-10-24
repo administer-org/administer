@@ -169,7 +169,7 @@ end
 function App.Initialize(): boolean
 	local Start = tick()
 	local DelaySetting, Apps = Utils.GetSetting("AppLoadDelay"), Var.DataStores.AppDB:GetAsync("AppList") or {}
-	
+
 	for _, AppInstance in script.Parent.Parent.Parent.LocalApps:GetChildren() do
 		table.insert(Apps, {
 			ID = AppInstance,
@@ -181,12 +181,12 @@ function App.Initialize(): boolean
 
 	if Utils.GetSetting("LoadApps") == false then
 		Utils.Logging.Print("App Bootstrapping disabled due to configuration, please disable!")
-		
+
 		Var.DidBootstrap = true
-		
+
 		return false
 	end
-	
+
 	if DelaySetting == "InStudio" and Var.Services.RunService:IsStudio() or DelaySetting == "All" then
 		task.wait(3)
 	end
@@ -200,7 +200,7 @@ function App.Initialize(): boolean
 	for _, AppObj in Apps do
 		Total += 1
 		--print('obj', AppObj, Completed, Total)
-		
+
 		task.spawn(function()
 			pcall(function() --// we don't care if an app bootstrap fails out
 				App.LoadLocal(AppObj.ID, {
@@ -278,8 +278,77 @@ function App.GetAll(Source: string): Types.TableWildcard
 	return { false, "Source must be of value nil | Bootstrapped | DataStore_Raw | Combined" }
 end
 
-function App.Install(AppID: number, InstallContext: string, AppName: string): Types.Response
+function App.GetApplicableThemes(): {any}
+	--// TODO: Do we want to use App.GetAll instead?
+	local Themes = Var.DataStores.AppDB:GetAsync("ThemeList")
+	local Final = {}
+
+	for ThemeID, Data in Themes do
+		table.insert(Final, {
+			ID = ThemeID,
+			AdministerID = ThemeID,
+			InstallSoruce = Data.InstallSource,
+			InstallDate = Data.InstallDate,
+			Source = require(tonumber(Data.ID))
+		})
+	end
+
+	return Final
+end
+
+function App.ModifyThemePreference(
+	Player: Player, 
+	Message: { Type: "SetAsPreferred" | "ApplyScheme" | "Delete" },
+	SchemeType: "Dark"? | "Light"?,
+	ThemeName: string?
+): ()
+	if not Player then
+		return {false, "Player must not be nil"}
+	end
+	
+	if Message == "SetAsPreferred" then
+		local ExistingPreferences = Var.DataStores.Settings:GetAsync(Player.UserId.."_ThemeSaves") or Var.DefaultThemePreferences
+		
+		ExistingPreferences[SchemeType] = ThemeName
+		
+		Var.DataStores.Settings:SetAsync(Player.UserId.."_ThemeSaves", ExistingPreferences)
+		
+		return {true, "Setting saved successfully"}
+	elseif Message == "ApplyScheme" then
+		local ExistingPreferences = Var.DataStores.Settings:GetAsync(Player.UserId.."_ThemeSaves") or Var.DefaultThemePreferences
+
+		ExistingPreferences.CurrentMode = SchemeType
+
+		Var.DataStores.Settings:SetAsync(Player.UserId.."_ThemeSaves", ExistingPreferences)
+
+		return {true, "Setting saved successfully"}
+	elseif Message == "Delete" then
+		local Themes = Var.DataStores.AppDB:GetAsync("ThemeList")
+		
+		if Themes[ThemeName] then
+			Utils.Logging.Warn(`[Theme] Uninstalling theme {ThemeName} (initiated by {Player.Name}/{Player.UserId}`)
+			
+			Themes[ThemeName] = nil
+			
+			Var.DataStores.AppDB:SetAsync("ThemeList", Themes)
+			
+			return {true, "Uninstalled!"}
+		else
+			return {false, "Theme not installed"}
+		end
+	else
+		return {false, "Unknown control request"}
+	end
+end
+
+
+function App.Install(
+	AppID: number, 
+	InstallContext: string, 
+	AppName: string
+): Types.Response
 	Utils.Logging.Print(`[-] Attempting to load app`)
+
 	local _, res = xpcall(function(): Types.Response
 		App.LoadLocal(AppID, {
 			InstallDate = os.time(),
@@ -295,12 +364,13 @@ function App.Install(AppID: number, InstallContext: string, AppName: string): Ty
 	end)
 
 	if res[1] == false then return res end
+
 	Utils.Logging.Print(`[✓] App bootstrap OK, installing!`)
 
 	local AppList = Var.DataStores.AppDB:GetAsync("AppList") or {}
 	for i, App in AppList do
 		if App.ID == AppID then
-			Utils.Logging.Warn("[x] Not continuing because this app is a duplicate!")
+			Utils.Logging.Warn("[x] Not re-installing duplicate app")
 			return { false, Utils.t(nil, "apps.DupeDetected") }
 		end
 	end
@@ -526,16 +596,15 @@ function App.InstallTheme(
 	Player: Player,
 	Source: "AOS" | "Local",
 	Data: table | number,
-	ServerURL: string?
+	ServerURL: string?,
+	AdministerID: string
 ): Types.Response
 	if Source == "AOS" then
 		if Data.RequirePayment then
 			if not Var.Services.MarketplaceService:UserOwnsGamePassAsync(Player.UserId, Data.GamePassID) then
-				print(`does not own {Data.GamePassID}`)
-
 				local Result = "Waiting"
 
-				Var.Services.MarketplaceService:PromptGamePassPurchase(Player, Data.GamePassId)
+				Var.Services.MarketplaceService:PromptGamePassPurchase(Player, Data.GamePassID)
 				Var.Services.MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(Plr, GamePassID, WasPurchased)
 					if Plr ~= Player or GamePassID ~= Data.GamePassID then return end
 
@@ -552,19 +621,39 @@ function App.InstallTheme(
 					--// we now own it, wow!!!
 				end
 			else
-				print("owned!!")
+				--print("owned!!")
 			end
 
-			return App.InstallTheme(Player, "Local", Data.InstallID, ServerURL)
+			HTTP.PostRoute(ServerURL, `/api/asset/{Data.Metadata.AdministerID}/install`, {}, function(): Types.Response
+				--// installed OK
+			end, function(SC): Types.Response
+				if SC == 400 then
+					--// AOS detected a duplicate, probably safe
+					return
+				end
+
+				Utils.Logging.Warn(`Failed to tell AOS about the installation: {SC}`)
+			end, {
+				Debug = false
+			})
+
+			return App.InstallTheme(Player, "Local", Data.InstallID, ServerURL, AdministerID)
 		end
 	else
-		local ThemeList = Var.DataStores.AppDB:GetAsync("ThemeList") or {}
+		--local ThemeList = Var.DataStores.AppDB:GetAsync("ThemeList") or {}
+		local ThemeList = {}
 
-		table.insert(ThemeList, {
+		if ThemeList[tostring(AdministerID)] ~= nil then
+			return {false, "You can't install a theme more than once!"}
+		end
+		
+		print(AdministerID)
+
+		ThemeList[AdministerID] = {
 			ID = Data,
 			InstallDate = os.time(),
 			InstallSource = ServerURL
-		})
+		}
 
 		Var.DataStores.AppDB:SetAsync("ThemeList", ThemeList)
 
@@ -585,12 +674,13 @@ function App.ServerAPI.InstallFromServer(
 
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
 		local RealID = Content.InstallID
+
 		if RealID == 0 then
 			return { false, "This server gave us bad data, please report the error to the server owner." }
 		end
 
 		if Content.Metadata.AssetType == "theme" then
-			return App.InstallTheme(Player, "AOS", Content, ServerURL)
+			return App.InstallTheme(Player, "AOS", Content, ServerURL, AppID)
 		end
 
 		--// Basic checks
@@ -613,6 +703,7 @@ function App.ServerAPI.InstallFromServer(
 			end)
 		else
 			Utils.Logging.Warn("App did not install with an OK status code, ignoring request to tell AOS.")
+
 			return Result
 		end
 	end, function(c)
