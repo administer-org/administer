@@ -190,7 +190,7 @@
     "apps.DupeDetected": "Du får bara installera en app en gång!",
     "apps.Downloaded": "Appen har installerats!",
     "apps.BadID": "Felaktigt app-ID! Denna app-server returnerar felaktiga data.",
-    "apps.server.Down": "Det gick inte att nå appservern. Kanske är den offline?",
+    "apps.server.Down": "Det gick inte att nå AOS-instansen. Kanske är den offline?",
     "apps.server.NotAdminister": "Detta är inte en AOS-instans! Kontrollera loggarna för mer information.",
     "apps.pulled.Bad": "Något gick fel med den här modulen: %s",
     "apps.aos.Down": "AOS returnerade inte en OK-statuskod.",
@@ -293,5 +293,15 @@
     "themes.desc.LoadStyle": "Tillämpa stil",
     "themes.desc.SaveAsDark": "Spara som önskat mörkt tema",
     "themes.desc.SaveAsLight": "Spara som önskat ljusschema",
-    "themes.ManageTheme": "Hantera tema"
+    "themes.ManageTheme": "Hantera tema",
+    "themes.uninstalled.success.Body": "Alla som har använt det kommer nu att se standardtemat.",
+    "themes.applied.session.Header": "Temat har tillämpats för denna session.",
+    "themes.applied.session.Body": "Klicka på detta meddelande för att återställa.",
+    "theme.applied.Dark": "% är nu ditt föredragna mörka tema",
+    "theme.applied.Light": "% är nu ditt föredragna ljusschema",
+    "theme.installed.Header": "Temat har köpts!",
+    "theme.installed.Body": "Du kan nu använda det i din samling.",
+    "themes.uninstall.Header": "Vill du avinstallera %s?",
+    "themes.uninstall.Body": "Den som har köpt detta tema måste installera det igen.",
+    "themes.uninstalled.success.Header": "Temat har avinstallerats!"
 }
