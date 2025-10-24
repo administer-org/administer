@@ -161,7 +161,7 @@
     "apps.DupeDetected": "¡Sólo puede instalar una aplicación una vez!",
     "apps.Downloaded": "¡Se ha instalado correctamente una aplicación!",
     "apps.BadID": "ID de aplicación incorrecto. Este servidor de aplicaciones devuelve datos incorrectos.",
-    "apps.server.Down": "No se ha podido establecer contacto con el servidor de aplicaciones. ¿Esta desconectado?",
+    "apps.server.Down": "No se ha podido contactar con la instancia AOS. ¿Quizás está desconectada?",
     "apps.server.NotAdminister": "¡Esto no es una instancia del AOS! Comprueba los registros para más información.",
     "apps.pulled.Bad": "Algo ha ido mal con este módulo: %s",
     "betas.Mobile.body": "Se ha registrado correctamente en la versión beta de Administer Móvil.",
@@ -339,5 +339,15 @@
     "themes.desc.LoadStyle": "Aplicar estilo",
     "themes.desc.SaveAsDark": "Guardar como esquema oscuro preferido",
     "themes.desc.SaveAsLight": "Guardar como esquema de luz preferido",
-    "themes.ManageTheme": "Gestionar tema"
+    "themes.ManageTheme": "Gestionar tema",
+    "themes.uninstalled.success.Body": "Cualquiera que lo haya aplicado ahora verá el tema predeterminado.",
+    "themes.applied.session.Body": "Haz clic en esta notificación para revertir.",
+    "theme.applied.Dark": "% es ahora tu esquema oscuro preferido.",
+    "theme.applied.Light": "% es ahora tu esquema de colores claro preferido.",
+    "theme.installed.Header": "¡Tema comprado correctamente!",
+    "theme.installed.Body": "Ahora puedes aplicarlo en tu colección.",
+    "themes.uninstall.Header": "¿Desea desinstalar %s?",
+    "themes.uninstall.Body": "Quien haya comprado este tema tendrá que instalarlo de nuevo.",
+    "themes.uninstalled.success.Header": "¡Tema desinstalado correctamente!",
+    "themes.applied.session.Header": "Tema aplicado correctamente para esta sesión."
 }

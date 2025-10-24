@@ -141,7 +141,7 @@
     "apps.DupeDetected": "Voit asentaa sovelluksen vain kerran!",
     "apps.Downloaded": "Sovellus on asennettu onnistuneesti!",
     "apps.BadID": "Virheellinen sovellus-ID! Tämä sovelluspalvelin palauttaa virheellisiä tietoja.",
-    "apps.server.Down": "Yhteyden muodostaminen sovelluspalvelimeen epäonnistui. Ehkä se on offline-tilassa?",
+    "apps.server.Down": "Yhteyden muodostaminen AOS-instanssiin epäonnistui. Ehkä se on offline-tilassa?",
     "apps.server.NotAdminister": "Tämä ei ole AOS-tapaus! Tarkista lokit lisätietoja varten.",
     "apps.pulled.Bad": "Tässä moduulissa tapahtui virhe: %s",
     "betas.Mobile.body": "",
@@ -300,5 +300,15 @@
     "themes.desc.SaveAsLight": "Tallenna valittuna valoisana teemana",
     "themes.ManageTheme": "Hallitse teemaa",
     "themes.desc.Delete": "Poista",
-    "themes.desc.LoadStyle": "Käytä tyyliä"
+    "themes.desc.LoadStyle": "Käytä tyyliä",
+    "themes.applied.session.Body": "Klikkaa tätä ilmoitusta palauttaaksesi",
+    "theme.applied.Dark": "% on nyt ensisijainen tumma teemasi.",
+    "theme.applied.Light": "% on nyt valitsemasi vaalea teema.",
+    "themes.uninstall.Header": "Haluatko poistaa %s:n?",
+    "themes.uninstall.Body": "Kaikki, jotka ovat ostaneet tämän teeman, joutuvat asentamaan sen uudelleen.",
+    "themes.uninstalled.success.Header": "Teema on poistettu onnistuneesti!",
+    "themes.uninstalled.success.Body": "Kaikki, joihin se on sovellettu, näkevät nyt oletusteeman.",
+    "themes.applied.session.Header": "Teema on otettu onnistuneesti käyttöön tässä istunnossa.",
+    "theme.installed.Header": "Teema ostettu onnistuneesti!",
+    "theme.installed.Body": "Voit nyt käyttää sitä kokoelmassasi."
 }
