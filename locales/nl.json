@@ -161,7 +161,7 @@
     "apps.DupeDetected": "Je mag een app maar één keer installeren!",
     "apps.Downloaded": "App succesvol geïnstalleerd!",
     "apps.BadID": "Ongeldige app-ID! Deze app-server retourneert onjuiste gegevens.",
-    "apps.server.Down": "Kon geen verbinding maken met de App Server. Misschien is deze offline?",
+    "apps.server.Down": "Het lukte niet om contact te maken met de AOS-instantie. Misschien is deze offline?",
     "apps.server.NotAdminister": "Dit is geen AOS-instantie! Controleer de logboeken voor meer informatie.",
     "apps.pulled.Bad": "Er is iets misgegaan met deze module: %s",
     "betas.Mobile.body": "Je hebt je succesvol aangemeld voor de Administer Mobile Beta.",
@@ -337,5 +337,15 @@
     "themes.desc.LoadStyle": "Stijl toepassen",
     "themes.desc.SaveAsDark": "Opslaan als voorkeursdonker schema",
     "themes.desc.SaveAsLight": "Opslaan als voorkeurslichtschema",
-    "themes.ManageTheme": "Thema beheren"
+    "themes.ManageTheme": "Thema beheren",
+    "themes.applied.session.Header": "Thema succesvol toegepast voor deze sessie",
+    "themes.applied.session.Body": "Klik op deze melding om terug te keren.",
+    "theme.applied.Dark": "% is nu uw voorkeursdonkere thema",
+    "theme.applied.Light": "% is nu uw voorkeursverlichtingsschema",
+    "theme.installed.Header": "Thema succesvol aangeschaft!",
+    "theme.installed.Body": "Je kunt het nu toepassen in je collectie.",
+    "themes.uninstall.Header": "Wilt u %s verwijderen?",
+    "themes.uninstall.Body": "Wie dit thema heeft gekocht, moet het opnieuw installeren.",
+    "themes.uninstalled.success.Header": "Thema succesvol verwijderd!",
+    "themes.uninstalled.success.Body": "Iedereen die het heeft toegepast, ziet nu het standaardthema."
 }

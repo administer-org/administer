@@ -160,7 +160,7 @@
     "apps.DupeDetected": "Você só pode baixar um aplicativo uma vez!",
     "apps.Downloaded": "Aplicativo baixado com sucesso!",
     "apps.BadID": "ID do aplicativo inválido! Este servidor de aplicativos está a devolver dados inválidos.",
-    "apps.server.Down": "Falha ao contactar o servidor do aplicativo. Talvez ele esteja offline?",
+    "apps.server.Down": "Falha ao acessar a instância AOS. Talvez esteja offline?",
     "apps.server.NotAdminister": "Esta não é uma instância AOS! Verifique os registros para mais informações.",
     "apps.pulled.Bad": "Algo correu mal com este módulo: %s",
     "betas.Mobile.body": "Você aderiu com sucesso ao Administer Mobile Beta.",
@@ -341,5 +341,15 @@
     "themes.desc.LoadStyle": "Aplicar estilo",
     "themes.desc.SaveAsDark": "Salvar como esquema escuro preferido",
     "themes.desc.SaveAsLight": "Salvar como esquema de cores claro preferido",
-    "themes.ManageTheme": "Gerenciar tema"
+    "themes.ManageTheme": "Gerenciar tema",
+    "theme.applied.Dark": "% agora é o seu esquema escuro preferido",
+    "theme.applied.Light": "% agora é seu esquema de cores claro preferido",
+    "theme.installed.Header": "Tema adquirido com sucesso!",
+    "theme.installed.Body": "Agora você pode aplicá-lo em sua coleção.",
+    "themes.uninstall.Header": "Deseja desinstalar %s?",
+    "themes.uninstall.Body": "Quem tiver adquirido este tema terá que instalá-lo novamente.",
+    "themes.uninstalled.success.Header": "Tema desinstalado com sucesso!",
+    "themes.uninstalled.success.Body": "Qualquer pessoa que o tenha aplicado verá agora o tema padrão.",
+    "themes.applied.session.Header": "Tema aplicado com sucesso para esta sessão",
+    "themes.applied.session.Body": "Clique nesta notificação para reverter."
 }

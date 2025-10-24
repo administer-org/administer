@@ -161,7 +161,7 @@
     "apps.DupeDetected": "Vous ne pouvez installer une application qu'une seule fois!",
     "apps.Downloaded": "Une application a été installée avec succès !",
     "apps.BadID": "Mauvais identifiant d'application ! Ce serveur d'application renvoie des données incorrectes.",
-    "apps.server.Down": "Échec de la connexion au serveur d'applications. Peut-être que c'est hors ligne ?",
+    "apps.server.Down": "Échec de la connexion à l'instance AOS. Peut-être est-elle hors ligne ?",
     "apps.server.NotAdminister": "Ce n'est pas une instance AOS ! Consultez les journaux pour plus d'informations.",
     "apps.pulled.Bad": "Quelque chose s'est mal passé avec ce module : %s",
     "betas.Mobile.body": "Vous avez réussi à vous inscrire à la version bêta d'administration mobile.",
@@ -337,5 +337,15 @@
     "themes.desc.LoadStyle": "Appliquer le style",
     "themes.desc.SaveAsDark": "Enregistrer comme thème sombre préféré",
     "themes.desc.SaveAsLight": "Enregistrer comme thème clair préféré",
-    "themes.ManageTheme": "Gérer le thème"
+    "themes.ManageTheme": "Gérer le thème",
+    "themes.applied.session.Header": "Thème appliqué avec succès pour cette session.",
+    "theme.installed.Body": "Vous pouvez désormais l'utiliser dans votre collection.",
+    "themes.uninstall.Header": "Souhaitez-vous désinstaller %s ?",
+    "themes.uninstall.Body": "Toute personne ayant acheté ce thème devra le réinstaller.",
+    "themes.uninstalled.success.Header": "Thème désinstallé avec succès !",
+    "themes.uninstalled.success.Body": "Toute personne qui l'avait appliqué verra désormais le thème par défaut.",
+    "themes.applied.session.Body": "Cliquez sur cette notification pour revenir en arrière.",
+    "theme.applied.Dark": "% est désormais votre thème sombre préféré.",
+    "theme.applied.Light": "% est désormais votre thème clair préféré.",
+    "theme.installed.Header": "Thème acheté avec succès !"
 }
