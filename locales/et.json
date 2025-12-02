@@ -300,8 +300,8 @@
     "themes.uninstalled.success.Body": "Kõik, kes seda kasutasid, näevad nüüd vaikimisi teemat.",
     "themes.applied.session.Header": "Teema on selle sessiooni jaoks edukalt rakendatud.",
     "themes.applied.session.Body": "Klõpsake sellele teavitamisele, et taastada",
-    "theme.applied.Dark": "% on nüüd teie eelistatud tume skeem",
-    "theme.applied.Light": "% on nüüd teie eelistatud valgusskeem",
+    "theme.applied.Dark": "%s on nüüd teie eelistatud tume teema",
+    "theme.applied.Light": "%s on nüüd teie eelistatud heledam värviskeem.",
     "theme.installed.Header": "Teema osteti edukalt!",
     "theme.installed.Body": "Nüüd saate seda oma kogus kasutada."
 }

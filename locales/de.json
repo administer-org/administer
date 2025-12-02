@@ -347,8 +347,8 @@
     "themes.uninstall.Header": "Möchten Sie %s deinstallieren?",
     "themes.uninstall.Body": "Wer dieses Theme gekauft hat, muss es erneut installieren.",
     "themes.uninstalled.success.Header": "Thema erfolgreich deinstalliert!",
-    "theme.applied.Dark": "% ist jetzt Ihr bevorzugtes dunkles Schema.",
-    "theme.applied.Light": "% ist jetzt Ihr bevorzugtes Helligkeitsschema.",
+    "theme.applied.Dark": "%s ist jetzt Ihr bevorzugtes dunkles Schema.",
+    "theme.applied.Light": "%s ist jetzt Ihr bevorzugtes Hell-Schema.",
     "theme.installed.Header": "Thema erfolgreich gekauft!",
     "theme.installed.Body": "Sie können es nun in Ihrer Sammlung anwenden."
 }

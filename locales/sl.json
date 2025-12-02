@@ -308,7 +308,7 @@
     "themes.applied.session.Header": "Tema je bila uspešno uporabljena za to sejo.",
     "themes.applied.session.Body": "Kliknite to obvestilo, da se vrnete nazaj.",
     "theme.installed.Header": "Tema je bila uspešno kupljena!",
-    "theme.applied.Dark": "% je zdaj vaša prednostna temna shema",
-    "theme.applied.Light": "% je zdaj vaša prednostna svetla shema",
+    "theme.applied.Dark": "%s je zdaj vaša prednostna temna shema.",
+    "theme.applied.Light": "%s je zdaj vaša prednostna svetla shema",
     "theme.installed.Body": "Zdaj ga lahko uporabite v svoji zbirki."
 }

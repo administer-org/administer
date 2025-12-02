@@ -301,8 +301,8 @@
     "themes.uninstalled.success.Body": "Oricine l-a aplicat va vedea acum tema implicită.",
     "themes.applied.session.Header": "Tema aplicată cu succes pentru această sesiune",
     "themes.applied.session.Body": "Faceți clic pe această notificare pentru a reveni.",
-    "theme.applied.Dark": "% este acum schema întunecată preferată",
-    "theme.applied.Light": "% este acum schema de culori preferată.",
+    "theme.applied.Dark": "%s este acum schema întunecată preferată",
+    "theme.applied.Light": "%s este acum schema de culori preferată.",
     "theme.installed.Header": "Tema a fost achiziționată cu succes!",
     "theme.installed.Body": "Acum îl puteți aplica în colecția dvs."
 }

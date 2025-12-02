@@ -348,8 +348,8 @@
     "themes.uninstalled.success.Body": "이 기능이 적용된 모든 사용자는 이제 기본 테마를 보게 됩니다",
     "themes.applied.session.Header": "테마가 이 세션에 성공적으로 적용되었습니다",
     "themes.applied.session.Body": "이 알림을 클릭하여 되돌리기",
-    "theme.applied.Dark": "%가 이제 선호하는 다크 테마입니다",
-    "theme.applied.Light": "%가 이제 선호하는 밝은 테마입니다",
+    "theme.applied.Dark": "%s가 이제 선호하는 다크 테마입니다",
+    "theme.applied.Light": "%s가 이제 선호하는 밝은 테마입니다",
     "theme.installed.Header": "테마 구매 성공!",
     "theme.installed.Body": "이제 컬렉션에 적용할 수 있습니다."
 }

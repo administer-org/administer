@@ -307,8 +307,8 @@
     "themes.uninstalled.success.Body": "Chiunque lo avesse applicato vedrà ora il tema predefinito.",
     "themes.applied.session.Header": "Tema applicato con successo per questa sessione",
     "themes.applied.session.Body": "Clicca su questa notifica per ripristinare",
-    "theme.applied.Dark": "% è ora il tuo tema scuro preferito",
-    "theme.applied.Light": "% è ora il tuo schema di colori chiaro preferito",
+    "theme.applied.Dark": "%s è ora il tuo tema scuro preferito",
+    "theme.applied.Light": "%s è ora il tuo schema di colori chiaro preferito",
     "theme.installed.Header": "Tema acquistato con successo!",
     "theme.installed.Body": "Ora puoi applicarlo nella tua raccolta."
 }

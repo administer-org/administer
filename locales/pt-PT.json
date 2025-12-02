@@ -347,8 +347,8 @@
     "themes.uninstalled.success.Header": "Tema desinstalado com sucesso!",
     "themes.uninstalled.success.Body": "Qualquer pessoa que o tenha aplicado verá agora o tema padrão.",
     "themes.applied.session.Header": "Tema aplicado com sucesso para esta sessão",
-    "theme.applied.Dark": "% é agora o seu esquema escuro preferido",
-    "theme.applied.Light": "% é agora o seu esquema de luz preferido",
+    "theme.applied.Dark": "%s é agora o seu esquema escuro preferido",
+    "theme.applied.Light": "%s é agora o seu esquema de cores claro preferido",
     "theme.installed.Header": "Tema adquirido com sucesso!",
     "theme.installed.Body": "Agora pode aplicá-lo na sua coleção.",
     "themes.applied.session.Body": "Clique nesta notificação para reverter"

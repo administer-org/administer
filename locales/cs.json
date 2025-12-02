@@ -300,8 +300,8 @@
     "themes.uninstalled.success.Body": "Každý, kdo jej použil, nyní uvidí výchozí téma.",
     "themes.applied.session.Header": "Téma bylo úspěšně použito pro tuto relaci.",
     "themes.applied.session.Body": "Kliknutím na toto oznámení se vrátíte zpět.",
-    "theme.applied.Dark": "% je nyní vaše preferované tmavé schéma",
-    "theme.applied.Light": "% je nyní vaše preferované světlé schéma",
+    "theme.applied.Dark": "%s je nyní vaše preferované tmavé schéma",
+    "theme.applied.Light": "%s je nyní vaše preferované světlé schéma.",
     "theme.installed.Header": "Téma bylo úspěšně zakoupeno!",
     "theme.installed.Body": "Nyní jej můžete použít ve své sbírce."
 }

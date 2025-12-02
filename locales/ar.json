@@ -309,6 +309,6 @@
     "themes.applied.session.Body": "انقر على هذا الإشعار للرجوع",
     "theme.installed.Header": "تم شراء السمة بنجاح!",
     "theme.installed.Body": "يمكنك الآن تطبيقه في مجموعتك.",
-    "theme.applied.Dark": "% هو الآن مخطط الألوان الداكن المفضل لديك",
-    "theme.applied.Light": "% هو الآن نظام الإضاءة المفضل لديك"
+    "theme.applied.Dark": "%s هو الآن مخطط الألوان الداكن المفضل لديك",
+    "theme.applied.Light": "%s هو الآن نظام الإضاءة المفضل لديك"
 }

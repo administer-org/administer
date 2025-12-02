@@ -347,8 +347,8 @@
     "themes.uninstalled.success.Body": "所有应用过该主题的用户现将看到默认主题",
     "themes.applied.session.Header": "主题已成功应用于本次会话",
     "themes.applied.session.Body": "点击此通知以还原",
-    "theme.applied.Dark": "% 现已成为您的首选深色主题",
-    "theme.applied.Light": "% 现已成为您的首选浅色主题",
+    "theme.applied.Dark": "%s 现已成为您的首选深色主题",
+    "theme.applied.Light": "%s 现已成为您的首选浅色主题",
     "theme.installed.Header": "主题购买成功！",
     "theme.installed.Body": "现在您可以在您的收藏中应用它。"
 }

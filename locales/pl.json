@@ -309,6 +309,6 @@
     "themes.uninstalled.success.Body": "Każdy, kto go zastosował, zobaczy teraz domyślny motyw.",
     "themes.applied.session.Header": "Motyw został pomyślnie zastosowany dla tej sesji.",
     "themes.applied.session.Body": "Kliknij to powiadomienie, aby przywrócić poprzedni stan.",
-    "theme.applied.Dark": "% jest teraz preferowanym ciemnym schematem",
-    "theme.applied.Light": "% jest teraz preferowanym schematem jasnym."
+    "theme.applied.Dark": "%s jest teraz preferowanym schematem ciemnym.",
+    "theme.applied.Light": "%s jest teraz preferowanym schematem jasnym."
 }

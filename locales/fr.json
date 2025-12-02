@@ -345,7 +345,7 @@
     "themes.uninstalled.success.Header": "Thème désinstallé avec succès !",
     "themes.uninstalled.success.Body": "Toute personne qui l'avait appliqué verra désormais le thème par défaut.",
     "themes.applied.session.Body": "Cliquez sur cette notification pour revenir en arrière.",
-    "theme.applied.Dark": "% est désormais votre thème sombre préféré.",
-    "theme.applied.Light": "% est désormais votre thème clair préféré.",
+    "theme.applied.Dark": "%s est désormais votre thème sombre préféré.",
+    "theme.applied.Light": "%s est désormais votre thème clair préféré.",
     "theme.installed.Header": "Thème acheté avec succès !"
 }
