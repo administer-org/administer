@@ -343,7 +343,7 @@
     "themes.desc.SaveAsLight": "Salvar como esquema de cores claro preferido",
     "themes.ManageTheme": "Gerenciar tema",
     "theme.applied.Dark": "% agora é o seu esquema escuro preferido",
-    "theme.applied.Light": "% agora é seu esquema de cores claro preferido",
+    "theme.applied.Light": "% agora é o seu esquema de cores claro preferido",
     "theme.installed.Header": "Tema adquirido com sucesso!",
     "theme.installed.Body": "Agora você pode aplicá-lo em sua coleção.",
     "themes.uninstall.Header": "Deseja desinstalar %s?",
@@ -351,5 +351,5 @@
     "themes.uninstalled.success.Header": "Tema desinstalado com sucesso!",
     "themes.uninstalled.success.Body": "Qualquer pessoa que o tenha aplicado verá agora o tema padrão.",
     "themes.applied.session.Header": "Tema aplicado com sucesso para esta sessão",
-    "themes.applied.session.Body": "Clique nesta notificação para reverter."
+    "themes.applied.session.Body": "Clique nesta notificação para reverter"
 }
