@@ -299,7 +299,7 @@
     "themes.uninstalled.success.Header": "Το θέμα απεγκαταστάθηκε με επιτυχία!",
     "themes.uninstalled.success.Body": "Όσοι το είχαν εφαρμόσει θα βλέπουν τώρα το προεπιλεγμένο θέμα.",
     "themes.applied.session.Body": "Κάντε κλικ σε αυτήν την ειδοποίηση για να επαναφέρετε",
-    "theme.applied.Dark": "Το % είναι πλέον το προτιμώμενο σκούρο σχήμα σας.",
+    "theme.applied.Dark": "Το %s είναι πλέον το προτιμώμενο σκούρο σχήμα σας.",
     "themes.applied.session.Header": "Το θέμα εφαρμόστηκε με επιτυχία για αυτή τη συνεδρία.",
     "theme.applied.Light": "Το % είναι πλέον το προτιμώμενο σχήμα φωτισμού σας.",
     "theme.installed.Header": "Το θέμα αγοράστηκε με επιτυχία!",
