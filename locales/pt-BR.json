@@ -351,5 +351,5 @@
     "themes.uninstalled.success.Header": "Tema desinstalado com sucesso!",
     "themes.uninstalled.success.Body": "Qualquer pessoa que o tenha aplicado verá agora o tema padrão.",
     "themes.applied.session.Header": "Tema aplicado com sucesso para esta sessão",
-    "themes.applied.session.Body": "Clique nesta notificação para reverter"
+    "themes.applied.session.Body": "Clique nesta notificação para reverter."
 }

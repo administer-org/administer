@@ -341,7 +341,7 @@
     "themes.desc.SaveAsDark": "Als bevorzugtes dunkles Schema speichern",
     "themes.desc.SaveAsLight": "Als bevorzugtes Helligkeitsschema speichern",
     "themes.ManageTheme": "Thema verwalten",
-    "themes.uninstalled.success.Body": "Jeder, der es angewendet hat, sieht nun das Standard-Theme.",
+    "themes.uninstalled.success.Body": "Jeder, der es angewendet hat, sieht nun das Standarddesign.",
     "themes.applied.session.Header": "Thema für diese Sitzung erfolgreich angewendet",
     "themes.applied.session.Body": "Klicken Sie auf diese Benachrichtigung, um den Vorgang rückgängig zu machen.",
     "themes.uninstall.Header": "Möchten Sie %s deinstallieren?",

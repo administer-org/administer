@@ -348,11 +348,11 @@
     "themes.uninstall.Body": "Ai đã mua chủ đề này sẽ phải cài đặt lại nó.",
     "themes.uninstalled.success.Header": "Giao diện đã được gỡ cài đặt thành công!",
     "themes.uninstalled.success.Body": "Bất kỳ ai đã áp dụng nó sẽ thấy chủ đề mặc định.",
-    "themes.applied.session.Header": "Giao diện đã được áp dụng thành công cho phiên làm việc này.",
-    "themes.applied.session.Body": "Nhấp vào thông báo này để hoàn nguyên.",
+    "themes.applied.session.Header": "Giao diện đã được áp dụng thành công cho phiên này.",
+    "themes.applied.session.Body": "Nhấp vào thông báo này để khôi phục.",
     "themes.desc.Delete": "Xóa",
     "themes.desc.LoadStyle": "Áp dụng phong cách",
     "themes.desc.SaveAsDark": "Lưu dưới dạng giao diện tối ưa thích",
-    "themes.desc.SaveAsLight": "Lưu dưới dạng giao diện sáng ưa thích",
+    "themes.desc.SaveAsLight": "Lưu dưới dạng chủ đề sáng ưa thích",
     "themes.ManageTheme": "Quản lý chủ đề"
 }

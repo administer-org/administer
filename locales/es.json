@@ -341,13 +341,13 @@
     "themes.desc.SaveAsLight": "Guardar como esquema de luz preferido",
     "themes.ManageTheme": "Gestionar tema",
     "themes.uninstalled.success.Body": "Cualquiera que lo haya aplicado ahora verá el tema predeterminado.",
-    "themes.applied.session.Body": "Haga clic en esta notificación para revertir.",
+    "themes.applied.session.Body": "Haz clic en esta notificación para revertir.",
     "theme.applied.Dark": "%s es ahora tu esquema oscuro preferido.",
     "theme.applied.Light": "%s es ahora tu esquema de colores claro preferido.",
     "theme.installed.Header": "¡Tema comprado correctamente!",
     "theme.installed.Body": "Ahora puedes aplicarlo en tu colección.",
     "themes.uninstall.Header": "¿Desea desinstalar %s?",
-    "themes.uninstall.Body": "Quien haya comprado este tema tendrá que volver a instalarlo.",
+    "themes.uninstall.Body": "Quien haya comprado este tema tendrá que instalarlo de nuevo.",
     "themes.uninstalled.success.Header": "¡Tema desinstalado correctamente!",
     "themes.applied.session.Header": "Tema aplicado correctamente para esta sesión."
 }
