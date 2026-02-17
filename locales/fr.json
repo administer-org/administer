@@ -79,7 +79,7 @@
     "Configuration.Marketplace.Install.TagsLabel": "ÉTIQUETTES",
     "Configuration.Marketplace.Install.UnverifiedWarning": "<b>Warning</b>: Cette application provient d'un serveur non vérifié. Si vous installez cette application, vous donnez <b>l'exécution sans restriction de code côté serveur</b> au développeur de l'application, qui peut contenir des virus ou voler votre jeu, assurez-vous de vraiment faire confiance au propriétaire de ce serveur !",
     "Configuration.Marketplace.MPFrozen.HeaderLabel": "Oups!",
-    "Configuration.Marketplace.MPFrozen.Subheading1": "Désolé, mais un ou plusieurs serveurs d'applications ont renvoyé une erreur lors du traitement (code : %s, route %s). Il peut s'agir d'une interdiction, d'une limite de débit temporaire ou d'une indisponibilité. Veuillez réessayer votre demande bientôt. Si vous continuez à voir cette page, veuillez vérifier le journal et supprimer tous les serveurs d'applications défectueux.",
+    "Configuration.Marketplace.MPFrozen.Subheading1": "Désolé, mais un ou plusieurs serveurs d'applications ont renvoyé une erreur lors du traitement (code: %s, route %s). Il peut s'agir d'une interdiction, d'une limite de débit temporaire ou d'une indisponibilité. Veuillez réessayer votre demande bientôt. Si vous continuez à voir cette page, veuillez vérifier le journal et supprimer tous les serveurs d'applications défectueux.",
     "Configuration.Marketplace.MainMarketplace.Content.Template.AppName": "Mon application",
     "Configuration.Marketplace.MainMarketplace.Content.Template.InstallLabel": "PLUS",
     "Configuration.Marketplace.MainMarketplace.Content.Template.ShortDesc": "Description manquante ici pour une raison quelconque...",
