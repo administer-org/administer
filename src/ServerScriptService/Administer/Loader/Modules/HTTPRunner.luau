@@ -1,0 +1,209 @@
+--// Administer
+--// pyxfluff 2024 - 2025
+
+local Root = script:FindFirstAncestor("Loader")
+local Config = require(Root.Core.Configuration)
+local Var = require(Root.Core.Variables)
+local Types = require(Root.Core.Types)
+
+local Http = {}
+
+--// Stops a circular import with the Utils module
+local function RoundMS(num)
+	return tostring(num * 1000):sub(1, 7)
+end
+
+-- For more information on this API, please refer to the documentation: https://docs.admsoftware.org
+function Http.GetRoute(
+	AppServer,
+	Route,
+	OnOK,
+	OnError,
+	Options: {
+		Timeout: number,
+		DontLookForAlts: boolean,
+		Headers: { any },
+		Debug: boolean,
+	}
+): Types.Response
+	if AppServer == nil or AppServer == "" then
+		AppServer = Var.PrimaryAppServer ~= "" and Var.PrimaryAppServer ~= nil and Var.PrimaryAppServer
+			or Var.DefaultAppServer
+	end
+
+	local Response
+	local ST = tick()
+	local IsAOS = string.match(AppServer, "^https://aos%-.+%.admsoftware%.org$") ~= nil
+
+	Options = Options or {}
+
+	local Timeout = Options.Timeout or 5
+
+	if AppServer == "" then
+		error()
+	end
+
+	Options.Headers = Options.Headers or {}
+
+	Options.Headers["X-Adm-Version"] = Config.VersData.NoExtraData
+	Options.Headers["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName) --// this is mostly just used for /versions but idc
+
+	if Options.Debug then
+		print("---- AdmHttpGet Debug ----", "Headers", Options.Headers, "URL", AppServer, "Route", Route)
+	end
+
+	xpcall(function()
+		local function DoRequest()
+			if Options.Debug then
+				print("Sending http request")
+			end
+			Response = Var.Services.HttpService:RequestAsync({
+				Url = `{AppServer}{Route}`,
+				Method = "GET",
+				Headers = Options.Headers,
+			})
+
+			if Options.Debug then
+				print("Got reply:", Response)
+			end
+		end
+
+		local Thread = task.spawn(function()
+			local ok, err = pcall(DoRequest)
+			if not ok then
+				Response = {
+					StatusCode = 500,
+					StatusMessage = `Administer - HTTP error: {err}`,
+				}
+			end
+		end)
+
+		repeat
+			task.wait()
+		until Response or tick() - ST >= Timeout
+
+		if tick() - ST >= Timeout and not Response then
+			task.cancel(Thread)
+
+			Response = {
+				StatusCode = 500,
+				StatusMessage = `Administer - The request timed out`,
+			}
+		end
+	end, function(e)
+		Response = {
+			StatusCode = 500,
+			StatusMessage = `Administer - Failed HTTP request: {e}`,
+		}
+	end)
+
+	if string.sub(tostring(Response.StatusCode), 1, 1) == "2" then
+		local JSON
+		xpcall(function()
+			JSON = Var.Services.HttpService:JSONDecode(Response.Body)
+		end, function()
+			JSON = Response.Body
+		end)
+
+		return OnOK(JSON, {
+			ProcessedMS = RoundMS(tick() - ST),
+			RespMessage = Response.StatusMessage,
+			Code = 200,
+		})
+	else
+		--// The gateway handles failover automatically; just surface the error.
+		local ErrorResp
+
+		local R = xpcall(function()
+			ErrorResp = OnError(Response.StatusCode, {
+				ProcessedMS = RoundMS(tick() - ST),
+				RespMessage = Response.StatusMessage,
+				Code = Response.StatusCode,
+			})
+		end, function(e)
+			warn(`[Administer] Failed to send out OnError! {e}`)
+		end)
+
+		return ErrorResp
+	end
+end
+
+-- For more information on this API, please refer to the documentation: https://docs.admsoftware.org
+function Http.PostRoute(
+	AppServer: string,
+	Route: string,
+	Body: {},
+	OnOK: (any, { ProcTime: number, RespMessage: string, Code: number }) -> any,
+	OnError: (any, any) -> any,
+	MiscConfig: { Headers: {} }?,
+	DoAnyways: (() -> ())?
+)
+	local ST = tick()
+	local FinalHeaders = {}
+
+	if MiscConfig ~= nil then
+		for Key, Header in MiscConfig.Headers do
+			FinalHeaders[Key] = Header
+		end
+	else
+		FinalHeaders = {
+			["X-Adm-Version"] = Config.VersData.String,
+			["X-Adm-Branch"] = string.lower(Var.CurrentBranch.BranchName),
+		}
+	end
+
+	--// perform request with protection and debugging on failure
+	local ok, ResponseOrErr = pcall(function()
+		return Var.Services.HttpService:RequestAsync({
+			Url = `{AppServer}{Route}`,
+			Method = "POST",
+			Headers = FinalHeaders,
+			Body = Var.Services.HttpService:JSONEncode(Body),
+		})
+	end)
+
+	if not ok then
+		warn("[HTTPRunner][PostRoute] RequestAsync failed:", tostring(ResponseOrErr))
+		warn("[HTTPRunner][PostRoute] Request details ->", AppServer .. Route)
+		warn("[HTTPRunner][PostRoute] Headers:", FinalHeaders)
+
+		Response = {
+			StatusCode = 0,
+			StatusMessage = `ConnectFail: {tostring(ResponseOrErr)}`,
+			Body = "",
+		}
+	else
+		Response = ResponseOrErr
+	end
+
+	if DoAnyways ~= nil then
+		pcall(function()
+			DoAnyways(Response)
+		end)
+	end
+
+	if tostring(Response.StatusCode):sub(1, 1) == "2" then
+		local decoded = Response.Body
+		xpcall(function()
+			decoded = Var.Services.HttpService:JSONDecode(Response.Body)
+		end, function(e)
+			warn("[HTTPRunner][PostRoute] JSON decode failed:", tostring(e))
+		end)
+
+		return OnOK(decoded, {
+			ProcessedMS = RoundMS(tick() - ST),
+			RespMessage = Response.StatusMessage,
+			Code = 200,
+		})
+	else
+		warn("[HTTPRunner][PostRoute] Non-2xx response:", Response.StatusCode, Response.StatusMessage)
+		warn("[HTTPRunner][PostRoute] Response body length:", tostring(Response.Body and #tostring(Response.Body) or 0))
+		return OnError(Response.StatusCode :: number, Response)
+	end
+end
+
+function Http.GUID()
+	return Var.Services.HttpService:GenerateGUID(false)
+end
+
+return Http
