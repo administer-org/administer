@@ -1,4 +1,4 @@
-local colorGroups = 15 -- amount of different color groups you want it to have (less groups means less precision)
+local colorGroups = 15
 
 local administerGUI = game.ServerScriptService.Administer.Resources.AdministerMainPanel
 
@@ -240,9 +240,7 @@ for _, v in keys do
 		local objects = data[2]
 		for k, w in objects do
 			local item = w[1]
-			--// hi sorry i needed to work normally so feel free to uncomment :3
 			if item:IsA("ImageLabel") or item:IsA("ImageButton") then
-				--item.ImageColor3 = rgbToColor3(newColor)
 			elseif item:IsA("UIGradient") then
 				local keypointPosition = objects[k][2]
 				if not UIGradientData[item] then

@@ -1,8 +1,7 @@
---// pyxfluff 2025
+--// CodingAgent 2026
 
 local Root = script.Parent.Parent
 
---// Modules
 local Var = require(Root.Variables)
 local Frontend = require(Root.Frontend)
 local Utilities = require(Root.Utilities)
@@ -66,7 +65,7 @@ local function SwapPages(Page1, Page2, NewIcon, Spin)
 
 	ET:Play()
 
-	ET.Completed:Wait() --// stop the animation from being too quick
+	ET.Completed:Wait()
 end
 
 return function()
@@ -108,7 +107,7 @@ return function()
 		},
 	}
 
-	Frames.Page1.Body.Text = string.gsub(Frames.Page1.Body.Text, "pyxfluff", game.Players.LocalPlayer.Name)
+	Frames.Page1.Body.Text = string.gsub(Frames.Page1.Body.Text, "CodingAgent", game.Players.LocalPlayer.Name)
 
 	Frames.Page1.NextPage.MouseButton1Click:Connect(function()
 		SwapPages(Frames.Page1, Frames.Loading, "", true)
@@ -165,8 +164,6 @@ return function()
 			Connection:Disconnect()
 		end
 
-		--// The gateway handles node selection automatically — no instance list needed.
-		--// Show a status card and let the user optionally enter a custom AOS URL.
 		local GatewayCard = Frames.Page3.Select.URL:Clone()
 		GatewayCard.Name = "GatewayCard"
 		GatewayCard.SystemName.Text = "Gateway (Automatic)"
@@ -247,10 +244,7 @@ return function()
 	end)
 
 	Frames.Page3.NextPage.MouseButton1Click:Connect(function()
-		--// No registration required — the gateway connects automatically.
 		SwapPages(Frames.Page3, Frames.Loading, "", true)
-
-		--// load settings todo todo todo
 
 		SwapPages(Frames.Loading, Frames.Page4, Utilities.Icon("gear"), false)
 	end)

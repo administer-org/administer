@@ -21,7 +21,7 @@ local root = Instance.new("Folder", camera)
 root.Name = "neon"
 
 local GenUid
-do -- Generate unique names for RenderStepped bindings
+do
 	local id = 0
 	function GenUid()
 		id = id + 1
@@ -34,7 +34,7 @@ do
 	local acos, max, pi, sqrt = math.acos, math.max, math.pi, math.sqrt
 	local sz = 0.2
 
-	function DrawTriangle(v1, v2, v3, p0, p1) -- I think Stravant wrote this function
+	function DrawTriangle(v1, v2, v3, p0, p1)
 		local s1 = (v1 - v2).magnitude
 		local s2 = (v2 - v3).magnitude
 		local s3 = (v3 - v1).magnitude
@@ -107,11 +107,6 @@ do
 	end
 end
 
---------------------------------
----- Module API --------------------------------
-----------------------------------------------------------------
-
--- Create a part binding for a GuiObject.
 function module:BindFrame(frame, properties)
 	if binds[frame] then
 		return binds[frame].parts
@@ -122,7 +117,7 @@ function module:BindFrame(frame, properties)
 	local f = Instance.new("Folder", root)
 	f.Name = frame.Name
 
-	local parents = {} -- construct hierarchy tree for rotation
+	local parents = {}
 	do
 		local function add(child)
 			if child:IsA("GuiObject") then
@@ -135,7 +130,6 @@ function module:BindFrame(frame, properties)
 
 	local function UpdateOrientation(fetchProps)
 		local zIndex = 1 - 0.05 * frame.ZIndex
-		-- the transparency inversion bug still surfaces when there's z-fighting
 		local tl, br = frame.AbsolutePosition, frame.AbsolutePosition + frame.AbsoluteSize
 		local tr, bl = Vector2.new(br.x, tl.y), Vector2.new(tl.x, br.y)
 		do
@@ -182,7 +176,6 @@ function module:BindFrame(frame, properties)
 	return binds[frame].parts
 end
 
--- Applies the `properties` table to bound parts.
 function module:Modify(frame, properties)
 	local parts = module:GetBoundParts(frame)
 	if parts then
@@ -195,7 +188,6 @@ function module:Modify(frame, properties)
 	end
 end
 
--- Removes the part binding from a gui object if one exists.
 function module:UnbindFrame(frame)
 	local cb = binds[frame]
 	if cb then
@@ -208,12 +200,10 @@ function module:UnbindFrame(frame)
 	end
 end
 
--- Returns true if a part binding exists for the gui object.
 function module:HasBinding(frame)
 	return binds[frame] ~= nil
 end
 
--- Returns an array using this.
 function module:GetBoundParts(frame)
 	return binds[frame] and binds[frame].parts
 end

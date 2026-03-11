@@ -1,4 +1,4 @@
--- AjaxTiba, July 2025 (For pyxfloof)
+-- AjaxTiba, July 2026 (For pyxfloof)
 
 -- Modules
 local variables = require(script.Parent.Variables)
@@ -6,9 +6,7 @@ local frontEnd = require(script.Parent.Frontend)
 local utilities = require(script.Parent.Utilities)
 
 local core = variables
--- Initialize settings
 local Settings = variables.Remotes.GetAllSettings:InvokeServer()
--- Load user data
 for i, v in pairs(Settings) do
 	local controllerName = v._SettingsMeta.Name
 	local success = variables.Remotes.LoadSettings:InvokeServer(controllerName, game.Players.LocalPlayer.UserId)
@@ -28,7 +26,6 @@ local elementModules = {
 	["Toggle"] = require(script.ElementModules.Toggle),
 }
 
--- Main Module
 local clientSettings = {}
 
 clientSettings.SettingElements = {

@@ -333,7 +333,7 @@ function Utils.NewRemote(
 		(Rem :: RemoteFunction).OnServerInvoke = function(Player: Player, ...)
 			local blacklist = { "Ping", "GetSetting" }
 
-			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] and not table.find(Var.Admins.InGame, Player) then
+			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] then
 				return false
 			end
 
@@ -574,7 +574,7 @@ function Utils.UpdateCallback(Services: { string })
 			Data["Administer"] = HTTP.GetRoute(Var.DefaultAppServer, "/pub/versions", function(VersionInfo, Misc)
 				Data["org.admsoftware.Core"] = VersionInfo
 			end, function(...)
-				Utils.Logging.Print(...)
+				warn(...)
 				Data["org.admsoftware.Core"] = {
 					IsError = true,
 					Misc = ...,
@@ -656,68 +656,6 @@ function Utils.TutorialSeen(Player, Tutorial, IsGlobal)
 	Var.DataStores.AdminsDS:SetAsync(`__{Player.UserId}_Tutorials`, Data)
 
 	return { true, `OK __{Player.UserId}_Tutorials: {Tutorial} true` }
-end
-
-Utils.CheckVersionStatus = function(): { Status: string, Latest: string, Current: string }
-	local HttpService = Var.Services.HttpService
-	local CurrentVersion = Config.VersData.String
-	local VersionStatus = { Status = "latest", Latest = CurrentVersion, Current = CurrentVersion }
-
-	local success, response = pcall(function()
-		return HttpService:GetAsync(Var.VersionCheckURL)
-	end)
-
-	if not success then
-		Utils.Logging.Warn("[VersionCheck] Failed to fetch version info from", Var.VersionCheckURL .. ":", response)
-		VersionStatus.Status = "no_check"
-		return VersionStatus
-	end
-
-	local success2, data = pcall(function()
-		return HttpService:JSONDecode(response)
-	end)
-
-	if not success2 then
-		Utils.Logging.Warn("[VersionCheck] Failed to decode API response:", response)
-		VersionStatus.Status = "no_check"
-		return VersionStatus
-	end
-
-	if not data or not data.administer or not data.administer.version then
-		Utils.Logging.Warn("[VersionCheck] Invalid API response structure")
-		VersionStatus.Status = "no_check"
-		return VersionStatus
-	end
-
-	local LatestVersion = data.administer.version.latest
-	local ValidVersions = data.administer.version.versions or {}
-
-	VersionStatus.Latest = LatestVersion
-
-	local VersionIsValid = false
-	for _, v in ValidVersions do
-		if v == CurrentVersion then
-			VersionIsValid = true
-			break
-		end
-	end
-
-	if not VersionIsValid then
-		VersionStatus.Status = "invalid"
-		Utils.Logging.Warn(
-			`[VersionCheck] Current version {CurrentVersion} is not in valid versions list: {table.concat(
-				ValidVersions,
-				", "
-			)}`
-		)
-	elseif CurrentVersion ~= LatestVersion then
-		VersionStatus.Status = "outdated"
-		Utils.Logging.Warn(`[VersionCheck] Current version {CurrentVersion} is outdated (latest: {LatestVersion})`)
-	else
-		VersionStatus.Status = "latest"
-	end
-
-	return VersionStatus
 end
 
 return Utils

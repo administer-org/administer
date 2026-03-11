@@ -1,6 +1,5 @@
 local target = script.Parent
 if not target:IsA("GuiObject") then
-	-- Relocator hasn't moved this script yet; bail silently
 	return
 end
 game:GetService("TweenService")

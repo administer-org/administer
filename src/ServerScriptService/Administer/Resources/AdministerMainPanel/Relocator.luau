@@ -2,8 +2,8 @@
 --// Moves scripts from the UIScripts holder folder to their correct UI parents,
 --// then enables them. Called once at the top of Client/init.client.luau.
 
-local Panel = script.Parent -- AdministerMainPanel (ScreenGui)
-local Holder = script.Parent.UIScripts -- UIScripts folder
+local Panel = script.Parent
+local Holder = script.Parent.UIScripts
 
 local function place(scriptName: string, getParent: () -> Instance)
 	local s = Holder:FindFirstChild(scriptName)
@@ -25,12 +25,10 @@ end
 local M = Panel:WaitForChild("Main")
 
 return function()
-	-- FullscreenMessage fade-in
 	place("FullscreenMessage_Fade", function()
 		return Panel:WaitForChild("FullscreenMessage")
 	end)
 
-	-- NewAdmin spinner
 	place("Spinner_NewAdmin", function()
 		return M:WaitForChild("Configuration")
 			:WaitForChild("Admins")
@@ -40,7 +38,6 @@ return function()
 			:WaitForChild("InnerSpin")
 	end)
 
-	-- SetupFull spinner
 	place("Spinner_SetupFull", function()
 		return M:WaitForChild("Welcome")
 			:WaitForChild("SetupFull")
@@ -49,12 +46,10 @@ return function()
 			:WaitForChild("InnerSpin")
 	end)
 
-	-- Notifications watcher
 	place("Notifications_Watcher", function()
 		return Panel:WaitForChild("Notifications")
 	end)
 
-	-- Notification Template neon glow
 	place("Notifications_Template_Neon", function()
 		return Panel:WaitForChild("Notifications")
 			:WaitForChild("Template")
@@ -62,7 +57,6 @@ return function()
 			:WaitForChild("Background")
 	end)
 
-	-- Notification InitialTemplate neon glow
 	place("Notifications_InitialTemplate_Neon", function()
 		return Panel:WaitForChild("Notifications")
 			:WaitForChild("InitialTemplate")

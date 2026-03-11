@@ -94,7 +94,7 @@ UIS.InputBegan:Connect(function(Input, Processed)
 		local ResultsBox = script.Parent.CommandBarOptions
 		local CommandCursor = CommandBar.Icon
 		local SearchEvent = CommandBar.Label:GetPropertyChangedSignal("Text"):Connect(function()
-			task.spawn(function() --// spawn so we can return IfAnimating safely
+			task.spawn(function()
 				if IsAnimating then
 					return
 				end
@@ -116,7 +116,6 @@ UIS.InputBegan:Connect(function(Input, Processed)
 				end
 			end)
 
-			--// this should be relatively quick assuming we stay in the luau table, so no "Indexing" screen is required
 			local SearchResults = IndexSearch(CommandBar.Label.Text)
 			local Position = 1
 
@@ -138,7 +137,7 @@ UIS.InputBegan:Connect(function(Input, Processed)
 				SearchObj.Parent = ResultsBox.ScrollingFrame
 			end
 
-			Anims = { --// child is 2nd here bc of the UIGridLayout
+			Anims = {
 				TS:Create(
 					CommandCursor,
 					TweenInfo.new(0.4, Enum.EasingStyle.Cubic),

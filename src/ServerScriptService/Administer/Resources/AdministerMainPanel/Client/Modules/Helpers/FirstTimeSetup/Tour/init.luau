@@ -1,8 +1,7 @@
--- AjaxTiba, July 2025 (For pyxfloof)
+-- AjaxTiba, July 2026 (For pyxfloof)
 
 local Root = script.Parent.Parent.Parent
 
---// Modules
 local Var = require(Root.Variables)
 local Frontend = require(Root.Frontend)
 local Utilities = require(Root.Utilities)
@@ -12,9 +11,6 @@ local Frames = Var.MainFrame.Welcome.SetupFull
 
 local tour = {}
 tour.Buttons = {}
-
---[[ Functions ]]
---
 
 function tour.GetButtons(frame: GuiObject)
 	tour.Buttons = {}
@@ -106,7 +102,6 @@ function tour.highlight(button: GuiButton, labelText)
 	end)
 
 	button.MouseButton1Click:Once(function()
-		-- Cleanup
 		label:Destroy()
 		Circle:Destroy()
 		active = false
@@ -129,18 +124,15 @@ function tour.Step(button: GuiButton, text: string)
 	if not button:IsA("GuiButton") then
 		button = button:FindFirstChildWhichIsA("GuiButton")
 	end
-	-- Grab all visible buttons
 	tour.GetButtons(Var.MainFrame)
 
 	local effectedButtons = tour.ToggleButtons(tour.Buttons, false)
 	tour.ToggleButtons({ button }, true)
-	tour.highlight(button, text) -- Yields function until button is clicked
+	tour.highlight(button, text)
 
 	tour.ToggleButtons(effectedButtons, true)
 end
 
---[[ Start Tour ]]
---
 function tour.BeginTour()
 	Var.IsInTutorial = true
 	Var.DoHeaderEffects = true
@@ -148,9 +140,6 @@ function tour.BeginTour()
 
 	local Header = Var.MainFrame.Header.Mark
 	local apps = Var.MainFrame.AppDrawer.AppHolder.Apps
-
-	--[[ STEPS ]]
-	--
 
 	tour.Step(
 		Header.AppLogo,
@@ -170,7 +159,6 @@ function tour.BeginTour()
 		<b>Click the Edit Button to continue.</b>]]
 	)
 
-	-- Editing a Widget
 	tour.Step(
 		Var.MainFrame:WaitForChild("Home").Widget1.Editing.Next,
 		[[You can change the displayed widget by clicking the next button.
@@ -197,7 +185,6 @@ function tour.BeginTour()
 
 	Frontend.Drawer.Open()
 
-	-- Installing a widget
 	tour.Step(
 		apps:WaitForChild("Configuration").SubCollection.Marketplace,
 		[[Open up the Marketplace by clicking Apps.
@@ -215,7 +202,7 @@ function tour.BeginTour()
 	<b>Click Get to continue</b>]]
 	)
 	tour.Step(
-		marketPlace.InstallBox.Details.Downloads.Install,
+		marketPlace.InstallBox.MainContent.TopHeader.Details.Downloads,
 		[[Click the Install button to install this app.
 	<b>Click Install to continue</b>]]
 	)
@@ -228,12 +215,12 @@ function tour.BeginTour()
 	until not Var.MainFrame.administer.MessageBox.Visible and not Var.MainFrame.administer.Toast.Visible
 
 	tour.Step(
-		marketPlace.InstallBox.Details.Votes.Likes:WaitForChild("TextButton"),
+		marketPlace.InstallBox.MainContent.TopHeader.Details.Votes.Likes:WaitForChild("TextButton"),
 		[[And you can click here to give the app a like.
 	<b>Press Like to continue</b>]]
 	)
 	tour.Step(
-		marketPlace.Parent.Sidebar.Buttons.XLibrary:WaitForChild("TextButton"),
+		marketPlace.Parent.ASidebar.Buttons.XLibrary:WaitForChild("TextButton"),
 		[[You can view your installed apps here.
 	<b>Press library to continue</b>]]
 	)
@@ -242,7 +229,6 @@ function tour.BeginTour()
 	until #marketPlace.XLibrary.Content:GetChildren() > 3
 	task.wait(3)
 
-	-- Admins
 	Frontend.Drawer.Open()
 	tour.Step(
 		apps:WaitForChild("Configuration").SubCollection.Admins,

@@ -33,9 +33,7 @@ Shime.__index = Shime
 
 local TweenService = game:GetService("TweenService")
 
--- Create a shimmer frame and return it
 local function createShimmer(parent: GuiObject): Frame
-	-- Create a new frame to hold the shimmer
 	local frame = Instance.new("Frame")
 	frame.Name = "UIShimmer"
 	frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -48,18 +46,15 @@ local function createShimmer(parent: GuiObject): Frame
 	frame.Visible = false
 	frame.Parent = parent
 
-	-- Update the corner radius of the frame when the UICorner or Parent changes
 	local function updateCornerRadius()
-		pcall(function() --// Silence incase frame.Parent is nil (Destroy())
+		pcall(function()
 			if frame.Parent:FindFirstChildOfClass("UICorner") then
 				local parentCorner = frame.Parent:FindFirstChildOfClass("UICorner")
 
-				-- Create a new UICorner for the frame
 				local corner = Instance.new("UICorner")
 				corner.CornerRadius = parentCorner.CornerRadius
 				corner.Parent = frame
 
-				-- Update the corner radius of the frame when the UICorner changes
 				corner:GetPropertyChangedSignal("CornerRadius"):Connect(updateCornerRadius)
 			end
 		end)
@@ -67,9 +62,8 @@ local function createShimmer(parent: GuiObject): Frame
 	frame:GetPropertyChangedSignal("Parent"):Connect(updateCornerRadius)
 	updateCornerRadius()
 
-	-- Update the size of the frame when the UIPadding changes
 	local function updatePaddingOffset()
-		pcall(function() --// Silence incase frame.Parent is nil (Destroy())
+		pcall(function()
 			if frame.Parent:FindFirstChildOfClass("UIPadding") then
 				local padding = frame.Parent:FindFirstChildOfClass("UIPadding")
 
@@ -84,11 +78,9 @@ local function createShimmer(parent: GuiObject): Frame
 
 				frame.Size = UDim2.new(widthSize, widthOffset, heightSize, heightOffset)
 
-				-- Update the position of the frame so it is centered
 				frame.Position = UDim2.new(0.5, -widthDiffOffset / 2, 0.5, -heightDiffOffset / 2)
 				print(frame.Position)
 
-				-- Update the padding offset when the UIPadding changes
 				padding:GetPropertyChangedSignal("PaddingLeft"):Connect(updatePaddingOffset)
 				padding:GetPropertyChangedSignal("PaddingRight"):Connect(updatePaddingOffset)
 				padding:GetPropertyChangedSignal("PaddingTop"):Connect(updatePaddingOffset)
@@ -99,7 +91,6 @@ local function createShimmer(parent: GuiObject): Frame
 	frame:GetPropertyChangedSignal("Parent"):Connect(updatePaddingOffset)
 	updatePaddingOffset()
 
-	-- Create a new gradient for the frame
 	local gradient = Instance.new("UIGradient")
 	gradient.Rotation = 15
 	gradient.Color = ColorSequence.new(Color3.new(1, 1, 1))
@@ -116,10 +107,8 @@ local function createShimmer(parent: GuiObject): Frame
 	return frame
 end
 
--- Playback state of the shimmer
 Shime.PlaybackState = nil
 
--- Create a new Shimmer object
 function Shime.new(
 	parent: GuiObject,
 	time: number?,
@@ -129,7 +118,6 @@ function Shime.new(
 	reverses: boolean?,
 	delayTime: number?
 )
-	-- Parameter validation
 	assert(typeof(parent) == "Instance" and parent:IsA("GuiObject"), "Invalid parent argument. Expected GuiObject.")
 
 	time = time or 1
@@ -158,28 +146,24 @@ function Shime.new(
 
 	local self = setmetatable({}, Shime)
 
-	-- Constants for the shimmer animation
-	local EASING_TIME = time or 1 -- Time for shimmer animation
-	local EASING_STYLE = style or Enum.EasingStyle.Linear -- Easing style for shimmer animation
-	local EASING_DIRECTION = direction or Enum.EasingDirection.InOut -- Easing direction for easing style
-	local REPEAT_COUNT = repeatCount or -1 -- Repeat amount for shimmer (negative number means infinite)
-	local REVERSES = reverses or false -- Reverse direction of shimmer when it reaches the end
-	local DELAY_TIME = delayTime or 0 -- Delay between each shimmer
+	local EASING_TIME = time or 1
+	local EASING_STYLE = style or Enum.EasingStyle.Linear
+	local EASING_DIRECTION = direction or Enum.EasingDirection.InOut
+	local REPEAT_COUNT = repeatCount or -1
+	local REVERSES = reverses or false
+	local DELAY_TIME = delayTime or 0
 
-	-- Create the shimmer frame and animation
 	local shimmer = createShimmer(parent)
 	self._frame = shimmer
 	self._gradient = shimmer:FindFirstChildOfClass("UIGradient")
 	self._corner = shimmer:FindFirstChildOfClass("UICorner")
 
-	-- Create the tween
 	self._tween = TweenService:Create(
 		self._gradient,
 		TweenInfo.new(EASING_TIME, EASING_STYLE, EASING_DIRECTION, REPEAT_COUNT, REVERSES, DELAY_TIME),
 		{ Offset = Vector2.new(1, 0) }
 	)
 
-	-- Setup tween completion callback. Under default constants this will never be called as the tween will repeat infinitely
 	self._tween.Completed:Connect(function()
 		self:_TweenCompleted()
 	end)
@@ -187,28 +171,23 @@ function Shime.new(
 	return self
 end
 
--- Setup tween completion callback
 function Shime:_TweenCompleted()
 	self._frame.Visible = false
 	self.PlaybackState = Enum.PlaybackState.Completed
 end
 
--- Get the shimmer frame
 function Shime:GetFrame(): Frame
 	return self._frame
 end
 
--- Get the shimmer gradient
 function Shime:GetGradient(): UIGradient
 	return self._gradient
 end
 
--- Get the ui corner of the shimmer frame
 function Shime:GetCorner(): UICorner
 	return self._corner
 end
 
--- Start shimmering
 function Shime:Play()
 	self.PlaybackState = Enum.PlaybackState.Begin
 	self._frame.Visible = true
@@ -216,7 +195,6 @@ function Shime:Play()
 	self.PlaybackState = Enum.PlaybackState.Playing
 end
 
--- Pause shimmering
 function Shime:Pause()
 	if self.PlaybackState == Enum.PlaybackState.Playing then
 		self._tween:Pause()
@@ -224,7 +202,6 @@ function Shime:Pause()
 	end
 end
 
--- Cancel shimmering
 function Shime:Cancel()
 	self._tween:Cancel()
 	self._frame.Visible = false

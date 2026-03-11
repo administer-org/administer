@@ -22,11 +22,9 @@ function QuickBlur:Blur(Image, Size, Desample)
 
 	ImageData = rpx
 
-	-- Apply blur effect
 	for pass = 1, Size do
 		for y = 0, ImageHeight - 1 do
 			for x = 0, ImageWidth - 1 do
-				-- Get indices for the neighboring pixels
 				local function clamp(val, min, max)
 					return math.max(min, math.min(max, val))
 				end
@@ -40,7 +38,6 @@ function QuickBlur:Blur(Image, Size, Desample)
 				for offset = 0, 2 do
 					local pixel = ImageData[buffer_index + offset]
 
-					-- Neighboring pixels or defaults
 					local top_left = ImageData[top_left_index + offset] or pixel
 					local top_right = ImageData[top_right_index + offset] or pixel
 					local low_left = ImageData[low_left_index + offset] or pixel
@@ -67,13 +64,11 @@ function QuickBlur:Blur(Image, Size, Desample)
 		end
 	end
 
-	-- Convert ImageData back to buffer format for WritePixelsBuffer
 	local FinalBuffer = buffer.create(TotalRGBA)
 	for i = 1, #ImageData do
 		buffer.writeu8(FinalBuffer, i - 1, ImageData[i])
 	end
 
-	-- Write the modified buffer back to the image
 	Image:WritePixelsBuffer(Vector2.zero, Vector2.new(ImageWidth, ImageHeight), FinalBuffer)
 
 	return Image

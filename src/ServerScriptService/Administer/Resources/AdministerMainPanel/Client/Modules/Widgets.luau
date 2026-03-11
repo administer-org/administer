@@ -1,6 +1,5 @@
 --// Administer
-
---// pyxfluff 2024-2025
+--// CodingAgent 2024-2026
 
 local Widgets = {
 	Active = {},
@@ -87,10 +86,9 @@ function Widgets.Edit(ContainingUI): ()
 
 	local NewPreviewContent: CanvasGroup = ContainingUI.Content:Clone()
 
-	--// Ensure it's safe
 	for _, Item in NewPreviewContent:GetChildren() do
 		if
-			Item:IsA("LocalScript") or Item:IsA("Script") --// idk why it would be a script but best to check?
+			Item:IsA("LocalScript") or Item:IsA("Script")
 		then
 			Item:Destroy()
 		end
@@ -104,7 +102,6 @@ function Widgets.Edit(ContainingUI): ()
 			Position = UDim2.new(0.271, 0, 0.057, 0),
 			BackgroundTransparency = 0.4,
 		}),
-		--Var.Services.TweenService:Create(ContainingUI.Content, TweenInfo.new(AnimSpeed * .8), {GroupTransparency = .9,}),
 		Var.Services.TweenService:Create(
 			NewPreviewContent,
 			TweenInfo.new(AnimSpeed * 0.35),
@@ -224,7 +221,6 @@ function Widgets.Edit(ContainingUI): ()
 			:Play()
 
 		if Selected == "" then
-			--// just exit
 			Utilities.Logging.Print("Exiting because nothing was selected!")
 			for _, Element in Editing.Preview:GetChildren() do
 				if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
@@ -259,9 +255,8 @@ function Widgets.Edit(ContainingUI): ()
 		ContainingUI:SetAttribute("IsEditing", false)
 	end)
 
-	--// start finding other widgets to use
 	local Widgets = Widgets.GetAvailableWidgets()["Large"]
-	local Count = 0 --// 0 by default because ideally they have one already?
+	local Count = 0
 	local Buttons = {}
 
 	local function ClickNext()

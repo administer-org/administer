@@ -5,16 +5,13 @@ local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local guiService = game:GetService("GuiService")
 
---// Modules
 local Frontend = require(script.Parent.Parent.Parent.Frontend)
 local Utilities = require(script.Parent.Parent.Parent.Utilities)
 
 local module = {}
 
--- Metamethods
 module.__index = module
 
--- Slider setup function
 function module.createDropdown(
 	bounds: GuiButton,
 	indicationText: TextLabel,
@@ -24,7 +21,6 @@ function module.createDropdown(
 	items: {},
 	SettingName
 )
-	-- Fill and slider are optional but 1 must be included
 	local self = {}
 
 	self.boundingArea = bounds
@@ -34,7 +30,6 @@ function module.createDropdown(
 
 	self.openMenu = nil
 
-	-- BindableEvents
 	self.MenuOpened = Instance.new("BindableEvent")
 	self.Opened = self.MenuOpened.Event
 	self.MenuClosed = Instance.new("BindableEvent")
@@ -42,7 +37,6 @@ function module.createDropdown(
 	self.ValueChangedBindable = Instance.new("BindableEvent")
 	self.ValueChanged = self.ValueChangedBindable.Event
 
-	-- PC / Mobile support
 	self.boundingArea.MouseButton1Down:Connect(function()
 		if self.openMenu then
 			self.openMenu:Destroy()
@@ -125,7 +119,6 @@ function module.createDropdown(
 	return self
 end
 
--- Set the sliders value
 function module:SetValue(value)
 	self.indicatorText.Text = value
 

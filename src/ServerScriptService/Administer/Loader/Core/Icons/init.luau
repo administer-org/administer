@@ -1,12 +1,12 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 return {
 	["Meta"] = {
 		Name = "UIcons",
 		Author = "FlatIcon",
 		Type = "full-set",
-		AllowThemeDependencies = true
+		AllowThemeDependencies = true,
 	},
 
 	["logos"] = {
@@ -14,11 +14,11 @@ return {
 		["administer-can"] = "18841275783",
 		["administer-beta"] = "18770010888",
 		["administer-wireframe"] = "83950641785996",
-		["logo-twitter-black"] = "12167431902"
+		["logo-twitter-black"] = "12167431902",
 	},
 
 	["accessibility"] = "103566714530577",
-	["administer"] = "116599744136879", --// I know logos exists I just use this too much 
+	["administer"] = "116599744136879",
 	["alarm"] = "18925390063",
 	["angle-left"] = "17685578876",
 	["apps"] = "18512337347",
@@ -145,5 +145,5 @@ return {
 	["volume"] = "13703642008",
 	["warning-filled"] = "17402667535",
 	["window-minimize"] = "87367479270514",
-	["x"] = "15105963940"
+	["x"] = "15105963940",
 }

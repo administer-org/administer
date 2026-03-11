@@ -1,4 +1,4 @@
--- dogo8me2 2025
+-- dogo8me2 2024
 
 local SettingsAPI = {}
 
@@ -15,11 +15,12 @@ local _dsAvailable = pcall(function()
 	DataStoreService:GetDataStore("__adm_probe"):GetAsync("__probe")
 end)
 
-local SettingsDataStore = _dsAvailable
-	and DataStoreService:GetDataStore("Administer_SettingPresets")
+local SettingsDataStore = _dsAvailable and DataStoreService:GetDataStore("Administer_SettingPresets")
 	or {
-		GetAsync    = function() return nil end,
-		SetAsync    = function() end,
+		GetAsync = function()
+			return nil
+		end,
+		SetAsync = function() end,
 		UpdateAsync = function() end,
 		RemoveAsync = function() end,
 	}
@@ -32,13 +33,12 @@ type MainSettings = Types.MainSettings
 local function saveDataStore(key: string, serverKey: string, data: {}): boolean
 	local clientData = {}
 	local serverData = {}
-	
+
 	for categoryName, config in data do
 		clientData[categoryName] = {}
 		serverData[categoryName] = {}
-		
+
 		for settingName, data in config do
-			
 			if data["SaveOnServer"] then
 				serverData[categoryName][settingName] = data
 			end
@@ -47,7 +47,7 @@ local function saveDataStore(key: string, serverKey: string, data: {}): boolean
 			end
 		end
 	end
-	
+
 	local success, err = pcall(function()
 		SettingsDataStore:SetAsync(key, HttpService:JSONEncode(clientData))
 		SettingsDataStore:SetAsync(serverKey, HttpService:JSONEncode(serverData))
@@ -73,10 +73,10 @@ local function loadDataStore(key: string, serverKey: string, template: {}?): {}
 		local successDecode, decodedClientData, decodedServerData = pcall(function()
 			return HttpService:JSONDecode(clientData), HttpService:JSONDecode(serverData)
 		end)
-		
+
 		if successDecode then
 			local data = {}
-			
+
 			for categoryName, config in decodedClientData do
 				data[categoryName] = {}
 
@@ -84,7 +84,7 @@ local function loadDataStore(key: string, serverKey: string, template: {}?): {}
 					data[categoryName][settingName] = loadedData
 				end
 			end
-			
+
 			for categoryName, config in decodedServerData do
 				if data[categoryName] == nil then
 					data[categoryName] = {}
@@ -93,7 +93,7 @@ local function loadDataStore(key: string, serverKey: string, template: {}?): {}
 					data[categoryName][settingName] = loadedData
 				end
 			end
-			
+
 			if template then
 				local function mergeTemplate(dataTable, templateTable)
 					local result = {}
@@ -114,21 +114,26 @@ local function loadDataStore(key: string, serverKey: string, template: {}?): {}
 		end
 	end
 
-	-- Return template if provided, otherwise empty
 	if template then
 		return template
 	end
 	return {}
 end
 
-
-local function settingFromString(settingName: string, settingsGroup: SettingsGroup, categoryName: string?, returnAsString: boolean?)
+local function settingFromString(
+	settingName: string,
+	settingsGroup: SettingsGroup,
+	categoryName: string?,
+	returnAsString: boolean?
+)
 	if categoryName then
 		return settingsGroup[categoryName][settingName]
 	else
 		for i, category in settingsGroup do
 			local setting: Setting = category[settingName]
-			if setting then return setting end
+			if setting then
+				return setting
+			end
 		end
 	end
 end
@@ -136,14 +141,16 @@ end
 local function categoryFromString(settingName: string, settingsGroup: SettingsGroup)
 	for i, category in settingsGroup do
 		local setting: Setting = category[settingName]
-		if setting and i ~= "_CategoryOpts" then return i end
+		if setting and i ~= "_CategoryOpts" then
+			return i
+		end
 	end
 end
 
 SettingsAPI.SettingsList = {}
 
 function SettingsAPI.GetController(name: string)
-	for i,v in pairs(SettingsAPI.SettingsList) do
+	for i, v in pairs(SettingsAPI.SettingsList) do
 		local data = v.GetData()["_SettingsMeta"]
 		if data.Name == name then
 			return v
@@ -175,7 +182,7 @@ function SettingsAPI.new(rawSettings)
 	local dataStoreKey = settingsGroup["_SettingsMeta"].Name
 	local changedSignal = Signal.new()
 
-	function APIController.Changed(names: {settingName: string}, callback) -- fires when either setting changes
+	function APIController.Changed(names: { settingName: string }, callback)
 		for i, name in names do
 			changedSignal:Connect(name, function()
 				callback(settingsGroup)
@@ -184,7 +191,7 @@ function SettingsAPI.new(rawSettings)
 		end
 	end
 
-	function APIController.with(names: {string}, callback)
+	function APIController.with(names: { string }, callback)
 		return function(...)
 			for i, name in names do
 				local retrievedSetting: Setting = settingFromString(name, settingsGroup)
@@ -192,7 +199,6 @@ function SettingsAPI.new(rawSettings)
 			end
 		end
 	end
-
 
 	function APIController.Get(names: any): any
 		if typeof(names) == "table" then
@@ -208,9 +214,7 @@ function SettingsAPI.new(rawSettings)
 			local _, Value = xpcall(function()
 				return retrievedSetting["Value"]["Value"]
 			end, function(e)
-				--// the setting does not exist
-				warn(`[Administer] Setting {names} was not found!`)
-				return false	
+				return false
 			end)
 
 			return Value
@@ -242,15 +246,16 @@ function SettingsAPI.new(rawSettings)
 	end
 
 	function APIController.GetData(): any
-		--// pyxfluff: Workaround for weird issue with caching
 		pcall(function()
-			if settingsGroup._SettingsMeta.Name ~= "Administer" then return end
-			
+			if settingsGroup._SettingsMeta.Name ~= "Administer" then
+				return
+			end
+
 			for GroupName, Group in settingsGroup do
 				Group._CategoryOpts = require(script.Parent.Parent.Core.Configuration).Settings[GroupName]._CategoryOpts
 			end
 		end)
-		
+
 		return settingsGroup
 	end
 
@@ -260,7 +265,9 @@ function SettingsAPI.new(rawSettings)
 	end
 
 	function APIController.Set(name: string, value: any?): boolean
-		if not value then value = "" end
+		if not value then
+			value = ""
+		end
 
 		local success = pcall(function()
 			local setting: Setting = settingFromString(name, settingsGroup)
@@ -268,7 +275,9 @@ function SettingsAPI.new(rawSettings)
 		end)
 
 		pcall(function()
-			if success then changedSignal:Fire(name) end
+			if success then
+				changedSignal:Fire(name)
+			end
 		end)
 
 		if remotes[name] then
@@ -289,7 +298,7 @@ function SettingsAPI.new(rawSettings)
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local saveRemote: RemoteFunction = remoteFolder:FindFirstChild("SaveSettings")
-			
+
 			return saveRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId)
 		end
 	end
@@ -297,14 +306,15 @@ function SettingsAPI.new(rawSettings)
 	function APIController.Load(UserId: number?, customTemplate: SettingsGroup?): boolean
 		if isServer then
 			local success, err = pcall(function()
-				settingsGroup = loadDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", customTemplate or rawSettings)
+				settingsGroup =
+					loadDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", customTemplate or rawSettings)
 			end)
-			
+
 			if success then
 				local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
-				pcall(function() --// if this fails the server is not loaded yet
-					local loaded:RemoteEvent = remoteFolder:WaitForChild("SettingsLoaded", 0.5)
-					
+				pcall(function()
+					local loaded: RemoteEvent = remoteFolder:WaitForChild("SettingsLoaded", 0.5)
+
 					loaded:FireAllClients()
 				end)
 			end
@@ -313,13 +323,13 @@ function SettingsAPI.new(rawSettings)
 			local localPlayer = Players.LocalPlayer
 			local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
 			local loadRemote: RemoteFunction = remoteFolder:FindFirstChild("LoadSettings")
-			
+
 			return loadRemote:InvokeServer(settingsGroup["_SettingsMeta"].Name, UserId, customTemplate)
 		end
 	end
 
 	table.insert(SettingsAPI.SettingsList, APIController)
-	
+
 	return APIController
 end
 

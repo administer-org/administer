@@ -62,22 +62,15 @@ local Settings = SettingsAPI.new({
 	},
 })
 
---// Connect to a SettingChanged event
 Settings.Changed({ "AnimationSpeed", "InterfaceScale" }, function(Setting)
 	print(`{Setting.Name} has changed and is now {Setting.Value}!`)
-end) --// -> { Disconnect: function }
-
---local Connection = Settings.with({ "Language" }, function(Setting, Time)
---	print(`{Setting.Value.Value == "English" and "Hello" or "Hola!"} The current Unix time is {Time}.`)
---end) --// -> function
-
---Connection(os.time())
+end)
 
 local LotsOfValues = Settings.Get({ "Language", "InterfaceScale" })
-print(LotsOfValues) --// -> { Language: English, InterfaceScale: 1 }
+print(LotsOfValues)
 
-print(Settings.Get("AnimationSpeed")) --// -> 1 -- how is this different to getRaw
+print(Settings.Get("AnimationSpeed"))
 
-local Category = Settings.GetCategory("Interface") --// -> { InterfaceScale: 1 }
+local Category = Settings.GetCategory("Interface")
 
 print(Category)

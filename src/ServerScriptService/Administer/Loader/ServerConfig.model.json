@@ -1,0 +1,18 @@
+{
+    "ClassName": "Configuration",
+    "properties": {
+		"Attributes": {
+			"DefaultAppServer": {"String": "https://gate.admsoftware.workers.dev"},
+            "AppServerInfoURL": {"String": "https://api.admsoftware.org/appservers"},
+            "VersionCheckURL": {"String": "https://api.admsoftware.org/info"},
+            "ProxyURL": {"String": "https://proxy.CodingAgent.dev"},
+            "AppPollingLimit": {"Int32": 50},
+            "WaitForBootstrap": {"Bool": false},
+            "IsFirstBoot": {"Bool": false},
+            "Locales": {"String": "script.Parent.Locales"},
+            "RemotesPath": {"String": "game.ReplicatedStorage"},
+            "EnableFreeAdmin": {"Bool": false},
+            "LocalAppsFolder": {"String": ""}
+		}
+	}
+}

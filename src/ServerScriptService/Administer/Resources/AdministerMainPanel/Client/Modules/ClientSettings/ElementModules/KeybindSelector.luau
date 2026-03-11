@@ -7,12 +7,9 @@ local guiService = game:GetService("GuiService")
 
 local module = {}
 
--- Metamethods
 module.__index = module
 
--- Slider setup function
 function module.createKeybindListener(bounds: GuiButton, indicationText: TextLabel)
-	-- Fill and slider are optional but 1 must be included
 	local self = {}
 
 	self.boundingArea = bounds
@@ -23,13 +20,11 @@ function module.createKeybindListener(bounds: GuiButton, indicationText: TextLab
 
 	self.listening = false
 
-	-- BindableEvents
 	self.listeningBindable = Instance.new("BindableEvent")
 	self.listeningStarted = self.listeningBindable.Event
 	self.ValueChangedBindable = Instance.new("BindableEvent")
 	self.ValueChanged = self.ValueChangedBindable.Event
 
-	-- PC / Mobile support
 	self.boundingArea.MouseButton1Click:Connect(function()
 		local pressedKeys = {}
 		self.listening = true
@@ -59,7 +54,6 @@ function module.createKeybindListener(bounds: GuiButton, indicationText: TextLab
 	return self
 end
 
--- Set the sliders value
 function module:SetValue(value: { Enum.KeyCode })
 	if value ~= self.value then
 		self.value = value

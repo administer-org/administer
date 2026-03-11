@@ -1,4 +1,4 @@
---// pyxfluff 2025
+--// CodingAgent 2026
 
 local Modules = script.Parent
 local Libs = script.Parent.Parent.Libraries
@@ -126,7 +126,6 @@ local function NewCard(RankData: { any }, ParentFrame, IsDummyCard)
 	xpcall(function()
 		Template.ColorBG.BackgroundColor3 = Color3.fromHex(RankData.Color)
 	end, function()
-		--// invalid hex code
 		Template.ColorBG.BackgroundColor3 = Color3.new(0.239, 0.643, 1)
 	end)
 
@@ -435,7 +434,7 @@ local function SwapPages(Page1, Page2, NewIcon, Spin, PageNumber)
 	Dots.AProgress.Text =
 		string.format(Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.StepLabel"), Page, CreatorStepCount)
 
-	ET.Completed:Wait() --// stop the animation from being too quick
+	ET.Completed:Wait()
 end
 
 function Admins.ClearEditState(Env)
@@ -449,7 +448,6 @@ function Admins.ClearEditState(Env)
 		Env.EditModeRank = 0
 	end
 
-	--// stuff to clear regardless
 	Env.Apps = {}
 end
 
@@ -514,11 +512,9 @@ function Admins.RunCreatorApp()
 	local Env = require(script.Parent.UI.AdminHelperEnv)
 	local Dots = Frames.BottomData.Controls.Dots
 
-	--// buttons
 	local ConnectionsTable
 	local FinalData = {}
 
-	--// Translations
 	Frames.BottomData.RankTitle.Text = Utilities.Translate("Configuration.Admins.NewAdmin.BottomData.RankTitle")
 
 	Frames.Page1.Header.Text = Utilities.Translate("Configuration.Admins.NewAdmin.Page1.Header")
@@ -562,11 +558,10 @@ function Admins.RunCreatorApp()
 	Frames.Page1.NextPage.MouseButton1Click:Connect(function()
 		SwapPages(Frames.Page1, Frames.Loading, "rbxassetid://11102397100", true, 1)
 
-		Env = require(script.Parent.UI.AdminHelperEnv) --// Re-fetch config just incase it changed
+		Env = require(script.Parent.UI.AdminHelperEnv)
 
 		print("hi")
 
-		--// Verify the filtering service is online
 		local Success, FilterResult = pcall(function()
 			return Var.Remotes.FilterString:InvokeServer("test string")
 		end)
@@ -689,7 +684,7 @@ function Admins.RunCreatorApp()
 				:GetPropertyChangedSignal("Text")
 				:Connect(function()
 					if Checking then
-						task.cancel(Thread) --// too quick, stop the old one...
+						task.cancel(Thread)
 
 						Thread = task.spawn(CheckTask)
 					else
@@ -919,21 +914,19 @@ function Admins.RunCreatorApp()
 					continue
 				end
 
-				--// TODO: Maybe we should do something better with CanNotEdit eventually like displaying a label.. but it works like this for now!
 				if not Var.RankCreatorApps[AppID] then
 					table.insert(CanNotEdit, AppID)
 				end
 
 				Var.RankCreatorApps[AppID] = CanUse
 
-				--print(AppID, CanUse)
 			end
 		end
 
 		for i, v: Instance in Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() do
 			if Env.HasPopulatedApps then
 				break
-			end --// maybe a better place for this?
+			end
 
 			if
 				not table.find({ "MultiThread", "SingleThread", "ZZ_AdministerData", "UIListLayout", "Home" }, v.Name)
@@ -949,7 +942,6 @@ function Admins.RunCreatorApp()
 							continue
 						end
 
-						--// check just incase its edited
 						for _, AppObj in Var.CombinedButtonConfig do
 							for _, SubIcon in AppObj.SubIcons do
 								local ButtonID = `{AppObj.ButtonID}\\{SubIcon.ButtonID}`
@@ -971,7 +963,6 @@ function Admins.RunCreatorApp()
 
 						App:FindFirstChildWhichIsA("TextButton").MouseButton1Click:Connect(function()
 							for _, AppObj in Var.CombinedButtonConfig do
-								--// i hate recursion
 								for _, SubIcon in AppObj.SubIcons do
 									local ButtonID = `{AppObj.ButtonID}\\{SubIcon.ButtonID}`
 
@@ -1001,7 +992,6 @@ function Admins.RunCreatorApp()
 					NewApp.Parent = Frames.Page4.AppDrawer.AppHolder.Apps
 					NewApp.Size = UDim2.new(0.911, 0, 0.13, 0)
 
-					--// same "is this edited?" logic..
 					for _, AppObj in Var.CombinedButtonConfig do
 						if AppObj.ButtonID == ButtonID and Var.RankCreatorApps[ButtonID] == false then
 							TweenService:Create(NewApp.Title, TweenInfo.new(0.4), {
@@ -1041,7 +1031,6 @@ function Admins.RunCreatorApp()
 	Frames.Page4.NextPage.MouseButton1Click:Connect(function()
 		SwapPages(Frames.Page4, Frames.Loading, "", true, 4)
 
-		--// Reset
 		if Frames.Page5:FindFirstChildWhichIsA("Frame") then
 			Frames.Page5:FindFirstChildWhichIsA("Frame"):Destroy()
 		end
@@ -1075,9 +1064,8 @@ function Admins.RunCreatorApp()
 		end
 
 		NewCard({
-			--// we have to adapt the data slightly bc the server schema is different
 			Name = Var.Remotes.FilterString:InvokeServer(Frames.Page2.TextInput.Text)[2],
-			Protected = false, --// may be configurable soon
+			Protected = false,
 			Members = Members,
 
 			Apps = Var.RankCreatorApps,
@@ -1096,7 +1084,6 @@ function Admins.RunCreatorApp()
 	Frames.Page5.NextPage.MouseButton1Click:Connect(function()
 		CanGoBack = false
 
-		--// Start packaging the data
 		SwapPages(Frames.Page5, Frames.Loading, "", true, 5)
 
 		local Members, AllowedPages = {}, {}
@@ -1125,7 +1112,7 @@ function Admins.RunCreatorApp()
 
 		FinalData = {
 			Name = Var.Remotes.FilterString:InvokeServer(Frames.Page2.TextInput.Text)[2],
-			Protected = false, --// may be configurable soon
+			Protected = false,
 			Members = Members,
 
 			Apps = Var.RankCreatorApps,

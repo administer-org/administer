@@ -1,26 +1,63 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local Variables = {}
 
 local Typing = require(script.Parent.Types)
 local Root = script.Parent.Parent.Parent
 
-local Config = require(script.Parent.Configuration)
+local Configuration = script.Parent.Parent.ServerConfig
 
---// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
-Variables.Config = require(script.Parent.Configuration) --// Config file location
-Variables.RemotesPath = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin = true --// Makes every user a superadmin. Not recommended for anything other than debugging.
+local function getObjectFromPath(pathString)
+	if not pathString or type(pathString) ~= "string" then
+		return nil
+	end
 
---Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
-Variables.DefaultAppServer = "https://gate.admsoftware.workers.dev" --// Gateway auto-selects the best AOS instance.
-Variables.AppServerInfoURL = "https://info.admsoftware.workers.dev" --// Base URL; /appservers returns the list of available AOS node URLs
-Variables.ProxyURL = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.pyxfluff.dev/games//docs.
-Variables.Locales = script.Parent.Locales --// Locales location
-Variables.AppPollingLimit = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
-Variables.WaitForBootstrap = false --// Whether or not we will wait for apps to load before sending out panels.
-Variables.IsFirstBoot = false --// Setting this to true will fully reset your game's Administer store so be careful!! Use the Utilities app to do it properly
+	local parts = string.split(pathString, ".")
+	local current
+
+	if parts[1] == "game" then
+		current = game
+		table.remove(parts, 1)
+	elseif parts[1] == "script" then
+		current = script
+		table.remove(parts, 1)
+	else
+		return nil
+	end
+
+	for _, name in ipairs(parts) do
+		if current:IsA("DataModel") or current:IsA("Instance") then
+			if name == "Parent" then
+				current = current.Parent
+			else
+				current = current:FindFirstChild(name)
+			end
+			if not current then
+				warn(`Path broken at: {name}`)
+				return nil
+			end
+		else
+			return nil
+		end
+	end
+
+	return current
+end
+
+Variables.Config = require(script.Parent.Configuration)
+Variables.RemotesPath = getObjectFromPath(Configuration:GetAttribute("RemotesPath"))
+Variables.EnableFreeAdmin = Configuration:GetAttribute("EnableFreeAdmin")
+Variables.LocalAppsFolder = getObjectFromPath(Configuration:GetAttribute("LocalAppsFolder"))
+
+Variables.DefaultAppServer = Configuration:GetAttribute("DefaultAppServer")
+Variables.AppServerInfoURL = Configuration:GetAttribute("AppServerInfoURL")
+Variables.VersionCheckURL = Configuration:GetAttribute("VersionCheckURL")
+Variables.ProxyURL = Configuration:GetAttribute("ProxyURL")
+Variables.Locales = getObjectFromPath(Configuration:GetAttribute("Locales"))
+Variables.AppPollingLimit = Configuration:GetAttribute("AppPollingLimit")
+Variables.WaitForBootstrap = Configuration:GetAttribute("WaitForBootstrap")
+Variables.IsFirstBoot = Configuration:GetAttribute("IsFirstBoot")
 
 Variables.Services = setmetatable({}, {
 	__index = function(self, Service)
@@ -29,8 +66,6 @@ Variables.Services = setmetatable({}, {
 	end,
 })
 
---// The scheme is `app\widget-title`, anything will work here
---// as long as it exists.
 Variables.BaseHomeInfo = {
 	_version = 1,
 	Widget1 = "administer\\welcome",
@@ -42,8 +77,6 @@ Variables.BaseHomeInfo = {
 	},
 }
 
---// Stub DataStore used when the real DataStoreService is unavailable (e.g. unpublished Studio sessions).
---// All reads return nil, all writes silently succeed — Administer degrades gracefully.
 local function makeStubDataStore(name: string)
 	return {
 		GetAsync = function(self, key)
@@ -57,10 +90,24 @@ local function makeStubDataStore(name: string)
 	}
 end
 
-local _dsOk, _dsErr = pcall(function()
-	-- A cheap test call that throws immediately if DataStores are unavailable
-	Variables.Services.DataStoreService:GetDataStore("__adm_probe"):GetAsync("__probe")
+local _dsOk = false
+local _dsErr = nil
+
+local budget = 0
+pcall(function()
+	budget = Variables.Services.DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
 end)
+
+if budget > 0 then
+	local ok, err = pcall(function()
+		Variables.Services.DataStoreService:GetDataStore("__adm_probe"):GetAsync("__probe")
+	end)
+	_dsOk = ok
+	_dsErr = err
+else
+	_dsOk = false
+	_dsErr = "DataStore request budget is 0 — API Services likely disabled"
+end
 
 if not _dsOk then
 	warn(
@@ -68,7 +115,7 @@ if not _dsOk then
 			.. "  All data (admins, settings, app servers) will NOT persist this session.\n"
 			.. "  To fix: publish your place to Roblox, or enable Studio Access to API Services\n"
 			.. "  under Game Settings → Security → Enable Studio Access to API Services.\n"
-			.. "  Error: "
+			.. "  Reason: "
 			.. tostring(_dsErr)
 	)
 end
@@ -95,7 +142,6 @@ Variables.DataStores = {
 	Settings = getDS("Administer_Settings"),
 }
 
---// Exposed so other modules can check if DataStores are available
 Variables.DataStoreAvailable = _dsOk
 
 Variables.Notification = {
@@ -103,21 +149,18 @@ Variables.Notification = {
 	Error = "",
 }
 
---// WARNING: EVERYTHING BELOW THIS LINE IS AUTOMATED AND SHOULD NOT BE EDITED.
---// DOING SO WILL BREAK YOUR GAME OR ADMINISTER.
---// IF YOU WANT TO HARDCODE ADMINS, SEE ./Configuration
 Variables.DidBootstrap = false
+Variables.StaffData = {}
 Variables.LogJoins = true
 Variables.PanelFound = Root.Resources:FindFirstChild("AdministerMainPanel")
 Variables.Branch = nil
 Variables.DisableBootstrapProtection = true
 Variables.IsRecentV1xMigration = false
 
---// Note to self: when adding these, remember to type in the Types file!!
 Variables.ModuleSensitivity = {
 	AdminRunner = 3,
 	Apps = 3,
-	Utilities = 2, --// This one is so general purpose it's just safest to mark it as mild
+	Utilities = 2,
 	HTTPRunner = 2,
 	Settings = 1,
 	Frontend = 1,
@@ -161,34 +204,6 @@ Variables.DefaultRankData = {
 
 Variables.CurrentBranch = {}
 Variables.Branches = {
-	Internal = {
-		ImageID = "rbxassetid://18841275783",
-		Name = "Administer Internal",
-		BranchName = "canary",
-		IsActive = false,
-	},
-
-	QualityAssurance = {
-		ImageID = "rbxassetid://76508533583525",
-		Name = "Administer QA Release",
-		BranchName = "qualassur",
-		IsActive = false,
-	},
-
-	Fresh = {
-		ImageID = "rbxassetid://18224047110",
-		Name = "Administer (git)",
-		BranchName = "git",
-		IsActive = false,
-	},
-
-	Beta = {
-		ImageID = "rbxassetid://18770010888",
-		Name = "Administer Public Beta",
-		BranchName = "pub_beta",
-		IsActive = false,
-	},
-
 	Stable = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
@@ -208,9 +223,9 @@ Variables.CachedLocales = {}
 Variables.AppServers = Variables.DataStores.AppDB:GetAsync("AppServerList") or {}
 
 Variables.Panel.Spawn = function(Rank, Player)
-	--// Prevent duplicate panels in the same PlayerGui
-	if Player.PlayerGui:FindFirstChild("AdministerMainPanel") ~= nil then
-		return Player.PlayerGui:FindFirstChild("AdministerMainPanel")
+	local stale = Player.PlayerGui:FindFirstChild("AdministerMainPanel")
+	if stale then
+		stale:Destroy()
 	end
 
 	local NewPanel = Variables.Panel.Path:Clone()
@@ -236,7 +251,6 @@ Variables.Panel.Spawn = function(Rank, Player)
 
 	NewPanel:SetAttribute("_CurrentBranch", Variables.Services.HttpService:JSONEncode(Variables.CurrentBranch))
 	NewPanel:SetAttribute("StartID", Variables.Services.HttpService:GenerateGUID(false))
-	--// In stub mode (no DataStore) skip the setup wizard so the panel opens normally
 	local needsSetup = _dsOk and (Tutorials["FirstTimeSetup"] ~= true) or false
 	NewPanel:SetAttribute("NeedsSetup", needsSetup)
 
@@ -245,7 +259,7 @@ end
 
 Variables.Init = function()
 	local RF = Instance.new("Folder", Variables.RemotesPath)
-	RF.Name = "Administer"
+	RF.Name = "__AdmPending"
 	Variables.RemotesPath = RF
 
 	local AppRemotes = Instance.new("Folder", Variables.RemotesPath)
@@ -270,8 +284,6 @@ Variables.Init = function()
 		end
 	end
 
-	--// Override with user-defined custom AOS URL if one was saved. When nil/empty, all
-	--// requests go through the gateway which handles node selection automatically.
 	local ok, customServer = pcall(function()
 		return Variables.DataStores.AppDB:GetAsync("CustomAOSServer")
 	end)

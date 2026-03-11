@@ -1,12 +1,10 @@
 --!strict
 
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local Types = require(script.Parent.Types)
 local Locales: { Default: string, Value: string, Items: { string } } = {
-	--// Change the default locale here
-	--// Make sure it is supported by Administer! See ./Locales for the list.
 	Default = "en",
 	Value = "en",
 	Items = {},
@@ -31,31 +29,26 @@ local Settings: SettingsType = {
 		Tweak = 1,
 
 		Extra = "",
-		String = "2.1.1",
+		String = "1.0.0",
 		GitRevision = "a13118d",
 
-		NoExtraData = "2.1.1",
+		NoExtraData = "1.0.0",
 		APIRevision = "2.0.0",
 
 		ID = "org.admsoftware.Core",
 	},
 
 	Admins = {
-		--// Hardcoded admins go here.
-		--// If you have no idea what a dictionary is then please just
-		--// use GUI-based rank configuration, you are going to make a syntax error.
-		--// If you see red lines anywhere here press Ctrl Z until they go away
 
 		Groups = {
-			--// Change the ID in the table key here. Copy this entry to make more.
-			[0] = { --// Group ID
-				RankNumber = 255, --// Group rank ID
-				AdminRankID = 1, --// Administer rank ID, leave 1 for administrator rights
+			[0] = {
+				RankNumber = 255,
+				AdminRankID = 1,
 			},
 		},
 
 		Players = {
-			[0] = { --// User ID
+			[0] = {
 				AdminRankID = 1,
 			},
 		},
@@ -70,7 +63,7 @@ local Settings: SettingsType = {
 		{
 			UserID = 133017837,
 			Name = "pyxfluff",
-			Job = "project lead, AOS, frontend/backend",
+			Job = "previous owner, AOS, frontend/backend",
 		},
 		{
 			UserID = 938429178,
@@ -124,8 +117,6 @@ local Settings: SettingsType = {
 		},
 	},
 
-	--// Don't change these unless you have to, they will probably be overwritten
-	--// or ignored by the system. They are just default values.
 	Settings = {
 		_SettingsMeta = {
 			Name = "Administer",
@@ -460,8 +451,8 @@ local Settings: SettingsType = {
 						"error",
 					},
 
-					Value = "log",
-					Default = "log",
+					Value = "warning",
+					Default = "warning",
 				},
 			},
 

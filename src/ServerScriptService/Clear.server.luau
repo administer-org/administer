@@ -1,45 +1,53 @@
---// Administer - ClearAllRanks.server.lua
---// Utility script to clear all admin ranks from the DataStore
---// To disable: set ENABLED to false or delete this script
+local DataStoreService = game:GetService("DataStoreService")
 
-local ENABLED = true
+local StoresToClear = {
+	Admins = DataStoreService:GetDataStore("Administer_Admins"),
+	Home = DataStoreService:GetDataStore("Administer_HomeStore"),
+	AppData = DataStoreService:GetDataStore("Administer_AppData"),
+	Settings = DataStoreService:GetDataStore("Administer_Settings"),
+}
 
-if not ENABLED then return end
+local function wipeStore(name, dataStore)
+	print("🧹 Starting wipe for: " .. name)
 
-local Root = script.Parent.Administer.Loader.Modules -- adjust path if needed
-
-local Var = require(Root.Parent.Core.Variables)
-
-local function ClearAllRanks()
-	print("[-] Clearing all admin ranks...")
-	local Start = os.clock()
-
-	xpcall(function()
-		local Info = Var.DataStores.AdminsDS:GetAsync("CurrentRanks")
-
-		if not Info or not Info.Names then
-			warn("[!] No ranks found, nothing to clear.")
-			return
-		end
-
-		-- Remove each individual rank entry
-		for _, Name in Info.Names do
-			Var.DataStores.AdminsDS:RemoveAsync(Name)
-			print(`[~] Removed rank: {Name}`)
-		end
-
-		-- Reset CurrentRanks
-		Var.DataStores.AdminsDS:SetAsync("CurrentRanks", {
-			Count = 0,
-			Names = {},
-			GroupAdminIDs = {},
-			AdminIDs = {}
-		})
-
-		print(`[✓] All ranks cleared in {os.clock() - Start}s!`)
-	end, function(E)
-		warn(`[X] Failed to clear ranks! {E}`)
+	local success, pages = pcall(function()
+		return dataStore:ListKeysAsync()
 	end)
+
+	if success then
+		while true do
+			local items = pages:GetCurrentPage()
+
+			for _, key in ipairs(items) do
+				local removeSuccess, err = pcall(function()
+					dataStore:RemoveAsync(key.KeyName)
+				end)
+
+				if removeSuccess then
+					print("✅ Removed key: " .. key.KeyName)
+				else
+					warn("❌ Failed to remove key " .. key.KeyName .. ": " .. err)
+				end
+			end
+
+			if pages.IsFinished then
+				break
+			end
+			pages:AdvanceToNextPageAsync()
+		end
+		print("✨ Finished wiping: " .. name)
+	else
+		warn("Scope error or ListKeysAsync failed for " .. name .. ": " .. tostring(pages))
+	end
 end
 
-ClearAllRanks()
+local function clearAllAdministerData()
+
+	for nickname, storeObject in pairs(StoresToClear) do
+		wipeStore(nickname, storeObject)
+	end
+
+	print("🚀 All specified DataStores have been cleared.")
+end
+
+clearAllAdministerData()

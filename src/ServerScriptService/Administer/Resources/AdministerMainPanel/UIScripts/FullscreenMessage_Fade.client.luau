@@ -1,3 +1,5 @@
+--// CodingAgent 2024
+
 local TS = game:GetService("TweenService")
 
 TS:Create(
@@ -6,19 +8,7 @@ TS:Create(
 	{ GroupTransparency = 0, Size = UDim2.new(1, 0, 1, 0) }
 ):Play()
 
-local Blur
-if script:FindFirstChild("Blur") then
-	Blur = script.Blur:Clone()
-	Blur.Parent = game.Lighting
-	Blur.Size = 0
-else
-	warn("[FullscreenMessage_Fade] Blur child not found on script, creating fallback BlurEffect")
-	Blur = Instance.new("BlurEffect")
-	Blur.Parent = game.Lighting
-	Blur.Size = 0
-end
-
-TS:Create(Blur, TweenInfo.new(1.5), { Size = 25 }):Play()
+local Blur = nil
 
 script.Parent.Exit.MouseButton1Click:Connect(function()
 	TS:Create(
@@ -26,10 +16,8 @@ script.Parent.Exit.MouseButton1Click:Connect(function()
 		TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
 		{ GroupTransparency = 1, Size = UDim2.new(1.5, 0, 1.5, 0) }
 	):Play()
-	TS:Create(Blur, TweenInfo.new(0.5), { Size = 0 }):Play()
 
 	task.wait(0.75)
 
-	Blur:Destroy()
 	script.Parent:Destroy()
 end)

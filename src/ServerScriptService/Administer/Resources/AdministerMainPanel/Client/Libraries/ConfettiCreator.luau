@@ -2,11 +2,10 @@ local gui = script.Parent.Parent.Parent
 
 local types = script:WaitForChild("ConfettiTypes")
 
-local deleteConfettiAfter = 10 --Increasing the time will decrease performance
+local deleteConfettiAfter = 10
 
 local rnd = Random.new()
 
---Creates a single confetti with random size
 function CreateOne(origin, colors, minSize, maxSize)
 	local allTypes = types:GetChildren()
 
@@ -34,7 +33,6 @@ function CreateOne(origin, colors, minSize, maxSize)
 	return confetti
 end
 
---Moves a single confetti in a projectile motion
 function MoveOne(confetti, upwardVelocity, horizontalVelocity, downwardAcceleration, angularVelocity)
 	local origin = Vector2.new(confetti.AbsolutePosition.X, confetti.AbsolutePosition.Y)
 
@@ -79,7 +77,6 @@ function MoveOne(confetti, upwardVelocity, horizontalVelocity, downwardAccelerat
 	end
 end
 
---Creates a group of confetti
 function CreateConfetti(
 	origin: UDim2?,
 
@@ -102,7 +99,6 @@ function CreateConfetti(
 	minAngularSpeed: number?,
 	maxAngularSpeed: number?
 )
-	--  Parameters                Given values               Default values if no given value
 	origin = origin or UDim2.fromScale(0.5, -0.5) :: UDim2
 	count = count or 200
 	colors = colors

@@ -1,5 +1,5 @@
 --// # Administer #
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 --// https://github.com/administer-org/Administer
 
@@ -20,7 +20,6 @@ local HttpRunner = require(Modules.HTTPRunner)
 local Utils = require(Modules.Utilities)
 local Debugging = require(Modules.Debugging)
 local SettingsAPI = require(Modules.SettingsAPI)
-local Migrator = require(Modules.Helpers.AdmV1Migrator)
 local PanelRelocator = require(Modules.Helpers.PanelRelocator)
 local Importer = require(Modules.Importer)
 
@@ -37,7 +36,6 @@ Var.Init()
 Var.InitClock["InitVars"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] Init() OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 
---// Patch panel scripts from Rojo-managed PanelScripts folder into the rbxm template
 do
 	local PanelTemplate = script.Parent.Resources:FindFirstChild("AdministerMainPanel")
 	local PanelScripts = script.Parent:FindFirstChild("PanelScripts")
@@ -59,21 +57,10 @@ xpcall(function()
 
 	local Settings = SettingsAPI.new(Configuration.Settings)
 
-	if Migrator.CheckForV1() then
-		Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
-		Migrator.Migrate()
-
-		Var.IsFirstBoot = false
-	else
-		Utils.Logging.Print("V1 Installation not found!")
-	end
-
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
 		Settings.Save(1)
 
-		--// This system is better than the old one because it allows the user
-		--// to uninstall AOS without causing the system to overwrite stuff
 		Var.DataStores.Settings:SetAsync("HasInit", true)
 	else
 		Settings.Load(1)
@@ -90,7 +77,6 @@ end)
 Var.InitClock["LoadSettings"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Var.InitClock.TempInit = os.clock()
 
---// Create remotes BEFORE player bootstrap to prevent race conditions
 Utils.Logging.Print("[-] Mounting frontend API..")
 Var.InitClock.TempInit = os.clock()
 
@@ -115,7 +101,6 @@ NewRemote("Ping", false, false, function()
 	return "PONG"
 end)
 
---// Translation routes
 NewRemote("GetTranslationModule", true, true, function(Player, Locale)
 	return require(script.Core.Locales[Locale]) :: any
 end)
@@ -137,7 +122,6 @@ NewRemote("GetLocaleNames", false, false, function()
 	return Result
 end)
 
---// Settings (must be before player bootstrap)
 NewRemote("LoadSettings", true, false, function(controllerName, userId, customSettings: Types.SettingsGroup?)
 	if not SettingsAPI then
 		return false
@@ -222,9 +206,25 @@ end)
 
 Utils.NewRemote("RemoteEvent", "SettingsLoaded", true, function() end)
 
+Var.RemotesPath.Name = "Administer"
+
 Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 
 task.defer(function()
+	do
+		local ok, result = pcall(function()
+			local raw = Var.Services.HttpService:GetAsync("https://api.admsoftware.org/info", true)
+			local decoded = Var.Services.HttpService:JSONDecode(raw)
+			Var.StaffData = decoded.administer.staff
+		end)
+		if not ok or not Var.StaffData then
+			Utils.Logging.Warn("[StaffFetch] Could not fetch staff from API, using config fallback:", tostring(result))
+			Var.StaffData = Configuration.Contributors
+		else
+			Utils.Logging.Print(`[StaffFetch] Loaded {#Var.StaffData} staff members from API`)
+		end
+	end
+
 	AppsModule.Initialize()
 
 	AdminRunner.Scan(false)
@@ -234,7 +234,6 @@ task.defer(function()
 
 		if not Var.DataStoreAvailable then
 			task.defer(function()
-				--// Wait for the panel to exist in their PlayerGui
 				local MaxWait = 15
 				local Elapsed = 0
 				repeat
@@ -260,12 +259,14 @@ task.defer(function()
 	end
 
 	Var.Services.Players.PlayerAdded:Connect(OnPlayerAdded)
+	Var.Services.Players.PlayerRemoving:Connect(function(Player: Player)
+		AdminRunner.Removing(Player)
+	end)
 
 	Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 	Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 end)
 
---// Additional remotes for apps, utilities, and admin features (these can come after player bootstrap)
 local function NewRemote(
 	Name: string,
 	AuthRequired: boolean,
@@ -283,15 +284,12 @@ local function NewRemote(
 	end
 end
 
---// Homepage
 NewRemote("UpdateHomePage", true, true, FrontendAPI.UpdateHomePage)
 
---// Utilities
 NewRemote("GetVersions", true, true, function(Player, Services)
 	local Final = {}
 
 	for _, Service in Services do
-		--// BIG TODO here
 		if Service == "administer" then
 			Final["administer"] = Configuration.VersData
 		end
@@ -307,13 +305,17 @@ NewRemote("GetPasses", false, false, function()
 		local Success, Error = pcall(function()
 			Attempts += 1
 			_Content = Var.Services.HttpService:GetAsync(
-				`https://proxy.pyxfluff.dev/games/v1/games/1778091660/game-passes?sortOrder=Asc&limit=50`,
+				`https://proxy.CodingAgent.dev/games/v1/games/2208062007/game-passes?sortOrder=Asc&limit=50`,
 				true
 			)
 		end)
 	until Success or Attempts > 5
 
-	return Var.Services.HttpService:JSONDecode(_Content)["data"]
+	local ok, decoded = pcall(function()
+		return Var.Services.HttpService:JSONDecode(_Content)
+	end)
+
+	return (ok and decoded and decoded["data"])
 		or {
 			{
 				price = "Failed to load.",
@@ -346,17 +348,45 @@ NewRemote("GetIconPack", false, false, function()
 end)
 
 NewRemote("GetContributors", false, false, function()
-	return Configuration.Contributors
+	return Var.StaffData
 end)
 
---// Apps
 NewRemote("GetAppList", true, false, function(QueryType)
 	return AppsModule.ServerAPI.GetList(nil, QueryType)
 end)
 
 NewRemote("GetAppInfo", true, false, AppsModule.ServerAPI.GetApp)
 NewRemote("GetInstalledApps", true, false, AppsModule.GetAll)
-NewRemote("InstallApp", true, false, AppsModule.ServerAPI.InstallFromServer)
+NewRemote("InstallApp", true, true, function(Player: Player, ServerURL: string, AppID: string)
+	local Result = AppsModule.ServerAPI.InstallFromServer(ServerURL, AppID)
+
+	if not Result[1] then
+		return Result
+	end
+
+	local newAppName, newIcon, newFrameName = nil, nil, nil
+
+	local LivePanel = Player.PlayerGui:FindFirstChild("AdministerMainPanel")
+	local livePanelMain = LivePanel and LivePanel:FindFirstChild("Main")
+
+	for appName, RunningApp in AppsModule.RunningApps do
+		if RunningApp.ClientFrameName then
+			local frameExists = livePanelMain and livePanelMain:FindFirstChild(RunningApp.ClientFrameName)
+			if not frameExists then
+				local TemplateFrame = Var.Panel.Path.Main:FindFirstChild(RunningApp.ClientFrameName)
+				if TemplateFrame and livePanelMain then
+					TemplateFrame:Clone().Parent = livePanelMain
+				end
+				newFrameName = RunningApp.ClientFrameName
+				newAppName = RunningApp.Name
+				newIcon = RunningApp.Icon
+				break
+			end
+		end
+	end
+
+	return { true, Result[2], newAppName, newIcon, newFrameName }
+end)
 NewRemote("Vote", true, false, AppsModule.ServerAPI.Vote)
 NewRemote("ManageApp", true, false, AppsModule.Uninstall)
 NewRemote("GetAppServers", true, false, AppsModule.ServerAPI.GetServerStatuses)
@@ -364,14 +394,14 @@ NewRemote("RemoveAppServer", true, false, AppsModule.ServerAPI.UninstallServer)
 NewRemote("GetAppCounts", true, false, AppsModule.GetTotals)
 NewRemote("AOSRichSearch", true, false, AppsModule.ServerAPI.Search)
 NewRemote("GetAOSInstances", true, false, AppsModule.ServerAPI.GetAOSInstances)
+if not Var.RemotesPath:FindFirstChild("AppLifecycle") then
+	Utils.NewRemote("RemoteEvent", "AppLifecycle", false, function() end)
+end
 NewRemote("RegisterPrimaryAOS", true, false, AppsModule.ServerAPI.RegisterPrimary)
 NewRemote("InstallServer", true, false, AppsModule.ServerAPI.New)
 NewRemote("GetPrimaryServer", true, false, AppsModule.ServerAPI.GetPrimaryServer)
 
 NewRemote("SetPrimaryAppServer", true, false, function(ServerURL: string)
-	--// Sets the primary app server for request routing
-	--// If URL is a gateway URL, finds best AOS instance and marks it as primary
-	--// If URL is in AppServers, marks it as primary
 
 	local IsGateway = string.find(ServerURL, "gateway") or string.find(ServerURL, "gate")
 
@@ -380,7 +410,6 @@ NewRemote("SetPrimaryAppServer", true, false, function(ServerURL: string)
 	Utils.Logging.Print(`[GatewayDetect] AppServers count -> {#Var.AppServers}`)
 
 	if IsGateway then
-		--// Find the best available AOS instance to use
 		local BestServer = nil
 		local LowestPing = math.huge
 
@@ -407,7 +436,6 @@ NewRemote("SetPrimaryAppServer", true, false, function(ServerURL: string)
 			Utils.Logging.Warn("[GatewayDetect] No available AOS instances found while selecting gateway fallback")
 		end
 	else
-		--// Set specific server as primary
 		Utils.Logging.Print(`[GatewayDetect] Setting explicit primary -> {ServerURL}`)
 		for _, Server in Var.AppServers do
 			if Server.ServerURL == ServerURL then
@@ -424,24 +452,18 @@ NewRemote("SetPrimaryAppServer", true, false, function(ServerURL: string)
 	return { true, "Primary server updated" }
 end)
 
---// First-time setup: called by the setup wizard with either "automatic" or a custom AOS URL.
---// "automatic" -> keeps the already-registered gateway as primary (nothing to do)
---// any other string -> registers the custom URL, removes the gateway, sets custom as primary
 NewRemote("CompleteFirstTimeSetup", true, false, function(Mode: string)
 	local GatewayURL = Var.DefaultAppServer
 	local TargetURL = (Mode == "automatic") and GatewayURL or Mode
 
 	if TargetURL ~= GatewayURL then
-		--// Step 1: Register the custom server (now we have 2 entries, so removing gateway is safe)
 		local AddResult = AppsModule.ServerAPI.New(TargetURL, 1)
 		if not AddResult[1] then
 			return { false, "Could not reach the custom AOS. Make sure the URL is correct and the server is online." }
 		end
 
-		--// Step 2: Remove the gateway entry (safe now because we have >= 2 servers)
 		AppsModule.ServerAPI.UninstallServer(GatewayURL, false)
 
-		--// Step 3: Mark the custom server as primary (no OverwriteExisting - we handled cleanup above)
 		AppsModule.ServerAPI.RegisterPrimary(TargetURL, false)
 
 		Utils.Logging.Print(`[Setup] Custom AOS registered and set as primary: {TargetURL}`)
@@ -452,7 +474,6 @@ NewRemote("CompleteFirstTimeSetup", true, false, function(Mode: string)
 	return { true, "Setup complete!" }
 end)
 
---// Admin routes
 NewRemote("GetRanks", true, false, AdminRunner.Ranks.GetAll)
 NewRemote("NewRank", true, false, AdminRunner.Ranks.New)
 NewRemote("CanUseApp", true, true, AdminRunner.CanUseApp)
@@ -463,7 +484,7 @@ end)
 Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
 Utils.Logging.Print(
-	`\n-- Administer {Configuration.VersData.String} {Configuration.VersData.GitRevision} loaded! --`,
+	`\n
 	"\n		> Ready in ",
 	Utils.RoundMS(os.clock() - Var.InitClock.RealInit) .. "ms",
 	"\n		> Apps thread: ",
@@ -492,24 +513,32 @@ end, function()
 	)
 end)
 
-HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...) end, function(...)
-	Utils.Logging.Warn(...)
-end)
+if Var.PrimaryAppServer ~= nil and Var.PrimaryAppServer ~= "" then
+	HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...) end, function(...)
+		Utils.Logging.Warn(...)
+	end)
 
-HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
-	version = Configuration.VersData.NoExtraData,
-	branch = Var.CurrentBranch["BranchName"],
-}, function(...)
-	return { ... }
-end, function(...)
-	Utils.Logging.SWarn(...)
+	HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
+		version = Configuration.VersData.NoExtraData,
+		branch = Var.CurrentBranch["BranchName"],
+	}, function(...)
+		return { ... }
+	end, function(...)
+		Utils.Logging.SWarn(...)
+		return { ... }
+	end)
+end
 
-	return { ... }
-end)
-
---// Initial version stuff
 Configuration.VersData.InstallDate = Utils.CheckVersion()
-Configuration.VersData.IsUpToDate =
-	not Utils.UpdateCallback({ "org.admsoftware.Core" })["org.admsoftware.Core"].your_version.is_outdated
+do
+	local _updateData = Utils.UpdateCallback({ "org.admsoftware.Core" })
+	local _coreData = _updateData["org.admsoftware.Core"]
+	Configuration.VersData.IsUpToDate = not (
+		_coreData
+		and not _coreData.IsError
+		and _coreData.your_version
+		and _coreData.your_version.is_outdated
+	)
+end
 
 Utils.Logging.Print(`[✓] Startup complete!`)

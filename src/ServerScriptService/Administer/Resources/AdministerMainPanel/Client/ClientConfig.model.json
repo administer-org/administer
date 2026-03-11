@@ -1,0 +1,14 @@
+{
+    "ClassName": "Configuration",
+    "properties": {
+		"Attributes": {
+            "RemotesPath": {"String": "game.ReplicatedStorage"},
+            "AdministerRoot": {"String": "script.Parent.Parent.Parent"},
+            "ForceMobile": {"Bool": false},
+            "DoHeaderEffects": {"Bool": true},
+            "HeartbeatDuration": {"Int32": 10},
+            "PingTicksLog": {"Int32": 60},
+            "AnimationSpeed": {"Int32": 1}
+		}
+	}
+}

@@ -1,11 +1,25 @@
 --// Administer
---// pyxfluff 2022-2025
+--// CodingAgent 2022-2026
 
 local SharedLibs = script.Libraries
 local Assets = script.Assets
 local Modules = script.Modules
 
 local Var = require(Modules.Variables)
+
+task.spawn(function()
+	for _, effect in ipairs(game.Lighting:GetChildren()) do
+		if effect:IsA("BlurEffect") then
+			effect.Size = 0
+		end
+	end
+end)
+
+game.Lighting.DescendantAdded:Connect(function(descendant)
+	if descendant:IsA("BlurEffect") then
+		descendant.Size = 0
+	end
+end)
 
 local Admins = require(Modules.Admins)
 local Apps = require(Modules.Apps)
@@ -17,7 +31,6 @@ local t = Utilities.Translate
 
 Frontend.Close(true)
 
---// Relocate UIScripts (spinners etc.) to their correct UI parents
 pcall(function()
 	require(script.Parent.Relocator)()
 end)
@@ -34,7 +47,6 @@ end
 
 local success, errormsg = pcall(function()
 	if script.Parent:GetAttribute("StartID") == nil then
-		-- Race condition: Bootstrap may still be setting attributes — wait up to 10s
 		local elapsed = 0
 		repeat
 			task.wait(0.1)
@@ -48,7 +60,6 @@ local success, errormsg = pcall(function()
 
 	Var.Remotes:WaitForChild("Ping", 15):InvokeServer()
 
-	--// Cache some settings
 	CacheSettings()
 
 	Var.Remotes:WaitForChild("SettingsLoaded", 15).OnClientEvent:Connect(CacheSettings)
@@ -56,7 +67,11 @@ end)
 
 if not success then
 	print(errormsg)
-	Utilities.NewNotification("Administer", "", Utilities.Translate("error.NoPing"), "Startup failed", 999)
+	local _ok, notifBody = pcall(Utilities.Translate, "error.NoPing")
+	if not _ok then
+		notifBody = "Could not connect to Administer."
+	end
+	Utilities.NewNotification("Administer", "", notifBody, "Startup failed", 999)
 
 	error(`Could not connect to the server, is Administer improperly installed?`)
 end
@@ -114,7 +129,6 @@ if KeybindRegisterTimeframe == "optimistic" then
 end
 
 if Var.UseAcrylic then
-	--// blast from the past
 	local NewEffect = Instance.new("DepthOfFieldEffect")
 	NewEffect.FarIntensity = 0
 	NewEffect.FocusDistance = 51.6
@@ -133,6 +147,7 @@ task.defer(function()
 		Description = t("Apps.MainFrame.Template.Desc"),
 		Icon = Utilities.Icon("home"),
 		ButtonID = "AdmHomepage",
+		IsBuiltIn = true,
 
 		MainButtonClick = function() end,
 		MainButtonFrame = Var.MainFrame.Home,
@@ -140,7 +155,6 @@ task.defer(function()
 		SubIcons = {},
 	})
 
-	--// update the base header for funsies
 	Var.MainFrame.Header.Mark.AppLogo.AppIcon.Image = Utilities.Icon("home")
 	Var.MainFrame.Header.Mark.HeaderLabel.Text = `<b>Administer</b> · {t("Apps.MainFrame.Home.Title")}`
 
@@ -149,6 +163,7 @@ task.defer(function()
 		Description = t("Apps.MainFrame.Config.Desc"),
 		Icon = Utilities.Icon("media"),
 		ButtonID = "AdmConfiguration",
+		IsBuiltIn = true,
 
 		SubIcons = {
 			{
@@ -182,55 +197,86 @@ task.defer(function()
 		},
 	})
 
-	--// Load the theme file now, for some reason previously it was leaving Configuration out
 	Frontend.PrepTheme()
 
-	--// TODO: Load theme
-
-	--Frontend.LoadTheme(require(script.Assets.Themes.DefaultLight))
 end)
 
---// Homepage, app drawer, header connections
-Var.MainFrame.Home.Widget1.Edit.MouseButton1Click:Connect(function()
-	Widgets.Edit(Var.MainFrame.Home.Widget1)
-end)
+local function waitForHome(retries, interval)
+	retries = retries or 10
+	interval = interval or 0.2
+	for i = 1, retries do
+		local h = Var.MainFrame:FindFirstChild("Home")
+		if h and h:IsA("Frame") then
+			return h
+		end
+		task.wait(interval)
+	end
+	return Var.MainFrame:FindFirstChild("Home")
+end
 
-Var.MainFrame.Home.Widget2.Edit.MouseButton1Click:Connect(function()
-	Widgets.Edit(Var.MainFrame.Home.Widget2)
-end)
+local Home = waitForHome(10, 0.2)
+if Home and Home:IsA("Frame") then
+	if Home:FindFirstChild("Widget1") and Home.Widget1:FindFirstChild("Edit") then
+		Home.Widget1.Edit.MouseButton1Click:Connect(function()
+			Widgets.Edit(Home.Widget1)
+		end)
+	end
 
-Var.MainFrame.Header.Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
-Var.MainFrame.Header.Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
-Var.MainFrame.Header.Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
+	if Home:FindFirstChild("Widget2") and Home.Widget2:FindFirstChild("Edit") then
+		Home.Widget2.Edit.MouseButton1Click:Connect(function()
+			Widgets.Edit(Home.Widget2)
+		end)
+	end
 
-Frontend.SpawnOverlay(Var.MainFrame)
+	if Var.MainFrame:FindFirstChild("Header") and Var.MainFrame.Header:FindFirstChild("Mark") then
+		local Mark = Var.MainFrame.Header.Mark
+		if Mark.AppLogo then
+			Mark.AppLogo.MouseButton1Click:Connect(Frontend.Drawer.Open)
+			Mark.AppLogo.MouseEnter:Connect(Frontend.Drawer.HoverBegin)
+			Mark.AppLogo.MouseLeave:Connect(Frontend.Drawer.HoverEnd)
+		end
+	end
 
-Var.MainFrame.Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
-	t("Welcome.Initial.HeaderLabel") :: string,
-	Var.Services.Players.LocalPlayer.DisplayName,
-	essentialSettings["HomepageGreeting"]
-)}</stroke>`
+	Frontend.SpawnOverlay(Var.MainFrame)
 
-Var.MainFrame.Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
-	Var.Services.Players.LocalPlayer.UserId,
-	Enum.ThumbnailType.HeadShot,
-	Enum.ThumbnailSize.Size352x352
-)
+	Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
+		t("Welcome.Initial.HeaderLabel") :: string,
+		Var.Services.Players.LocalPlayer.DisplayName,
+		essentialSettings["HomepageGreeting"]
+	)}</stroke>`
 
-Var.MainFrame.AppDrawer.PlayerData.DisplayName.Text = Var.Services.Players.LocalPlayer.DisplayName
-Var.MainFrame.AppDrawer.PlayerData.Rank.Text =
-	`{Var.MainFrame.Parent:GetAttribute("_AdminRank")} · {#Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() - 4} apps`
-Var.MainFrame.AppDrawer.PlayerData.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
-	Var.Services.Players.LocalPlayer.UserId,
-	Enum.ThumbnailType.HeadShot,
-	Enum.ThumbnailSize.Size352x352
-)
+	Home.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
+		Var.Services.Players.LocalPlayer.UserId,
+		Enum.ThumbnailType.HeadShot,
+		Enum.ThumbnailSize.Size352x352
+	)
 
-task.defer(function()
-	local PromColor = Var.Remotes.GetProminentColorFromUserID:InvokeServer(Var.Services.Players.LocalPlayer.UserId)
+	if Var.MainFrame:FindFirstChild("AppDrawer") and Var.MainFrame.AppDrawer:FindFirstChild("PlayerData") then
+		local PD = Var.MainFrame.AppDrawer.PlayerData
+		PD.DisplayName.Text = Var.Services.Players.LocalPlayer.DisplayName
+		PD.Rank.Text =
+			`{Var.MainFrame.Parent:GetAttribute("_AdminRank")} · {#Var.MainFrame.AppDrawer.AppHolder.Apps:GetChildren() - 4} apps`
+		if PD:FindFirstChild("PlayerImage") then
+			PD.PlayerImage.Image = Var.Services.Players:GetUserThumbnailAsync(
+				Var.Services.Players.LocalPlayer.UserId,
+				Enum.ThumbnailType.HeadShot,
+				Enum.ThumbnailSize.Size352x352
+			)
+		end
+	end
 
-	Var.MainFrame.Home.Gradient2.ImageLabel.ImageColor3 = Color3.fromRGB(PromColor[1], PromColor[2], PromColor[3])
-end)
+	task.defer(function()
+		local ok, PromColor = pcall(function()
+			return Var.Remotes.GetProminentColorFromUserID:InvokeServer(Var.Services.Players.LocalPlayer.UserId)
+		end)
+
+		if ok and PromColor and Home:FindFirstChild("Gradient2") and Home.Gradient2:FindFirstChild("ImageLabel") then
+			Home.Gradient2.ImageLabel.ImageColor3 = Color3.fromRGB(PromColor[1], PromColor[2], PromColor[3])
+		end
+	end)
+else
+	Utilities.Logging.Warn("MainFrame.Home not found after wait; skipping homepage bindings")
+end
 
 if script.Parent:GetAttribute("NeedsSetup") then
 	Utilities.Logging.Print("Setup is not complete, entering lockdown mode!")
@@ -247,7 +293,6 @@ if script.Parent:GetAttribute("NeedsSetup") then
 	Frontend.Open()
 end
 
---// Marketplace
 task.defer(function()
 	xpcall(Apps.Init, function(e)
 		Utilities.Logging.Print(
@@ -257,7 +302,6 @@ task.defer(function()
 	end)
 end)
 
---// Admins
 xpcall(function()
 	task.defer(function()
 		pcall(Admins.Load)
@@ -321,7 +365,6 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 	Var.MainFrame.Header.AssistiveClose.Visible = true
 	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
 
-	--// Grid changes
 	Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.MainContent.MainContent.MetadataBox.UIGridLayout.CellSize =
 		UDim2.fromOffset(150, 115)
 else
@@ -379,7 +422,6 @@ xpcall(function(...)
 		Card.Visible = true
 	end
 
-	--// Fetch versions robustly. Remote failures shouldn't abort the whole info panel.
 	local ok, versionRes = pcall(function()
 		return Var.Remotes:WaitForChild("GetVersions"):InvokeServer({ "administer" })
 	end)
@@ -392,7 +434,6 @@ xpcall(function(...)
 			IsFail = true,
 		}
 	else
-		--// Fallback minimal version to keep the UI alive
 		Var.Version = {
 			IsUpToDate = true,
 			IsFail = false,
@@ -417,7 +458,7 @@ xpcall(function(...)
 
 		Card.Username.Text = Contrib.Name
 		Card.Task.Text = Contrib.Job
-		pcall(function() --// just incase a user gets banned and i cant remove them
+		pcall(function()
 			Card.ImageLabel.Image = game.Players:GetUserThumbnailAsync(
 				Contrib.UserID,
 				Enum.ThumbnailType.HeadShot,
@@ -432,7 +473,6 @@ xpcall(function(...)
 	Var.MainFrame.Configuration.InfoPage.Donate.ScrollingFrame.Version.Text =
 		Utilities.Translate("Configuration.InfoPage.Donate.Message")
 
-	--// We need to do this last because it's a possible failure point so we should load the actual content first
 	for _, Pass in Var.Remotes.GetPasses:InvokeServer() do
 		local Cloned = Var.MainFrame.Configuration.InfoPage.Donate.Buttons.Temp:Clone()
 
@@ -467,7 +507,7 @@ xpcall(function(...)
 				SubIcon = Utilities.Icon("hammer"),
 			},
 			Utilities.Translate("Configuration.InfoPage.License.About"),
-			string.format(Utilities.Translate("Configuration.InfoPage.License"), "2022 - 2025"),
+			string.format(Utilities.Translate("Configuration.InfoPage.License"), "2022 - 2026"),
 			{
 				{
 					Text = Utilities.Translate("generic.OK"),
@@ -480,7 +520,7 @@ xpcall(function(...)
 		)
 	end)
 end, function(a0)
-	Utilities.Logging.Warn("Failed to fetch info page assets, assuming this is a permissions issue!", a0)
+	Utilities.Logging.Debug("Failed to fetch info page assets, assuming this is a permissions issue!", a0)
 end)
 
 if essentialSettings.ChatCommand then
@@ -506,46 +546,46 @@ if essentialSettings.EnableClickEffects then
 	end)
 end
 
---// Translations \\--
+pcall(function()
+	Var.MainFrame.Configuration.Marketplace.ASidebar.Head.Text =
+		Utilities.Translate("Configuration.Marketplace.Header.Head")
+	Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.AAFeatured.Title.Text =
+		Utilities.Translate("apps.sidebar.Featured")
+	Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.Apps.Title.Text =
+		Utilities.Translate("Configuration.Marketplace.Header.Plugins")
+	Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.XLibrary.Resources.Content.Title.Text =
+		Utilities.Translate("apps.sidebar.Library")
+	Var.MainFrame.Configuration.Marketplace.ASidebar.Searchbar.Title.Text =
+		Utilities.Translate("Configuration.Marketplace.Searchbar.Searchbar.Label")
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.Head.Text =
+		Utilities.Translate("apps.featured.TopInstalled")
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.MainHot.HotLabel.Title.Text =
+		Utilities.Translate("apps.Hot")
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.Head.Text =
+		Utilities.Translate("apps.library.Header")
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.Text =
+		Utilities.Translate("apps.library.Subheader")
+	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.LogoWordmark.Text =
+		Utilities.Translate("apps.InstallServer")
 
---// Marketplace
-Var.MainFrame.Configuration.Marketplace.ASidebar.Head.Text =
-	Utilities.Translate("Configuration.Marketplace.Header.Head")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.AAFeatured.Title.Text =
-	Utilities.Translate("apps.sidebar.Featured")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.Apps.Title.Text =
-	Utilities.Translate("Configuration.Marketplace.Header.Plugins")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Buttons.XLibrary.Resources.Content.Title.Text =
-	Utilities.Translate("apps.sidebar.Library")
-Var.MainFrame.Configuration.Marketplace.ASidebar.Searchbar.Title.Text =
-	Utilities.Translate("Configuration.Marketplace.Searchbar.Searchbar.Label")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.Head.Text =
-	Utilities.Translate("apps.featured.TopInstalled")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.AAFeatured.MainHot.HotLabel.Title.Text =
-	Utilities.Translate("apps.Hot")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.Head.Text = Utilities.Translate("apps.library.Header")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.Text =
-	Utilities.Translate("apps.library.Subheader")
-Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.LogoWordmark.Text =
-	Utilities.Translate("apps.InstallServer")
+	Var.MainFrame.Configuration.Admins.Header.Head.Text =
+		Utilities.Translate("Configuration.Admins.Container.Ranks.Header.TLabel")
+	Var.MainFrame.Configuration.Admins.Header.Subheader.Text =
+		Utilities.Translate("Configuration.Admins.Container.Ranks.Subheader")
 
---// Ranks
-Var.MainFrame.Configuration.Admins.Header.Head.Text =
-	Utilities.Translate("Configuration.Admins.Container.Ranks.Header.TLabel")
-Var.MainFrame.Configuration.Admins.Header.Subheader.Text =
-	Utilities.Translate("Configuration.Admins.Container.Ranks.Subheader")
-
---// Info
-Var.MainFrame.Configuration.InfoPage.VersionDetails.AdmSoftware.Text =
-	Utilities.Translate("Configuration.InfoPage.License.Prompt")
-Var.MainFrame.Configuration.InfoPage.UpdateCenter.TextLogo.Text =
-	Utilities.Translate("Configuration.InfoPage.VersionDetails.Header")
-Var.MainFrame.Configuration.InfoPage.UpdateCenter.CreditHeader.Text =
-	Utilities.Translate("Configuration.InfoPage.VersionDetails.Updated")
-Var.MainFrame.Configuration.InfoPage.UpdateCenter.Temp.Label.Text =
-	Utilities.Translate("Configuration.InfoPage.VersionDetails.Update")
-Var.MainFrame.Configuration.InfoPage.Donate.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.Donate.title")
-Var.MainFrame.Configuration.InfoPage.Credits.TextLogo.Text = Utilities.Translate("Configuration.InfoPage.Credits.title")
+	Var.MainFrame.Configuration.InfoPage.VersionDetails.AdmSoftware.Text =
+		Utilities.Translate("Configuration.InfoPage.License.Prompt")
+	Var.MainFrame.Configuration.InfoPage.UpdateCenter.TextLogo.Text =
+		Utilities.Translate("Configuration.InfoPage.VersionDetails.Header")
+	Var.MainFrame.Configuration.InfoPage.UpdateCenter.CreditHeader.Text =
+		Utilities.Translate("Configuration.InfoPage.VersionDetails.Updated")
+	Var.MainFrame.Configuration.InfoPage.UpdateCenter.Temp.Label.Text =
+		Utilities.Translate("Configuration.InfoPage.VersionDetails.Update")
+	Var.MainFrame.Configuration.InfoPage.Donate.TextLogo.Text =
+		Utilities.Translate("Configuration.InfoPage.Donate.title")
+	Var.MainFrame.Configuration.InfoPage.Credits.TextLogo.Text =
+		Utilities.Translate("Configuration.InfoPage.Credits.title")
+end)
 
 if KeybindRegisterTimeframe == "safe" then
 	Frontend.RegisterPanelKeybind()

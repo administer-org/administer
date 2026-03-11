@@ -1,4 +1,5 @@
---// pyxfluff 2024-2025
+--// Administer
+--// CodingAgent 2024-2026
 
 --// This is mostly for the Marketplace but has some other app-related functions.
 
@@ -13,6 +14,172 @@ local Shime = require(Modules.Parent.Libraries.Shime)
 
 local Apps = {}
 local Connections = {}
+local ActiveContextMenu = nil
+
+local function getConf()
+	if not Var.MainFrame then
+		return nil
+	end
+	local direct = Var.MainFrame:FindFirstChild("Configuration")
+	if direct and direct:FindFirstChild("Marketplace") then
+		return direct
+	end
+	local recursive = Var.MainFrame:FindFirstChild("Configuration", true)
+	if recursive and recursive:FindFirstChild("Marketplace") then
+		return recursive
+	end
+	return nil
+end
+
+local function RemoveDrawerButton(appName: string?)
+	if not appName then
+		return
+	end
+
+	local appsHolder = nil
+	pcall(function()
+		appsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
+	end)
+
+	Utilities.Logging.Warn(`[RemoveDrawerButton] Removing {appName}, appsHolder={tostring(appsHolder)}`)
+
+	for idx, config in Var.CombinedButtonConfig do
+		if config.AppName == appName and not config.IsBuiltIn then
+			Utilities.Logging.Warn(
+				`[RemoveDrawerButton] Found in CombinedButtonConfig, ButtonRef={tostring(config.ButtonRef)}`
+			)
+			if config.ButtonRef and config.ButtonRef.Parent then
+				Utilities.Logging.Warn(`[RemoveDrawerButton] Destroying ButtonRef for {appName}`)
+				config.ButtonRef:Destroy()
+			end
+
+			table.remove(Var.CombinedButtonConfig, idx)
+			break
+		end
+	end
+
+	if not appsHolder then
+		Utilities.Logging.Warn(`[RemoveDrawerButton] appsHolder is nil, skipping drawer cleanup`)
+		return
+	end
+
+	Utilities.Logging.Warn(`[RemoveDrawerButton] Searching AppsHolder children for {appName}`)
+	for _, child in appsHolder:GetChildren() do
+		Utilities.Logging.Warn(`[RemoveDrawerButton] Checking child: {child.Name}`)
+		local nameMatch = (child.Name == appName)
+		local titleLabel = child:FindFirstChild("Title")
+		local titleMatch = titleLabel and titleLabel:IsA("TextLabel") and titleLabel.Text == appName
+		if nameMatch or titleMatch then
+			Utilities.Logging.Warn(`[RemoveDrawerButton] Found match! Destroying {child.Name}`)
+			child:Destroy()
+			break
+		end
+	end
+end
+
+local lifecycleRemote = Var.Remotes:FindFirstChild("AppLifecycle") or Var.Remotes:WaitForChild("AppLifecycle", 5)
+if lifecycleRemote and lifecycleRemote:IsA("RemoteEvent") then
+	lifecycleRemote.OnClientEvent:Connect(function(action, payload)
+		if action == "uninstalled" then
+			RemoveDrawerButton(payload and payload.AppName)
+		end
+	end)
+else
+	Utilities.Logging.Warn("[AppLifecycle] AppLifecycle remote missing; drawer cleanup disabled")
+end
+
+local function ShowContextMenu(onDelete: () -> ())
+	if ActiveContextMenu then
+		ActiveContextMenu:Destroy()
+		ActiveContextMenu = nil
+	end
+	local existingBackdrop = Var.MainFrame.Parent:FindFirstChild("AppContextMenuBackdrop")
+	if existingBackdrop then
+		existingBackdrop:Destroy()
+	end
+
+	local mousePos = Var.Services.UserInputService:GetMouseLocation()
+	local inset = game:GetService("GuiService"):GetGuiInset()
+
+	local Menu = Instance.new("Frame")
+	Menu.Name = "AppContextMenu"
+	Menu.Size = UDim2.fromOffset(160, 36)
+	Menu.Position = UDim2.fromOffset(mousePos.X, mousePos.Y - inset.Y)
+	Menu.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	Menu.BorderSizePixel = 0
+	Menu.ZIndex = 50
+	Menu.Parent = Var.MainFrame.Parent
+
+	local Corner = Instance.new("UICorner")
+	Corner.CornerRadius = UDim.new(0, 6)
+	Corner.Parent = Menu
+
+	local DeleteBtn = Instance.new("TextButton")
+	DeleteBtn.Name = "DeleteOption"
+	DeleteBtn.Size = UDim2.fromScale(1, 1)
+	DeleteBtn.BackgroundTransparency = 1
+	DeleteBtn.Font = Enum.Font.GothamMedium
+	DeleteBtn.TextSize = 13
+	DeleteBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+	DeleteBtn.TextXAlignment = Enum.TextXAlignment.Left
+	DeleteBtn.ZIndex = 51
+	DeleteBtn.Parent = Menu
+
+	local IconLabel = Instance.new("ImageLabel")
+	IconLabel.Name = "Icon"
+	IconLabel.Size = UDim2.fromOffset(16, 16)
+	IconLabel.Position = UDim2.fromOffset(10, 10)
+	IconLabel.BackgroundTransparency = 1
+	IconLabel.Image = Utilities.Icon("trash")
+	IconLabel.ImageColor3 = Color3.fromRGB(255, 80, 80)
+	IconLabel.ZIndex = 52
+	IconLabel.Parent = Menu
+
+	local Padding = Instance.new("UIPadding")
+	Padding.PaddingLeft = UDim.new(0, 34)
+	Padding.Parent = DeleteBtn
+
+	DeleteBtn.Text = "Delete App"
+
+	task.defer(function()
+		if not Menu.Parent then
+			return
+		end
+		local screen = Menu.Parent.AbsoluteSize
+		local mx = math.min(mousePos.X, screen.X - 168)
+		local my = math.min(mousePos.Y - inset.Y, screen.Y - 44)
+		Menu.Position = UDim2.fromOffset(mx, my)
+	end)
+
+	ActiveContextMenu = Menu
+
+	local Backdrop = Instance.new("TextButton")
+	Backdrop.Name = "AppContextMenuBackdrop"
+	Backdrop.Size = UDim2.fromScale(1, 1)
+	Backdrop.Position = UDim2.fromOffset(0, 0)
+	Backdrop.BackgroundTransparency = 1
+	Backdrop.Text = ""
+	Backdrop.ZIndex = Menu.ZIndex - 1
+	Backdrop.Parent = Menu.Parent
+
+	local function closeMenu()
+		if ActiveContextMenu == Menu then
+			Backdrop:Destroy()
+			Menu:Destroy()
+			ActiveContextMenu = nil
+		end
+	end
+
+	Backdrop.MouseButton1Click:Connect(closeMenu)
+	Backdrop.MouseButton2Click:Connect(closeMenu)
+
+	DeleteBtn.MouseButton1Click:Connect(function()
+		Backdrop:Destroy()
+		Menu:Destroy()
+		ActiveContextMenu = nil
+		onDelete()
+	end)
+end
 
 function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 	local AppsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
@@ -32,7 +199,6 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 	table.insert(Var.CombinedButtonConfig, ButtonConfig)
 
 	if #ButtonConfig.SubIcons == 0 then
-		--// Just make the one
 		local Button = AppsHolder.SingleThread:Clone()
 
 		Button.Parent = AppsHolder
@@ -42,12 +208,18 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 		Button:SetAttribute("ThreadType", "single")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
+		Button:SetAttribute("IsBuiltIn", ButtonConfig.IsBuiltIn == true)
 
 		task.defer(function()
 			Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
 		end)
 
+		local suppressNextTap = false
 		Button.Activator.MouseButton1Click:Connect(function()
+			if suppressNextTap then
+				suppressNextTap = false
+				return
+			end
 			task.defer(Frontend.Drawer.Close)
 
 			Frontend.SwapApps(ButtonConfig, 0, Button)
@@ -55,8 +227,93 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 			xpcall(ButtonConfig.MainButtonClick, Utilities.Logging.Warn)
 		end)
 
-		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true) --// TODO: do we need this anymore?
+		if not ButtonConfig.IsBuiltIn then
+			local function _openDeletePopup()
+				ShowContextMenu(function()
+					Frontend.Popup.new(
+						{
+							Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
+							Icon = Utilities.Icon("administer"),
+						},
+						{ Primary = ButtonConfig.Icon, SubIcon = Utilities.Icon("warning-filled") },
+						Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(ButtonConfig.AppName),
+						Utilities.Translate("Configuration.Apps.MessageBox.Content"),
+						{
+							{
+								Text = Utilities.Translate("generic.Yes"),
+								Icon = Utilities.Icon("trash"),
+								Callback = function(_Close)
+									_Close()
+									if Button and Button.Parent then
+										Button:Destroy()
+									end
+									for idx, config in Var.CombinedButtonConfig do
+										if config.AppName == ButtonConfig.AppName and not config.IsBuiltIn then
+											table.remove(Var.CombinedButtonConfig, idx)
+											break
+										end
+									end
+									task.spawn(function()
+										local invokeOk, Response = pcall(
+											Var.Remotes.ManageApp.InvokeServer,
+											Var.Remotes.ManageApp,
+											ButtonConfig.AppName
+										)
+										if invokeOk and Response[1] == false then
+											Frontend.Toast({
+												Icon = Utilities.Icon("x"),
+												Text = Utilities.Translate("generic.error.Generic"),
+												Subtext = Response[2],
+												Timeout = 10,
+											})
+										end
+									end)
+								end,
+							},
+							{
+								Text = Utilities.Translate("generic.Cancel"),
+								Icon = Utilities.Icon("x"),
+								Callback = function(_Close)
+									_Close()
+								end,
+							},
+						}
+					)
+				end)
+			end
 
+			Button.Activator.MouseButton2Click:Connect(_openDeletePopup)
+
+			if Var.Services.UserInputService.TouchEnabled then
+				local holdThread = nil
+				Button.Activator.InputBegan:Connect(function(Input)
+					if Input.UserInputType ~= Enum.UserInputType.Touch then
+						return
+					end
+					holdThread = task.delay(0.45, function()
+						holdThread = nil
+						suppressNextTap = true
+						_openDeletePopup()
+					end)
+				end)
+				Button.Activator.InputEnded:Connect(function(Input)
+					if Input.UserInputType ~= Enum.UserInputType.Touch then
+						return
+					end
+					if holdThread then
+						task.cancel(holdThread)
+						holdThread = nil
+					end
+				end)
+			end
+		end
+
+		ButtonConfig.MainButtonFrame:SetAttribute("AdmLinkSinglePage", true)
+
+		ButtonConfig.ButtonRef = Button
+		Utilities.Logging.Debug(
+			`[DBG] AddAppDrawerButton single: {ButtonConfig.AppName} ({ButtonConfig.ButtonID}) ref={tostring(Button)}`
+		)
 		return Button
 	else
 		local Button = AppsHolder.MultiThread:Clone()
@@ -69,12 +326,18 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 		Button:SetAttribute("ThreadType", "multi")
 		Button:SetAttribute("ButtonID", ButtonConfig.ButtonID)
+		Button:SetAttribute("IsBuiltIn", ButtonConfig.IsBuiltIn == true)
 
 		task.defer(function()
 			Button.Visible = Var.Remotes.CanUseApp:InvokeServer(ButtonConfig.ButtonID)
 		end)
 
+		local suppressNextTap = false
 		Button.Activator.MouseButton1Click:Connect(function()
+			if suppressNextTap then
+				suppressNextTap = false
+				return
+			end
 			if ButtonConfig.MainButtonFrame == nil then
 				return
 			end
@@ -85,6 +348,87 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 			xpcall(ButtonConfig.MainButtonClick, Utilities.Logging.Warn)
 		end)
+
+		if not ButtonConfig.IsBuiltIn then
+			local function _openDeletePopup()
+				ShowContextMenu(function()
+					Frontend.Popup.new(
+						{
+							Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
+							Icon = Utilities.Icon("administer"),
+						},
+						{ Primary = ButtonConfig.Icon, SubIcon = Utilities.Icon("warning-filled") },
+						Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(ButtonConfig.AppName),
+						Utilities.Translate("Configuration.Apps.MessageBox.Content"),
+						{
+							{
+								Text = Utilities.Translate("generic.Yes"),
+								Icon = Utilities.Icon("trash"),
+								Callback = function(_Close)
+									_Close()
+									if Button and Button.Parent then
+										Button:Destroy()
+									end
+									for idx, config in Var.CombinedButtonConfig do
+										if config.AppName == ButtonConfig.AppName and not config.IsBuiltIn then
+											table.remove(Var.CombinedButtonConfig, idx)
+											break
+										end
+									end
+									task.spawn(function()
+										local invokeOk, Response = pcall(
+											Var.Remotes.ManageApp.InvokeServer,
+											Var.Remotes.ManageApp,
+											ButtonConfig.AppName
+										)
+										if invokeOk and Response[1] == false then
+											Frontend.Toast({
+												Icon = Utilities.Icon("x"),
+												Text = Utilities.Translate("generic.error.Generic"),
+												Subtext = Response[2],
+												Timeout = 10,
+											})
+										end
+									end)
+								end,
+							},
+							{
+								Text = Utilities.Translate("generic.Cancel"),
+								Icon = Utilities.Icon("x"),
+								Callback = function(_Close)
+									_Close()
+								end,
+							},
+						}
+					)
+				end)
+			end
+
+			Button.Activator.MouseButton2Click:Connect(_openDeletePopup)
+
+			if Var.Services.UserInputService.TouchEnabled then
+				local holdThread = nil
+				Button.Activator.InputBegan:Connect(function(Input)
+					if Input.UserInputType ~= Enum.UserInputType.Touch then
+						return
+					end
+					holdThread = task.delay(0.45, function()
+						holdThread = nil
+						suppressNextTap = true
+						_openDeletePopup()
+					end)
+				end)
+				Button.Activator.InputEnded:Connect(function(Input)
+					if Input.UserInputType ~= Enum.UserInputType.Touch then
+						return
+					end
+					if holdThread then
+						task.cancel(holdThread)
+						holdThread = nil
+					end
+				end)
+			end
+		end
 
 		for Index, Icon in ButtonConfig.SubIcons do
 			local Clone = Button.SubCollection.Object:Clone()
@@ -116,6 +460,10 @@ function Apps.AddAppDrawerButton(ButtonConfig: Types.ButtonConfig)
 
 		Button.SubHierarchyLine.Size = UDim2.new(0.025, 0, Height, 0)
 
+		ButtonConfig.ButtonRef = Button
+		Utilities.Logging.Debug(
+			`[DBG] AddAppDrawerButton multi: {ButtonConfig.AppName} ({ButtonConfig.ButtonID}) ref={tostring(Button)}`
+		)
 		return Button
 	end
 end
@@ -147,7 +495,107 @@ function Apps.Show(ServerURL, ID, Reason): string
 		return Utilities.Translate("apps.aos.InternalError")
 	end
 
-	local AppInfoFrame = Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.MainContent
+	local AppInfoFrame
+
+	local mainFrame = Var.MainFrame
+	local config = mainFrame and mainFrame.FindFirstChild and mainFrame:FindFirstChild("Configuration")
+	local marketplace = config and config:FindFirstChild("Marketplace")
+	local mainMarketplace = marketplace and marketplace:FindFirstChild("MainMarketplace")
+	local installBox = mainMarketplace and mainMarketplace:FindFirstChild("InstallBox")
+	local mainContent = installBox and installBox:FindFirstChild("MainContent")
+
+	if not mainContent then
+		local missing = {}
+		if not mainFrame then
+			table.insert(missing, "MainFrame")
+		end
+		if not config then
+			table.insert(missing, "Configuration")
+		end
+		if not marketplace then
+			table.insert(missing, "Marketplace")
+		end
+		if not mainMarketplace then
+			table.insert(missing, "MainMarketplace")
+		end
+		if not installBox then
+			table.insert(missing, "InstallBox")
+		end
+		if not installBox or not mainContent then
+			table.insert(missing, "MainContent")
+		end
+
+		Utilities.Logging.Debug(
+			"Apps.Show: InstallBox UI not found or malformed; missing=",
+			table.concat(missing, ", ")
+		)
+
+		Frontend.Popup.new(
+			{
+				Name = Utilities.ToSentenceCase(Utilities.Translate("Configuration.Marketplace.Header.Head")),
+				Icon = Utilities.Icon("grid"),
+			},
+			{
+				Primary = Utilities.Icon("download"),
+				SubIcon = Utilities.Icon("x"),
+			},
+			Data.Name or Utilities.Translate("generic.unknown"),
+			Data.LongDescription or Utilities.Translate("generic.error.Generic"),
+			{
+				{
+					Icon = Utilities.Icon("check-plain"),
+					Text = Utilities.Translate("apps.install") or "Install",
+					Callback = function(Close)
+						local Res = Var.Remotes.InstallApp:InvokeServer(ServerURL, ID, Data.Name)
+						if not Res[1] then
+							Frontend.Popup.new(
+								{
+									Name = Utilities.ToSentenceCase(
+										Utilities.Translate("Configuration.Marketplace.Header.Head")
+									),
+									Icon = Utilities.Icon("grid"),
+								},
+								{
+									Primary = Utilities.Icon("warning-filled"),
+									SubIcon = Utilities.Icon("x"),
+								},
+								Utilities.Translate("apps.load.Fail"),
+								Res[2] or Utilities.Translate("generic.error.Generic"),
+								{
+									{
+										Icon = Utilities.Icon("check-plain"),
+										Text = "OK",
+										Callback = function(C)
+											C()
+										end,
+									},
+								}
+							)
+						else
+							Frontend.Toast({
+								Icon = Utilities.Icon("check-plain"),
+								Text = Utilities.Translate("generic.Success"),
+								Subtext = Utilities.Translate("apps.installed.Body"),
+								Timeout = 5,
+							})
+							task.defer(Apps.LoadLibrary)
+						end
+						Close()
+					end,
+				},
+				{
+					Icon = Utilities.Icon("x"),
+					Text = Utilities.Translate("generic.Close") or "Close",
+					Callback = function(Close)
+						Close()
+					end,
+				},
+			}
+		)
+		return true
+	end
+
+	AppInfoFrame = mainContent
 
 	local function NewInfoBox(Icon, Title, Value)
 		local NewMetaBox = AppInfoFrame.MainContent.MetadataBox.Template:Clone()
@@ -161,7 +609,6 @@ function Apps.Show(ServerURL, ID, Reason): string
 		NewMetaBox.Title.Text = Title
 	end
 
-	--// Cleanup
 	for _, Tag in AppInfoFrame.TopHeader.Details:GetChildren() do
 		if Tag:GetAttribute("IsTag") then
 			Tag:Destroy()
@@ -218,7 +665,6 @@ function Apps.Show(ServerURL, ID, Reason): string
 	NewInfoBox(
 		"comment-code",
 		"Asset Type",
-		--Data.AppType
 		"App"
 	)
 
@@ -378,9 +824,7 @@ function Apps.Show(ServerURL, ID, Reason): string
 				Timeout = 5,
 			})
 
-			-- Refresh the library so the newly installed app appears immediately
-			Apps.Init(true) -- update sidebar counts
-			Apps.LoadLibrary() -- repopulate installed list
+			task.defer(Apps.LoadLibrary)
 		end
 
 		task.delay(2, function()
@@ -391,7 +835,10 @@ function Apps.Show(ServerURL, ID, Reason): string
 		Shimmer:GetFrame():Destroy()
 	end)
 
-	Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+	local _conf = getConf()
+	if _conf then
+		_conf.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+	end
 	AppInfoFrame.Parent.Visible = true
 
 	Var.Services.TweenService
@@ -465,7 +912,8 @@ function Apps.Clear(): ()
 		(Connection :: RBXScriptConnection):Disconnect()
 	end
 
-	for _, Item in Var.MainFrame.Configuration.Marketplace.MainMarketplace.Content:GetChildren() do
+	local _conf = getConf()
+	for _, Item in (_conf and _conf.Marketplace.MainMarketplace.Content or {}):GetChildren() do
 		if Item:IsA("Frame") and Item.Name ~= "Template" then
 			Item:Destroy()
 		end
@@ -517,7 +965,11 @@ end
 local InProgress = false
 
 function Apps.LoadAppList(List: {}?): ()
-	local Market = Var.MainFrame.Configuration.Marketplace
+	local Market = getConf() and getConf().Marketplace
+	if not Market then
+		Utilities.Logging.Warn("Apps.LoadAppList: could not resolve Marketplace, aborting")
+		return
+	end
 
 	if List == {} then
 		return
@@ -535,11 +987,11 @@ function Apps.LoadAppList(List: {}?): ()
 
 		Utilities.Logging.Warn("You're clicking too fast or your app servers are unresponsive! Please slow down.")
 
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+		Market.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
 		Var.Marketplace.ActivePage = "MPFrozen"
 
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Visible = true
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(
+		Market.MainMarketplace.MPFrozen.Visible = true
+		Market.MainMarketplace.MPFrozen.Subheading1.Text = string.gsub(
 			Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),
 			"{{ }}",
 			"debounce triggered, AOS is unresponsive. try again in 5-10 seconds"
@@ -551,7 +1003,6 @@ function Apps.LoadAppList(List: {}?): ()
 	InProgress = true
 
 	task.delay(5, function()
-		--// prevent the UI from locking up
 		InProgress = false
 	end)
 
@@ -581,7 +1032,6 @@ function Apps.LoadAppList(List: {}?): ()
 			NewCard.Stats.Rating.Label.Text = tostring(CardData.rating) == "1" and "100%"
 				or string.sub(string.gsub(tostring(CardData.rating), "0.", ""), 1, 2) .. "%"
 
-			--// Interface customization
 			NewCard.Stats.Rating.ImageLabel.Image = Utilities.Icon("like")
 			NewCard.Stats.DownloadButton.Server.Text = Utilities.Translate("generic.Install")
 
@@ -677,12 +1127,8 @@ function Apps.LoadAppList(List: {}?): ()
 
 		repeat
 			for SUrl, Server in AppList do
-				--// This does not work, do not uncomment it, I do not know why.
-				--if pcall(function() Server[Index]["processed_in"] = Server[Index]["processed_in"] end) then continue end
 
 				if Server[Index] == nil then
-					--// try again next time
-					--Index -= 2 actually i think this will cause an infinite loop so ill jsut fix it if there are issues
 				else
 					table.insert(Featured, Server[Index])
 				end
@@ -695,12 +1141,10 @@ function Apps.LoadAppList(List: {}?): ()
 			Card(App, Market.MainMarketplace.AAFeatured.TopGrid)
 		end
 
-		--// make the 1st result the featured card, will prob have an algo soon
 		local TopCard = Market.MainMarketplace.AAFeatured.MainHot
 		local Selected = Featured[1]
 
 		if Selected == nil or type(Selected) ~= "table" then
-			--// No featured apps available (gateway/server offline)
 			return
 		end
 
@@ -733,7 +1177,7 @@ function Apps.LoadAppList(List: {}?): ()
 					SubIcon = Utilities.Icon("question-circle"),
 				},
 				Utilities.Translate("apps.score.Detail"),
-				string.gsub( --// i hate this gsub but i dont want to update every locale
+				string.gsub(
 					string.format(Utilities.Translate("apps.score.Body"), Selected.ServerName, Selected.weighted_score),
 					"{}",
 					Selected.Server
@@ -773,11 +1217,11 @@ function Apps.LoadAppList(List: {}?): ()
 	if AppList[1] == false then
 		Utilities.Logging.Warn("Failed to fetch!", AppList)
 
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+		Market.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
 		Var.Marketplace.ActivePage = "MPFrozen"
 
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Visible = true
-		Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Subheading1.Text = string.format(
+		Market.MainMarketplace.MPFrozen.Visible = true
+		Market.MainMarketplace.MPFrozen.Subheading1.Text = string.format(
 			Utilities.Translate("Configuration.Marketplace.MPFrozen.Subheading1"),
 			"ETIMEOUT",
 			"/api/directory"
@@ -790,7 +1234,11 @@ function Apps.LoadAppList(List: {}?): ()
 end
 
 function Apps.InitSerarchbar()
-	local MP = Var.MainFrame.Configuration.Marketplace
+	local MP = getConf() and getConf().Marketplace
+	if not MP then
+		Utilities.Logging.Warn("Apps.InitSerarchbar: could not resolve Marketplace, aborting")
+		return
+	end
 
 	MP.ASidebar.Searchbar.Input:GetPropertyChangedSignal("Text"):Connect(function()
 		MP.ASidebar.Searchbar.Title.Text = MP.ASidebar.Searchbar.Input.Text
@@ -866,176 +1314,191 @@ function Apps.LoadLibrary()
 
 	IsLibraryLoading = true
 
-	local AppsMenu = Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary
-	for i, AppItem: Instance in AppsMenu.Content:GetChildren() do
-		if not AppItem:IsA("CanvasGroup") or AppItem.Name == "Template" or AppItem.Name == "ServerTemplate" then
-			continue
+	local ok, err = pcall(function()
+		local _conf = getConf()
+		if not _conf then
+			error("getConf() returned nil — Configuration not found")
 		end
-		AppItem:Destroy()
-	end
+		local AppsMenu = _conf.Marketplace.MainMarketplace.XLibrary
+		for i, AppItem: Instance in AppsMenu.Content:GetChildren() do
+			if not AppItem:IsA("CanvasGroup") or AppItem.Name == "Template" or AppItem.Name == "ServerTemplate" then
+				continue
+			end
+			AppItem:Destroy()
+		end
 
-	Apps.Init(true)
+		Apps.Init(true)
 
-	local AppsList = Var.Remotes.GetInstalledApps:InvokeServer("Bootstrapped")
+		local AppsList = Var.Remotes.GetInstalledApps:InvokeServer("Bootstrapped")
 
-	for k, App in AppsList[2] do
-		local NewTemplate = AppsMenu.Content.Template:Clone()
+		for k, App in AppsList[2] do
+			local NewTemplate = AppsMenu.Content.Template:Clone()
 
-		NewTemplate.AppName.Text = k
-		NewTemplate.Name = k
-		NewTemplate.Logo.Image = App["Icon"]
-		NewTemplate.AppShortDesc.Text = App["Description"]
-		NewTemplate.InstallDate.Text = string.format(
-			Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
-			App["InstalledSince"] ~= 0 and Utilities.FormatRelativeTime(App["InstalledSince"])
-				or Utilities.Translate("generic.Locally")
-		)
+			NewTemplate.AppName.Text = k
+			NewTemplate.Name = k
+			NewTemplate.Logo.Image = App["Icon"]
+			NewTemplate.AppShortDesc.Text = App["Description"]
+			NewTemplate.InstallDate.Text = string.format(
+				Utilities.Translate("Configuration.Apps.Content.Template.InstallDate"),
+				App["InstalledSince"] ~= 0 and Utilities.FormatRelativeTime(App["InstalledSince"])
+					or Utilities.Translate("generic.Locally")
+			)
 
-		if not Var.EnableEditableImages then
-			NewTemplate.BackgroundImage.Image = `rbxassetid://{App["Icon"]}`
-		else
-			NewTemplate.BackgroundImage.ImageContent = Content.fromObject(
-				require(script.Parent.Parent.Libraries.QuickBlur):Blur(
-					Var.Services.AssetService:CreateEditableImageAsync(`rbxassetid://{App["Icon"]}`),
-					10,
-					6
+			if not Var.EnableEditableImages then
+				NewTemplate.BackgroundImage.Image = `rbxassetid://{App["Icon"]}`
+			else
+				NewTemplate.BackgroundImage.ImageContent = Content.fromObject(
+					require(script.Parent.Parent.Libraries.QuickBlur):Blur(
+						Var.Services.AssetService:CreateEditableImageAsync(`rbxassetid://{App["Icon"]}`),
+						10,
+						6
+					)
 				)
-			)
+			end
+
+			NewTemplate.Buttons.LongText.Title.Text = `{math.round(App.BuildTime * 1000)}ms`
+
+			NewTemplate.Parent = AppsMenu.Content
+			NewTemplate.Visible = true
+
+			NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
+				Frontend.Popup.new(
+					{
+						Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
+						Icon = Utilities.Icon("administer"),
+					},
+					{
+						Primary = `rbxassetid://{App["Icon"]}`,
+						SubIcon = Utilities.Icon("warning-filled"),
+					},
+					Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(k),
+					Utilities.Translate("Configuration.Apps.MessageBox.Content"),
+					{
+						{
+							Text = Utilities.Translate("generic.Yes"),
+							Icon = Utilities.Icon("trash"),
+							Callback = function(_Close)
+								_Close()
+								local Response = Var.Remotes.ManageApp:InvokeServer(App.AppID)
+								if Response[1] == false then
+									Frontend.Popup.new(
+										{
+											Name = "Administer",
+											Icon = Utilities.Icon("administer"),
+										},
+										{
+											Primary = `rbxassetid://{App["Icon"]}`,
+											SubIcon = Utilities.Icon("x"),
+										},
+
+										Utilities.Translate("generic.error.Generic"),
+										Response[2],
+
+										{
+											{
+												Text = Utilities.Translate("generic.OK"),
+												Icon = Utilities.Icon("check-plain"),
+												Callback = function(Cls)
+													Cls()
+												end,
+											},
+										}
+									)
+								else
+									Utilities.Logging.Warn(
+										`[DBG] LoadLibrary delete: k={k} AppID={tostring(App.AppID)} CombinedButtonConfig#={#Var.CombinedButtonConfig}`
+									)
+									local found = false
+									for idx, config in Var.CombinedButtonConfig do
+										Utilities.Logging.Warn(
+											`[DBG] config[{idx}] name={config.AppName} isBuiltIn={tostring(
+												config.IsBuiltIn
+											)} hasRef={tostring(config.ButtonRef ~= nil)}`
+										)
+										if config.AppName == k and not config.IsBuiltIn then
+											Utilities.Logging.Warn(`[DBG] matched config[{idx}] -> destroying`)
+											RemoveDrawerButton(k)
+											table.remove(Var.CombinedButtonConfig, idx)
+											found = true
+											break
+										end
+									end
+									if not found then
+										Utilities.Logging.Warn(
+											"[DBG] no match in CombinedButtonConfig; AppsHolder children:"
+										)
+										local AppsHolder = Var.MainFrame.AppDrawer.AppHolder.Apps
+										for i, child in AppsHolder:GetChildren() do
+											Utilities.Logging.Warn(
+												`[DBG]   [{i}] name={child.Name} ButtonID={tostring(
+													child:GetAttribute("ButtonID")
+												)}`
+											)
+										end
+									end
+									NewTemplate:Destroy()
+									Apps.LoadLibrary()
+								end
+							end,
+						},
+						{
+							Text = Utilities.Translate("generic.Cancel"),
+							Icon = Utilities.Icon("x"),
+							Callback = function(_Close)
+								_Close()
+							end,
+						},
+					}
+				)
+			end)
 		end
 
-		NewTemplate.Buttons.LongText.Title.Text = `{math.round(App.BuildTime * 1000)}ms`
+		local AppServers = Var.Remotes.GetAppServers:InvokeServer()
 
-		NewTemplate.Parent = AppsMenu.Content
-		NewTemplate.Visible = true
-
-		NewTemplate.Buttons.Delete.MouseButton1Click:Connect(function()
-			Frontend.Popup.new(
-				{
-					Name = Utilities.Translate("Configuration.Marketplace.Header.Head"),
-					Icon = Utilities.Icon("administer"),
-				},
-				{
-					Primary = `rbxassetid://{App["Icon"]}`,
-					SubIcon = Utilities.Icon("warning-filled"),
-				},
-				Utilities.Translate("Configuration.Apps.MessageBox.Header"):format(k),
-				Utilities.Translate("Configuration.Apps.MessageBox.Content"),
-				{
-					{
-						Text = Utilities.Translate("generic.Yes"),
-						Icon = Utilities.Icon("trash"),
-						Callback = function(_Close)
-							local Response = Var.Remotes.ManageApp:InvokeServer(App.AppID)
-
-							_Close()
-
-							if Response[1] == false then
-								Frontend.Popup.new(
-									{
-										Name = "Administer",
-										Icon = Utilities.Icon("administer"),
-									},
-									{
-										Primary = `rbxassetid://{App["Icon"]}`,
-										SubIcon = Utilities.Icon("x"),
-									},
-
-									Utilities.Translate("generic.error.Generic"),
-									Response[2],
-
-									{
-										{
-											Text = Utilities.Translate("generic.OK"),
-											Icon = Utilities.Icon("check-plain"),
-											Callback = function(Cls)
-												Cls()
-											end,
-										},
-									}
-								)
-							else
-								_Close()
-
-								Apps.LoadLibrary()
-							end
-						end,
-					},
-					{
-						Text = Utilities.Translate("generic.Cancel"),
-						Icon = Utilities.Icon("x"),
-						Callback = function(_Close)
-							_Close()
-						end,
-					},
-				}
-			)
+		local NextButton = AppsMenu.Content.ServerTemplate:Clone()
+		xpcall(function()
+			NextButton.ServerName.Text = "Next"
+			NextButton.Name = "GatewayNextButton"
+			NextButton.Metadata.Text = "Automatic failover through gateway"
+			NextButton.BackgroundImage.BackgroundColor3 = Color3.fromHex("4CAF50")
+			NextButton.Buttons.LongText.Title.Text = "⚡ Use Gateway (Auto-Failover)"
+			NextButton.Buttons.LongText.Icon.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
+		end, function()
+			NextButton.ServerName.Text = "Next"
+			NextButton.Name = "GatewayNextButton"
+			NextButton.Buttons.LongText.Title.Text = "⚡ Use Gateway"
 		end)
-	end
 
-	local AppServers = Var.Remotes.GetAppServers:InvokeServer()
+		NextButton.Parent = AppsMenu.Content
+		NextButton.Visible = true
 
-	-- Add "Next" button for gateway auto-failover
-	local NextButton = AppsMenu.Content.ServerTemplate:Clone()
-	xpcall(function()
-		NextButton.ServerName.Text = "Next"
-		NextButton.Name = "GatewayNextButton"
-		NextButton.Metadata.Text = "Automatic failover through gateway"
-		NextButton.BackgroundImage.BackgroundColor3 = Color3.fromHex("4CAF50")
-		NextButton.Buttons.LongText.Title.Text = "⚡ Use Gateway (Auto-Failover)"
-		NextButton.Buttons.LongText.Icon.BackgroundColor3 = Color3.fromRGB(76, 175, 80)
-	end, function()
-		NextButton.ServerName.Text = "Next"
-		NextButton.Name = "GatewayNextButton"
-		NextButton.Buttons.LongText.Title.Text = "⚡ Use Gateway"
+		local GatewayActionBtn = NextButton.Buttons.Delete
+		GatewayActionBtn.MouseButton1Click:Connect(function()
+			Var.Remotes.SetPrimaryAppServer:InvokeServer("https://gate.admsoftware.workers.dev")
+			Frontend.Toast({
+				Icon = Utilities.Icon("check-circle"),
+				Text = "Connected via Gateway",
+				Subtext = "Using automatic failover",
+				Timeout = 5,
+			})
+		end)
 	end)
 
-	NextButton.Parent = AppsMenu.Content
-	NextButton.Visible = true
-
-	NextButton.Buttons.Delete:Destroy() -- Remove delete button from gateway option
-
-	-- Gateway button click - set PrimaryAppServer to gateway URL
-	NextButton.Buttons.LongText.MouseButton1Click:Connect(function()
-		Var.Remotes.SetPrimaryAppServer:InvokeServer("https://gate.admsoftware.workers.dev")
-		Frontend.Toast({
-			Icon = Utilities.Icon("check-circle"),
-			Text = "Connected via Gateway",
-			Subtext = "Using automatic failover",
-			Timeout = 5,
-		})
-	end)
-
-	local CustomServer = Var.Remotes.GetPrimaryServer:InvokeServer()
-	local IsCustom = CustomServer ~= nil and CustomServer ~= "" and CustomServer ~= Var.DefaultAppServer
-
-	-- Gateway card (always shown)
-	local GatewayCard = Template:Clone()
-	GatewayCard.Name = "Gateway"
-	GatewayCard.LongText.Text = "🌐 Gateway (Automatic)"
-	GatewayCard.SubText.Text = "Managed by Administer Gateway"
-	GatewayCard.DeleteButton.Visible = false
-	GatewayCard.Parent = ServerList
-
-	-- Custom server card (only if set)
-	if IsCustom then
-		local CustomCard = Template:Clone()
-		CustomCard.Name = "CustomServer"
-		CustomCard.LongText.Text = "⚙️ Custom AOS Server"
-		CustomCard.SubText.Text = CustomServer
-		CustomCard.DeleteButton.Visible = true
-		CustomCard.DeleteButton.MouseButton1Click:Connect(function()
-			Var.Remotes.SetPrimaryAppServer:InvokeServer("")
-			Apps.LoadLibrary() -- refresh
-		end)
-		CustomCard.Parent = ServerList
+	if not ok then
+		Utilities.Logging.Warn("LoadLibrary encountered an error:", tostring(err))
 	end
 
 	IsLibraryLoading = false
 end
 
 function Apps.Init(JustRefreshCounts)
-	local Sidebar = Var.MainFrame.Configuration.Marketplace.ASidebar
-	local ActiveApps = Var.Remotes.GetInstalledApps:InvokeServer("Combined")
+	local _initConf = getConf()
+	if not Var.MainFrame or not _initConf then
+		Utilities.Logging.Warn("Apps.Init: MainFrame or Configuration not accessible yet, skipping")
+		return
+	end
+
+	local Sidebar = _initConf.Marketplace.ASidebar
 	local Counts = Var.Remotes.GetAppCounts:InvokeServer()
 
 	Sidebar.Buttons.XLibrary.Resources.Content.Apps.Text =
@@ -1044,6 +1507,8 @@ function Apps.Init(JustRefreshCounts)
 	if JustRefreshCounts then
 		return
 	end
+
+	local ActiveApps = Var.Remotes.GetInstalledApps:InvokeServer("Combined")
 
 	for _, Button in Sidebar.Buttons:GetChildren() do
 		local Watcher = Instance.new("TextButton")
@@ -1055,139 +1520,153 @@ function Apps.Init(JustRefreshCounts)
 		Watcher.Position = UDim2.new(0, 0, 0, 0)
 
 		Watcher.MouseButton1Click:Connect(function()
-			--// just incase
-			Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.Visible = false
-			Var.MainFrame.Configuration.Marketplace.MainMarketplace.MPFrozen.Visible = false
+			xpcall(function()
+				local marketplace = Sidebar.Parent
+				local mainMarketplace = marketplace and marketplace:FindFirstChild("MainMarketplace")
+				if not mainMarketplace then
+					Utilities.Logging.Debug("Apps.Init: Sidebar click - MainMarketplace missing, ignoring")
+					return
+				end
 
-			Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = false
+				if mainMarketplace:FindFirstChild("InstallBox") then
+					mainMarketplace.InstallBox.Visible = false
+				end
+				if mainMarketplace:FindFirstChild("MPFrozen") then
+					mainMarketplace.MPFrozen.Visible = false
+				end
 
-			Var.Marketplace.ActivePage = Button.Name
-			Var.Marketplace.ActivePageType = Button.Name:upper()
+				if mainMarketplace:FindFirstChild(Var.Marketplace.ActivePage) then
+					mainMarketplace[Var.Marketplace.ActivePage].Visible = false
+				end
 
-			if Button.Name == "Themes" or Button.Name == "Apps" then
-				Var.Marketplace.ActivePage = "CardGrid"
-				Var.Marketplace.ActivePageType = Button.Name
+				Var.Marketplace.ActivePage = Button.Name
+				Var.Marketplace.ActivePageType = Button.Name:upper()
 
-				Apps.LoadAppList()
-			elseif Button.Name == "AAFeatured" then
-				Var.Marketplace.ActivePageType = "FEATURED"
+				if Button.Name == "Themes" or Button.Name == "Apps" then
+					Var.Marketplace.ActivePage = "CardGrid"
+					Var.Marketplace.ActivePageType = Button.Name
 
-				Apps.LoadAppList()
-			elseif Button.Name == "XLibrary" then
-				Apps.LoadLibrary()
-			end
+					Apps.LoadAppList()
+				elseif Button.Name == "AAFeatured" then
+					Var.Marketplace.ActivePageType = "FEATURED"
 
-			Var.MainFrame.Configuration.Marketplace.MainMarketplace[Var.Marketplace.ActivePage].Visible = true
+					Apps.LoadAppList()
+				elseif Button.Name == "XLibrary" then
+					Apps.LoadLibrary()
+				end
+
+				if mainMarketplace:FindFirstChild(Var.Marketplace.ActivePage) then
+					mainMarketplace[Var.Marketplace.ActivePage].Visible = true
+				end
+			end, function(err)
+				Utilities.Logging.Warn("Apps.Init: Sidebar click handler failed:", tostring(err))
+			end)
 		end)
 	end
 
-	--// hopefully the icon pack has loaded by now?
 	Sidebar.Parent.MainMarketplace.XLibrary.AdministerLogo.Image = Utilities.Icon("administer")
 	Sidebar.Parent.MainMarketplace.XLibrary.GameArt.Image = Var.Remotes.GetGameArt:InvokeServer()
 
-	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.SubHeader.TextButton.MouseButton1Click:Connect(
-		function()
-			Frontend.SwapAppBasic(Var.MainFrame.Configuration.Admins, {
-				Name = Utilities.Translate("Configuration.Admins.Container.Admins.Header.TLabel"),
-				Icon = Utilities.Icon("user-clip"),
-			})
-		end
-	)
+	Sidebar.Parent.MainMarketplace.XLibrary.SubHeader.TextButton.MouseButton1Click:Connect(function()
+		local _c = getConf()
+		Frontend.SwapAppBasic(_c and _c.Admins, {
+			Name = Utilities.Translate("Configuration.Admins.Container.Admins.Header.TLabel"),
+			Icon = Utilities.Icon("user-clip"),
+		})
+	end)
 
-	Var.MainFrame.Configuration.Marketplace.MainMarketplace.XLibrary.InstallAOSInstance.MouseButton1Click:Connect(
-		function()
-			Frontend.Popup.new(
+	Sidebar.Parent.MainMarketplace.XLibrary.InstallAOSInstance.MouseButton1Click:Connect(function()
+		Frontend.Popup.new(
+			{
+				Icon = Utilities.Icon("administer"),
+				Name = "Administer",
+				Subheader = `AOS {Utilities.Translate("generic.Registration")}`,
+			},
+			{
+				Primary = Utilities.Icon("network"),
+				SubIcon = Utilities.Icon("chain"),
+			},
+
+			Utilities.Translate("apps.aos.install.Detail"),
+			Utilities.Translate("apps.aos.install.Body"),
+
+			{
 				{
-					Icon = Utilities.Icon("administer"),
-					Name = "Administer",
-					Subheader = `AOS {Utilities.Translate("generic.Registration")}`,
+					Text = Utilities.Translate("generic.Exit"),
+					Icon = Utilities.Icon("no-entry"),
+					Callback = function(Close)
+						Close()
+					end,
 				},
 				{
-					Primary = Utilities.Icon("network"),
-					SubIcon = Utilities.Icon("chain"),
+					Text = Utilities.Translate("generic.Done"),
+					Icon = Utilities.Icon("floppy-disk"),
+					Callback = function(Close, TextInputs)
+						Close()
+
+						local ServerURL = TextInputs[1]
+						local Result =
+							Var.Remotes.InstallServer:InvokeServer(ServerURL, game.Players.LocalPlayer.UserId)
+
+						if Result[1] then
+							Result = Var.Remotes.RegisterPrimaryAOS:InvokeServer(ServerURL)
+
+							Frontend.Popup.new(
+								{
+									Icon = Utilities.Icon("administer"),
+									Name = "Administer",
+									Subheader = `AOS {Utilities.Translate("generic.Registration")}`,
+								},
+								{
+									Primary = Utilities.Icon("network"),
+									SubIcon = Utilities.Icon(Result[1] and "check-plain" or "x"),
+								},
+								Result[1] and Utilities.Translate("generic.Success")
+									or Utilities.Translate("generic.errors.Generic"),
+								Result[1] and Utilities.Translate("apps.addserver.OK")
+									or Utilities.Translate("apps.addserver.Failed"),
+								{
+									{
+										Text = Utilities.Translate("generic.OK"),
+										Icon = Utilities.Icon("check-plain"),
+										Callback = function(Close)
+											Close()
+										end,
+									},
+								}
+							)
+						else
+							Frontend.Popup.new(
+								{
+									Icon = Utilities.Icon("administer"),
+									Name = "Administer",
+									Subheader = "AOS Registration",
+								},
+								{
+									Primary = Utilities.Icon("network"),
+									SubIcon = Utilities.Icon("question-circle"),
+								},
+								"Invalid server",
+								Utilities.Translate("apps.server.NotAdminister") .. Result[2],
+								{
+									{
+										Text = "OK",
+										Icon = Utilities.Icon("check-plain"),
+										Callback = function(Close)
+											Close()
+										end,
+									},
+								}
+							)
+						end
+					end,
 				},
-
-				Utilities.Translate("apps.aos.install.Detail"),
-				Utilities.Translate("apps.aos.install.Body"),
-
-				{
-					{
-						Text = Utilities.Translate("generic.Exit"),
-						Icon = Utilities.Icon("no-entry"),
-						Callback = function(Close)
-							Close()
-						end,
-					},
-					{
-						Text = Utilities.Translate("generic.Done"),
-						Icon = Utilities.Icon("floppy-disk"),
-						Callback = function(Close, TextInputs)
-							Close()
-
-							local ServerURL = TextInputs[1]
-							local Result =
-								Var.Remotes.InstallServer:InvokeServer(ServerURL, game.Players.LocalPlayer.UserId)
-
-							if Result[1] then
-								Result = Var.Remotes.RegisterPrimaryAOS:InvokeServer(ServerURL)
-
-								Frontend.Popup.new(
-									{
-										Icon = Utilities.Icon("administer"),
-										Name = "Administer",
-										Subheader = `AOS {Utilities.Translate("generic.Registration")}`,
-									},
-									{
-										Primary = Utilities.Icon("network"),
-										SubIcon = Utilities.Icon(Result[1] and "check-plain" or "x"),
-									},
-									Result[1] and Utilities.Translate("generic.Success")
-										or Utilities.Translate("generic.errors.Generic"),
-									Result[1] and Utilities.Translate("apps.addserver.OK")
-										or Utilities.Translate("apps.addserver.Failed"),
-									{
-										{
-											Text = Utilities.Translate("generic.OK"),
-											Icon = Utilities.Icon("check-plain"),
-											Callback = function(Close)
-												Close()
-											end,
-										},
-									}
-								)
-							else
-								Frontend.Popup.new(
-									{
-										Icon = Utilities.Icon("administer"),
-										Name = "Administer",
-										Subheader = "AOS Registration",
-									},
-									{
-										Primary = Utilities.Icon("network"),
-										SubIcon = Utilities.Icon("question-circle"),
-									},
-									"Invalid server",
-									Utilities.Translate("apps.server.NotAdminister") .. Result[2],
-									{
-										{
-											Text = "OK",
-											Icon = Utilities.Icon("check-plain"),
-											Callback = function(Close)
-												Close()
-											end,
-										},
-									}
-								)
-							end
-						end,
-					},
-				},
-				{ {
-					HeaderText = "Server URL (https://aos-us-1.admsoftware.org)",
-				} }
-			)
-		end
-	)
+			},
+			{ {
+				HeaderText = "Server URL (https://aos-us-1.admsoftware.org)",
+			} }
+		)
+	end)
 
 	Apps.InitSerarchbar()
 	task.defer(Apps.LoadAppList)

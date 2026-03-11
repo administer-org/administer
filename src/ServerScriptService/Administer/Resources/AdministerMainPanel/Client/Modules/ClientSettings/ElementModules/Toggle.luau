@@ -5,12 +5,9 @@ local tweenService = game:GetService("TweenService")
 
 local module = {}
 
--- Metamethods
 module.__index = module
 
--- Slider setup function
 function module.createSwitch(bounds: GuiButton, indicator: TextLabel)
-	-- Fill and slider are optional but 1 must be included
 	local self = {}
 
 	self.boundingArea = bounds
@@ -21,7 +18,6 @@ function module.createSwitch(bounds: GuiButton, indicator: TextLabel)
 		self:SetValue(not self.value)
 	end)
 
-	-- BindableEvents
 	self.valueChangedBindable = Instance.new("BindableEvent")
 	self.ValueChanged = self.valueChangedBindable.Event
 
@@ -30,7 +26,6 @@ function module.createSwitch(bounds: GuiButton, indicator: TextLabel)
 	return self
 end
 
--- Set the sliders value
 function module:SetValue(value)
 	if value ~= self.value then
 		self.value = value

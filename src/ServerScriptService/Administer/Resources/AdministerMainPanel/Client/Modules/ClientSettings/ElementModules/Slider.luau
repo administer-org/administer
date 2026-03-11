@@ -7,12 +7,9 @@ local guiService = game:GetService("GuiService")
 
 local module = {}
 
--- Metamethods
 module.__index = module
 
--- Slider setup function
 function module.createSlider(bounds: GuiButton, min, max, step, fill: Frame, head: Frame)
-	-- Fill and slider are optional but 1 must be included
 	local self = {}
 
 	self.boundingArea = bounds
@@ -26,7 +23,6 @@ function module.createSlider(bounds: GuiButton, min, max, step, fill: Frame, hea
 
 	self.dragging = false
 
-	-- BindableEvents
 	self.dragStartBindable = Instance.new("BindableEvent")
 	self.DragBegin = self.dragStartBindable.Event
 	self.dragEndBindable = Instance.new("BindableEvent")
@@ -34,7 +30,6 @@ function module.createSlider(bounds: GuiButton, min, max, step, fill: Frame, hea
 	self.ValueChangedBindable = Instance.new("BindableEvent")
 	self.ValueChanged = self.ValueChangedBindable.Event
 
-	-- PC / Mobile support
 	self.boundingArea.MouseButton1Down:Connect(function()
 		self.dragging = true
 		self.dragStartBindable:Fire()
@@ -73,7 +68,6 @@ function module.createSlider(bounds: GuiButton, min, max, step, fill: Frame, hea
 	return self
 end
 
--- Set the sliders value
 function module:SetValue(value)
 	if value ~= self.value then
 		self.value = value

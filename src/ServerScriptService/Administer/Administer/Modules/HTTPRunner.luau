@@ -159,7 +159,7 @@ function Http.PostRoute(
 
 	if not ok then
 		warn("[HTTPRunner][PostRoute] RequestAsync failed:", tostring(ResponseOrErr))
-		warn("[HTTPRunner][PostRoute] Request details ->", tostring(AppServer) .. tostring(Route))
+		warn("[HTTPRunner][PostRoute] Request details ->", AppServer .. Route)
 		warn("[HTTPRunner][PostRoute] Headers:", FinalHeaders)
 
 		Response = {
