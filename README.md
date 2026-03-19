@@ -6,7 +6,7 @@
 
 [![administer-org - administer](https://img.shields.io/static/v1?label=administer-org&message=administer&color=blue&logo=github)](https://github.com/administer-org/administer "Go to GitHub repo") [![stars - administer](https://img.shields.io/github/stars/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![forks - administer](https://img.shields.io/github/forks/administer-org/administer?style=social)](https://github.com/administer-org/administer) [![translation status](https://translate.admsoftware.org/widget/administer/svg-badge.svg?native=1)](https://translate.admsoftware.org)
 
-[![License](https://img.shields.io/badge/License-AGPL--3.0-green)](#license) [![issues - administer](https://img.shields.io/github/issues/administer-org/administer)](https://github.com/administer-org/administer/issues) [![Hits-of-Code](https://hitsofcode.com/github/administer-org/administer?branch=main)](https://hitsofcode.com/github/administer-org/administer/view?branch=main)
+[![License](https://img.shields.io/badge/Apache 2.0-green)](#license) [![issues - administer](https://img.shields.io/github/issues/administer-org/administer)](https://github.com/administer-org/administer/issues) [![Hits-of-Code](https://hitsofcode.com/github/administer-org/administer?branch=main)](https://hitsofcode.com/github/administer-org/administer/view?branch=main)
 
 
 ### [Install from Roblox](https://to.admsoftware.org/roblox) · [DevForum Topic](https://to.admsoftware.org/devforum) · [Development Trello](https://trello.com/b/GA5Kc0vB/administer) · [Documentation](https://docs.admsoftware.org)
