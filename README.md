@@ -62,4 +62,4 @@ We utilize many other open-source resources such as:
 <img src="https://translate.admsoftware.org/widget/administer/user-guide/multi-auto.svg" alt="Translation status" />
 </a>
 
-&copy; pyxfluff 2024 - 2025 &bullet; Usage of Administster or its code is governed under the GNU AGPL 3.0 License.
+&copy; theblackdragon5 2024 - 2026 &bullet; Usage of Administster or its code is governed under the AGPL 3.0 License.
