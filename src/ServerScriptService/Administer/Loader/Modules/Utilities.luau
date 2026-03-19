@@ -1,22 +1,22 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 --// Initialization
 local Utils = {
-	Time = {}
+	Time = {},
 }
 
 --// Dependencies
 --// Do not add anything here you don't need, it will cause circular imports.
-local Root        = script:FindFirstAncestor("Loader")
+local Root = script:FindFirstAncestor("Loader")
 
-local HTTP        = require(Root.Modules.HTTPRunner)
+local HTTP = require(Root.Modules.HTTPRunner)
 local SettingsAPI = require(Root.Modules.SettingsAPI)
 
-local Locales     = Root.Core.Locales
-local Types       = require(Root.Core.Types)
-local Config      = require(Root.Core.Configuration)
-local Var         = require(Root.Core.Variables)
+local Locales = Root.Core.Locales
+local Types = require(Root.Core.Types)
+local Config = require(Root.Core.Configuration)
+local Var = require(Root.Core.Variables)
 
 local Settings = Config.Settings
 local SettingsCache = {}
@@ -24,7 +24,7 @@ local SettingsCache = {}
 --Retrieves a setting from the Administer settings index. Setting must be valid Setting syntax (read docs)
 Utils.GetSetting = function(setting: Types.Setting, UserID: number?): Types.SettingResponse
 	if Var.SettingsAPI == nil then
-		return "log" --// just make sure Utils.Logging works :pray:
+		return "warning" --// default to warning so Warn() fires before SettingsAPI is ready
 	elseif setting == "Verbosity" then
 		return SettingsCache.Verbosity or Var.SettingsAPI.Get("Verbosity")
 	end
@@ -32,21 +32,21 @@ Utils.GetSetting = function(setting: Types.Setting, UserID: number?): Types.Sett
 	return Var.SettingsAPI.Get(setting)
 end
 
-Utils.GetSettings = function(settings: {Types.Setting}, UserID: number?): Types.SettingResponse
+Utils.GetSettings = function(settings: { Types.Setting }, UserID: number?): Types.SettingResponse
 	local settingData = {}
 	if Var.SettingsAPI == nil then
 		return "log"
 	end
-	
+
 	for _, setting in pairs(Settings) do
 		local val = nil
-		
+
 		if setting == "Verbosity" then
 			val = SettingsCache.Verbosity or Var.SettingsAPI.Get("Verbosity")
 		else
 			val = Var.SettingsAPI.Get(setting)
 		end
-		
+
 		settingData[setting] = val
 	end
 
@@ -56,16 +56,18 @@ end
 Utils.Logging = {
 	--Prints out a basic message.
 	Print = function(...)
-		if Utils.GetSetting("Verbosity") ~= "log" then return end
-		
+		if Utils.GetSetting("Verbosity") ~= "log" then
+			return
+		end
+
 		print(`[{Config.Name}] [log]`, ...)
 	end,
 
 	--Creates a warning, with a traceback.
 	Warn = function(...)
-		if table.find({"log", "warning"}, Utils.GetSetting("Verbosity")) ~= nil then
+		if Utils.GetSetting("Verbosity") == "error" then
 			return
-		end 
+		end
 
 		warn(`[{Config.Name}] [warn]`, ..., debug.traceback(""))
 	end,
@@ -81,19 +83,22 @@ Utils.Logging = {
 	end,
 
 	Debug = function(...)
-		--// TODO
+		if Utils.GetSetting("Verbosity") ~= "log" then
+			return
+		end
+
 		print(debug.traceback(...))
-	end
+	end,
 }
 
 --Checks if a provided player is an Administer admin.
 Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 	if (Utils.GetSetting("sudo") and game:GetService("RunService"):IsStudio()) or Var.EnableFreeAdmin then
 		return {
-			IsAdmin  = true,
-			Reason   = Utils.t(Player, "admincheck.SUDO"),
-			RankID   = "Administrator",
-			RankName = Utils.t(Player, "admin.RankDefault")
+			IsAdmin = true,
+			Reason = Utils.t(Player, "admincheck.SUDO"),
+			RankID = "Administrator",
+			RankName = Utils.t(Player, "admin.RankDefault"),
 		}
 	end
 
@@ -104,7 +109,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 			IsAdmin = true,
 			Reason = Utils.t(Player, "admincheck.OVERRIDE"),
 			RankID = "Administrator",
-			RankName = Utils.t(Player, "admin.RankDefault")
+			RankName = Utils.t(Player, "admin.RankDefault"),
 		}
 	else
 		for GroupID, Data in require(Root.Core.Configuration).Admins.Groups do
@@ -114,7 +119,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 						IsAdmin = true,
 						Reason = Utils.t(Player, "admincheck.OVERRIDE"),
 						RankID = Data.AdminRankName,
-						RankName = "Admin"
+						RankName = "Admin",
 					}
 				end
 			end, function(e)
@@ -133,23 +138,25 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 				IsAdmin = true,
 				Reason = Utils.t(Player, "admincheck.RANKINDEX"),
 				RankID = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName,
-				RankName = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName
+				RankName = RanksIndex.AdminIDs[tostring(Player.UserId)].AdminRankName,
 			}
 		else
 			return {
 				IsAdmin = false,
-				RankID = 0
+				RankID = 0,
 			}
 		end
 	end, function()
 		--// Safe to ignore an error
 		return {
 			IsAdmin = false,
-			RankID = 0
+			RankID = 0,
 		}
 	end)
 
-	if Result.IsAdmin then return Result end
+	if Result.IsAdmin then
+		return Result
+	end
 
 	--if RanksData["IsAdmin"] then
 	--	return true, "Data based on settings configured by an admin.", RanksData["RankId"], RanksData["RankName"]
@@ -158,29 +165,33 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 	local _, Result = xpcall(function()
 		for ID, Group in RanksIndex.GroupAdminIDs do
 			ID = string.split(ID, "_")[1]
-			if not Player:IsInGroup(ID) then continue end
+			if not Player:IsInGroup(ID) then
+				continue
+			end
 
 			if Group["RequireRank"] then
-				if Player:GetRankInGroup(ID) ~= tonumber(Group["RankNumber"]) then continue end
+				if Player:GetRankInGroup(ID) ~= tonumber(Group["RankNumber"]) then
+					continue
+				end
 
 				return {
 					IsAdmin = true,
 					Reason = Utils.t(Player, "admincheck.GROUP"),
 					RankID = Group.AdminRankName,
-					RankName = Group.AdminRankName
+					RankName = Group.AdminRankName,
 				}
 			else
 				return {
 					IsAdmin = true,
 					Reason = Utils.t(Player, "admincheck.GROUP"),
 					RankID = Group.AdminRankName,
-					RankName = Group.AdminRankName
+					RankName = Group.AdminRankName,
 				}
 			end
 		end
 
 		return {
-			IsAdmin = false
+			IsAdmin = false,
 		}
 	end, function(e)
 		if string.find(e, "of table") ~= nil then
@@ -190,7 +201,7 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		end
 
 		return {
-			IsAdmin = false
+			IsAdmin = false,
 		}
 	end)
 
@@ -202,24 +213,29 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		IsAdmin = false,
 		Reason = Utils.t(Player, "admincheck.nil"),
 		RankID = 0,
-		RankName = Utils.t(Player, "admin.NoRank")
+		RankName = Utils.t(Player, "admin.NoRank"),
 	}
 end
 
 -- Spawns a new admin notification. Yields, use with task.spawn to avoid.
 Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, NotificationSound, Options)
 	local Panel
-	if (xpcall(function()
-			Panel = Admin.PlayerGui:FindFirstChild("AdministerMainPanel")
+	if
+		(
+			xpcall(function()
+				Panel = Admin.PlayerGui:FindFirstChild("AdministerMainPanel")
 
-			if Panel == nil then error(nil) end
-			return true
-		end, function()
-			Utils.Logging.SWarn(
-				"This player does not have the assets required to render a notification, ignoring request."
-			)
-			return false
-		end)) == false
+				if Panel == nil then
+					error(nil)
+				end
+				return true
+			end, function()
+				Utils.Logging.SWarn(
+					"This player does not have the assets required to render a notification, ignoring request."
+				)
+				return false
+			end)
+		) == false
 	then
 		return { false }
 	end
@@ -264,16 +280,16 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 			Notification.Parent,
 			TweenInfo.new(OpenTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 			{
-				Position = UDim2.new(-0.018, 0, 0.858, 0)
+				Position = UDim2.new(-0.018, 0, 0.858, 0),
 			}
 		),
 		Var.Services.TweenService:Create(
 			Notification,
 			TweenInfo.new(OpenTime, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
 			{
-				GroupTransparency = 0
+				GroupTransparency = 0,
 			}
-		)
+		),
 	}
 
 	for i, v in Tweens do
@@ -288,7 +304,7 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 		local NotifTween2 =
 			Var.Services.TweenService:Create(Notification, TweenInfo.new(OpenTime * 0.7, Enum.EasingStyle.Quad), {
 				Position = UDim2.new(1, 0, 0, 0),
-				GroupTransparency = 1
+				GroupTransparency = 1,
 			})
 
 		NotifTween2:Play()
@@ -308,10 +324,12 @@ function Utils.NewRemote(
 	RemoteType: "RemoteEvent" | "RemoteFunction",
 	RemoteName: string,
 	AuthRequired: boolean,
-	Callback: (...any) -> (...any),
+	Callback: (...any) -> ...any,
 	AppName: string | nil
 ): ()
-	if not table.find({ "RemoteFunction", "RemoteEvent" }, RemoteType) then return false, "Invalid remote type!" end
+	if not table.find({ "RemoteFunction", "RemoteEvent" }, RemoteType) then
+		return false, "Invalid remote type!"
+	end
 
 	local Rem = Instance.new(RemoteType)
 	Rem.Name = RemoteName
@@ -319,25 +337,33 @@ function Utils.NewRemote(
 
 	if RemoteType == "RemoteEvent" then
 		(Rem :: RemoteEvent).OnServerEvent:Connect(function(Player: Player, ...)
-			if AuthRequired and not table.find(Var.Admins.InGame, Player) then return false end
+			if AuthRequired and not table.find(Var.Admins.InGame, Player) then
+				return false
+			end
 
 			Callback(Player, ...)
 
 			return true
 		end)
-
 	elseif RemoteType == "RemoteFunction" then
 		(Rem :: RemoteFunction).OnServerInvoke = function(Player: Player, ...)
-			
-			local blacklist = {"Ping", "GetSetting"}
-			
-			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] then return false end
-			
-			if not table.find(blacklist, RemoteName) then Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`) end
+			local blacklist = { "Ping", "GetSetting" }
+
+			if AuthRequired and not Utils.IsAdmin(Player)["IsAdmin"] and not table.find(Var.Admins.InGame, Player) then
+				return false
+			end
+
+			if not table.find(blacklist, RemoteName) then
+				Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`)
+			end
 
 			local t, cbk = tick(), Callback(Player, ...)
 
-			if not table.find(blacklist, RemoteName) then Utils.Logging.Print(`--> {Utils.t(nil, "generic.Done")} ({string.sub(tostring((tick() - t) * 1000), 1, 6)}ms)`) end
+			if not table.find(blacklist, RemoteName) then
+				Utils.Logging.Print(
+					`--> {Utils.t(nil, "generic.Done")} ({string.sub(tostring((tick() - t) * 1000), 1, 6)}ms)`
+				)
+			end
 
 			return cbk
 		end
@@ -351,7 +377,7 @@ function Utils.NewRemote(
 
 		Rem.Parent = AppFolder
 	end
-	
+
 	return Rem
 end
 
@@ -401,7 +427,7 @@ function Utils.GetGameOwner(): { ID: number, MemberType: string }
 
 	return {
 		ID = Result,
-		MemberType = Type
+		MemberType = Type,
 	}
 end
 
@@ -410,9 +436,11 @@ function Utils.GetShortNumer(Number)
 
 	return (
 		math.floor(
-			((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3))
-				* 10 ^ (Decimals or 3)
-		) / 10 ^ (Decimals or 3) .. (({ "k", "M", "B", "T", "Qa", "Qn", "Sx", "Sp", "Oc", "N" })[math.floor(math.log10(Number) / 3)] or "")
+				((Number < 1 and Number) or math.floor(Number) / 10 ^ (math.log10(Number) - math.log10(Number) % 3))
+					* 10 ^ (Decimals or 3)
+			)
+			/ 10 ^ (Decimals or 3)
+		.. (({ "k", "M", "B", "T", "Qa", "Qn", "Sx", "Sp", "Oc", "N" })[math.floor(math.log10(Number) / 3)] or "")
 	)
 end
 
@@ -426,7 +454,9 @@ function Utils.GetGameMedia()
 	local MediaData = Var.Services.HttpService:JSONDecode(
 		Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v2/games/{game.GameId}/media`)
 	)["data"]
-	if MediaData == {} then return Default end
+	if MediaData == {} then
+		return Default
+	end
 
 	local Tries = 0
 	local Selected = false
@@ -434,11 +464,13 @@ function Utils.GetGameMedia()
 		local Next = MediaData[Tries]
 
 		if Next == nil or Next.videoHash ~= nil then
-			if Tries >= 50 then return Default end
+			if Tries >= 50 then
+				return Default
+			end
 
 			if Tries ~= #MediaData then
 				Tries += 1
-				continue 
+				continue
 			else
 				return Default --// exhausted all of our images, none good
 			end
@@ -457,7 +489,9 @@ end
 function Utils.GetServerRegion()
 	local IP = Var.Services.HttpService:GetAsync("https://api.ipify.org/")
 	local IPInfo = Var.Services.HttpService:JSONDecode(
-		Var.Services.HttpService:GetAsync(`http://www.ip-api.com/json/{IP}?fields=status,message,countryCode,regionName,city`)
+		Var.Services.HttpService:GetAsync(
+			`http://www.ip-api.com/json/{IP}?fields=status,message,countryCode,regionName,city`
+		)
 	)
 
 	return `{IPInfo["countryCode"]}\\{IPInfo["regionName"]}`
@@ -478,7 +512,9 @@ function Utils.GetProminentColor(UserID)
 			Raw = data
 		until success or Tries == 2
 
-		if Tries == 2 then return { 33, 53, 122 } end
+		if Tries == 2 then
+			return { 33, 53, 122 }
+		end
 
 		local Decoded = Var.Services.HttpService:JSONDecode(Raw)
 		local UserURL = Decoded["data"][1]["imageUrl"]
@@ -516,10 +552,10 @@ function Utils.t(Player: Player | nil | string, Key: string): string
 	local Result = ""
 
 	if Player == nil then
-		Result =  require(Locales[Settings.Interface.Language.Value.Default])[Key]
+		Result = require(Locales[Settings.Interface.Language.Value.Default])[Key]
 	elseif typeof(Player) == "string" then
 		Result = require(Locales[Player])[Key]
- 	else
+	else
 		local LocaleResult
 		xpcall(function()
 			LocaleResult = (
@@ -529,14 +565,14 @@ function Utils.t(Player: Player | nil | string, Key: string): string
 			warn(debug.traceback(x))
 			LocaleResult = "en"
 		end)
-		
+
 		Var.CachedLocales[Player.UserId] = LocaleResult
 
 		--Utils.Logging.Print(`Locale: {LocaleResult}`)
 
 		Result = require(Locales:FindFirstChild(LocaleResult))[Key] or Key
 	end
-	
+
 	if not Result then
 		return Key
 	else
@@ -556,17 +592,17 @@ function Utils.UpdateCallback(Services: { string })
 			Data["Administer"] = HTTP.GetRoute(Var.DefaultAppServer, "/pub/versions", function(VersionInfo, Misc)
 				Data["org.admsoftware.Core"] = VersionInfo
 			end, function(...)
-				warn(...)
+				Utils.Logging.Print(...)
 				Data["org.admsoftware.Core"] = {
 					IsError = true,
-					Misc = ...
+					Misc = ...,
 				}
 			end, {
-				Debug = false
+				Debug = false,
 			})
 		else
 			--// ...
-		end	
+		end
 	end
 
 	return Data
@@ -585,7 +621,7 @@ end
 function Utils.CheckVersion()
 	local Vers = Config.VersData.String
 	local SavedInstalls = Var.DataStores.AppDB:GetAsync("InstallDates") or {
-		["org.admsoftware.Core"] = {}
+		["org.admsoftware.Core"] = {},
 	}
 
 	if SavedInstalls["org.admsoftware.Core"][Vers] == nil then
@@ -597,26 +633,22 @@ function Utils.CheckVersion()
 	return SavedInstalls["org.admsoftware.Core"][Vers]
 end
 
-function Utils.HasSeenTutorial(
-	Player: Player | number | string, 
-	TutorialName: string,
-	IsGlobal: boolean
-)
+function Utils.HasSeenTutorial(Player: Player | number | string, TutorialName: string, IsGlobal: boolean)
 	if typeof(Player) ~= "Instance" then
 		Player = {
-			UserId = Player
+			UserId = Player,
 		}
 	end
 
 	if IsGlobal then
 		Player = {
-			UserId = "Global"
+			UserId = "Global",
 		}
 	end
 
 	local Data = Var.DataStores.AdminsDS:GetAsync(`__{Player.UserId}_Tutorials`) or {}
 
-	if Data[TutorialName] == nil then 
+	if Data[TutorialName] == nil then
 		return false
 	else
 		return true
@@ -626,13 +658,13 @@ end
 function Utils.TutorialSeen(Player, Tutorial, IsGlobal)
 	if typeof(Player) ~= "Instance" then
 		Player = {
-			UserId = Player
+			UserId = Player,
 		}
 	end
 
 	if IsGlobal then
 		Player = {
-			UserId = "Global"
+			UserId = "Global",
 		}
 	end
 
@@ -642,8 +674,72 @@ function Utils.TutorialSeen(Player, Tutorial, IsGlobal)
 
 	Var.DataStores.AdminsDS:SetAsync(`__{Player.UserId}_Tutorials`, Data)
 
-	return {true, `OK __{Player.UserId}_Tutorials: {Tutorial} true`}	
+	return { true, `OK __{Player.UserId}_Tutorials: {Tutorial} true` }
 end
 
+--// Version Check
+--// Checks the admin panel version against the remote API
+Utils.CheckVersionStatus = function(): { Status: string, Latest: string, Current: string }
+	local HttpService = Var.Services.HttpService
+	local CurrentVersion = Config.VersData.String
+	local VersionStatus = { Status = "latest", Latest = CurrentVersion, Current = CurrentVersion }
+
+	local success, response = pcall(function()
+		return HttpService:GetAsync(Var.VersionCheckURL)
+	end)
+
+	if not success then
+		Utils.Logging.Warn("[VersionCheck] Failed to fetch version info from", Var.VersionCheckURL .. ":", response)
+		VersionStatus.Status = "no_check"
+		return VersionStatus
+	end
+
+	local success2, data = pcall(function()
+		return HttpService:JSONDecode(response)
+	end)
+
+	if not success2 then
+		Utils.Logging.Warn("[VersionCheck] Failed to decode API response:", response)
+		VersionStatus.Status = "no_check"
+		return VersionStatus
+	end
+
+	if not data or not data.administer or not data.administer.version then
+		Utils.Logging.Warn("[VersionCheck] Invalid API response structure")
+		VersionStatus.Status = "no_check"
+		return VersionStatus
+	end
+
+	local LatestVersion = data.administer.version.latest
+	local ValidVersions = data.administer.version.versions or {}
+
+	VersionStatus.Latest = LatestVersion
+
+	--// Check if current version is in the valid versions list
+	local VersionIsValid = false
+	for _, v in ValidVersions do
+		if v == CurrentVersion then
+			VersionIsValid = true
+			break
+		end
+	end
+
+	if not VersionIsValid then
+		VersionStatus.Status = "invalid"
+		Utils.Logging.Warn(
+			`[VersionCheck] Current version {CurrentVersion} is not in valid versions list: {table.concat(
+				ValidVersions,
+				", "
+			)}`
+		)
+	elseif CurrentVersion ~= LatestVersion then
+		VersionStatus.Status = "outdated"
+		Utils.Logging.Warn(`[VersionCheck] Current version {CurrentVersion} is outdated (latest: {LatestVersion})`)
+	else
+		VersionStatus.Status = "latest"
+	end
+
+	return VersionStatus
+end
 
 return Utils

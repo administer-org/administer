@@ -1,6 +1,5 @@
 --// Administer
-
---// pyxfluff 2024-2025
+--// CodingAgent 2024-2026
 
 local Frontend = { Popup = {}, Drawer = {} }
 
@@ -41,6 +40,7 @@ function Frontend.ToggleFullscreen(ForceClose: boolean, TargetFrame: Frame | Can
 	end
 
 	local Speed = Var.AnimationSpeed * 0.75
+	local Header = Var.MainFrame:FindFirstChild("Header")
 
 	if TargetFrame:GetAttribute("IsFullScreen") == true or ForceClose == true then
 		TargetFrame:SetAttribute("IsFullScreen", false)
@@ -59,13 +59,15 @@ function Frontend.ToggleFullscreen(ForceClose: boolean, TargetFrame: Frame | Can
 				{ CornerRadius = UDim.new(0, 20) }
 			)
 			:Play()
-		Var.Services.TweenService
-			:Create(
-				Var.MainFrame.Header.Mark,
-				TweenInfo.new(Speed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.328, 0, 0, 0) }
-			)
-			:Play()
+		if Header then
+			Var.Services.TweenService
+				:Create(
+					Header.Mark,
+					TweenInfo.new(Speed, Enum.EasingStyle.Quart),
+					{ Position = UDim2.new(0.328, 0, 0, 0) }
+				)
+				:Play()
+		end
 	else
 		TargetFrame:SetAttribute("IsFullScreen", true)
 
@@ -83,17 +85,14 @@ function Frontend.ToggleFullscreen(ForceClose: boolean, TargetFrame: Frame | Can
 				{ CornerRadius = UDim.new(0, 0) }
 			)
 			:Play()
-		Var.Services.TweenService
-			:Create(Var.MainFrame.Header.Mark, TweenInfo.new(Speed, Enum.EasingStyle.Quart), {
-				Position = UDim2.new(0.328, Var.Services.GUIService.TopbarInset.Min.X, 0, 0),
-				Size = UDim2.new(
-					Var.MainFrame.Header.Mark.Size.X.Scale,
-					0,
-					0,
-					Var.Services.GUIService.TopbarInset.Height
-				),
-			})
-			:Play()
+		if Header then
+			Var.Services.TweenService
+				:Create(Header.Mark, TweenInfo.new(Speed, Enum.EasingStyle.Quart), {
+					Position = UDim2.new(0.328, Var.Services.GUIService.TopbarInset.Min.X, 0, 0),
+					Size = UDim2.new(Header.Mark.Size.X.Scale, 0, 0, Var.Services.GUIService.TopbarInset.Height),
+				})
+				:Play()
+		end
 	end
 end
 
@@ -552,7 +551,9 @@ function Frontend.Toast(Config: {
 	local ClickEvent = Toast.Click.MouseButton1Click:Connect(function()
 		Close()
 
-		xpcall(Config.OnClick(), Utilities.Logging.Print)
+		if Config.OnClick then
+			xpcall(Config.OnClick, Utilities.Logging.Print)
+		end
 	end)
 
 	Close = function()
@@ -588,23 +589,17 @@ function Frontend.Popup.Open(): ()
 	}
 	Frontend.Popup.OriginalStates[descendant] = original
 
-	Var.Services.TweenService
-		:Create(descendant, BGTweenInfo, {
-			Size = UDim2.new(original.Size.X.Scale * 0.75, 0, original.Size.Y.Scale * 0.75, 0),
-			Position = UDim2.fromScale(0.5, 0.5),
-			AnchorPoint = Vector2.new(0.5, 0.5),
-			BackgroundColor3 = original.Color:lerp(Color3.fromRGB(16, 17, 20), 0.6),
-		})
-		:Play()
-
 	local Popup = Var.MainFrame.administer.MessageBox
 
-	local PopupOriginalSize = Popup.Size
-	local SizeStr = string.split(tostring(Popup.Size), ",")
-	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
-	local Y = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2])
+	-- Lazy-init canonical size from the live object on first call
+	if not MessageBoxCanonicalSize then
+		MessageBoxCanonicalSize = Popup.Size
+	end
 
-	Popup.Size = UDim2.fromScale(X / 1.5, Y / 1.5)
+	local PopupOriginalSize = MessageBoxCanonicalSize
+	local cs = MessageBoxCanonicalSize
+	Popup.Size =
+		UDim2.new(cs.X.Scale / 1.5, math.floor(cs.X.Offset / 1.5), cs.Y.Scale / 1.5, math.floor(cs.Y.Offset / 1.5))
 	Popup.Position = UDim2.fromScale(0.5, 1.25)
 	Popup.GroupTransparency = 0.5
 	Popup.Visible = true
@@ -630,40 +625,67 @@ end
 function Frontend.Popup.Close(): ()
 	local BGTweenInfo = TweenInfo.new(Var.AnimationSpeed * 0.65, Enum.EasingStyle.Cubic)
 
-	for descendant, original in Frontend.Popup.OriginalStates do
-		if descendant then
-			Var.Services.TweenService
-				:Create(descendant, BGTweenInfo, {
-					Size = original.Size,
-					Position = original.Position,
-					BackgroundColor3 = original.Color,
-					AnchorPoint = original.AnchorPoint,
-				})
-				:Play()
-		end
+	-- Resolve the MessageBox via pcall in case the hierarchy isn't ready.
+	local Box = nil
+	local boxOk, boxResult = pcall(function()
+		return Var.MainFrame.administer.MessageBox
+	end)
+	if boxOk then
+		Box = boxResult
 	end
 
-	local Box = Var.MainFrame.administer.MessageBox
-	local PopupOriginalSize = Box.Size
-	local SizeStr = string.split(tostring(Box.Size), ",")
-	local X = tonumber(string.split(string.gsub(SizeStr[1], "{", ""), " ")[1])
-	local Y = tonumber(string.split(string.gsub(SizeStr[3], "{", ""), " ")[2])
-
-	local PopupTween =
-		Var.Services.TweenService:Create(Box, TweenInfo.new(Var.AnimationSpeed * 0.85, Enum.EasingStyle.Cubic), {
-			Size = UDim2.new(X * 0.35, 0, Y * 0.35, 0),
-			GroupTransparency = 1,
-		})
-
-	PopupTween:Play()
-	PopupTween.Completed:Wait()
-
-	Box.Size = PopupOriginalSize
-	Box.Visible = false
+	-- Hide the popup and unblock Popup.new IMMEDIATELY (synchronous, no yield).
+	-- All animation runs in a detached task so the caller isn't blocked.
+	if Box then
+		Box.Visible = false
+		Box.GroupTransparency = 0
+		-- Reset size synchronously while hidden so the next Open() always reads the correct canonical size
+		Box.Size = MessageBoxCanonicalSize
+	end
 	Var.PopupOpen = false
+
+	task.spawn(function()
+		-- Restore the dimmed/shrunken background page.
+		pcall(function()
+			for descendant, original in Frontend.Popup.OriginalStates do
+				if descendant then
+					Var.Services.TweenService
+						:Create(descendant, BGTweenInfo, {
+							Size = original.Size,
+							Position = original.Position,
+							BackgroundColor3 = original.Color,
+							AnchorPoint = original.AnchorPoint,
+						})
+						:Play()
+				end
+			end
+		end)
+
+		if Box then
+			local cs = MessageBoxCanonicalSize
+			-- Box is already hidden; this tween is purely cosmetic for any edge cases
+			local closeDuration = Var.AnimationSpeed * 0.85
+			Var.Services.TweenService
+				:Create(Box, TweenInfo.new(closeDuration, Enum.EasingStyle.Cubic), {
+					Size = UDim2.new(
+						cs.X.Scale * 0.35,
+						math.floor(cs.X.Offset * 0.35),
+						cs.Y.Scale * 0.35,
+						math.floor(cs.Y.Offset * 0.35)
+					),
+					GroupTransparency = 1,
+				})
+				:Play()
+
+			task.wait(closeDuration)
+			Box.Size = MessageBoxCanonicalSize
+			Box.GroupTransparency = 0
+		end
+	end)
 end
 
 local MessageBox = Var.MainFrame.administer.MessageBox
+local MessageBoxCanonicalSize = nil -- lazy: captured on first Open() call so Var.MainFrame is guaranteed ready
 local ButtonOneOriginalPos = MessageBox.Button1.Position
 local PopupButtons = {}
 
@@ -744,10 +766,16 @@ function Frontend.Popup.new(
 	MessageBox.Button1.Label.Text = Options[1].Text
 	MessageBox.Button1.Icon.Image = Options[1].Icon
 	PopupButtons[1] = MessageBox.Button1.MouseButton1Click:Connect(function()
-		Options[1].Callback(ClosePopup, {
-			MessageBox.TextInputs[1].Box.Text,
-			MessageBox.TextInputs[2].Box.Text,
-		})
+		local cbOk, cbErr = pcall(function()
+			Options[1].Callback(ClosePopup, {
+				MessageBox.TextInputs[1].Box.Text,
+				MessageBox.TextInputs[2].Box.Text,
+			})
+		end)
+		if not cbOk then
+			Utilities.Logging.Warn("[Popup] Button1 callback error:", tostring(cbErr))
+			ClosePopup()
+		end
 	end)
 
 	xpcall(function()
@@ -1482,7 +1510,11 @@ function Frontend.AddButtonAnimation(Button: TextButton | ImageButton)
 				BorderGone:Play()
 				BorderGone.Completed:Wait()
 
-				Button.ButtonAnimBorder:Destroy()
+				-- Re-check: another MouseLeave may have already destroyed it while we waited
+				local border = Button:FindFirstChild("ButtonAnimBorder")
+				if border then
+					border:Destroy()
+				end
 			end)
 		end
 

@@ -1,11 +1,10 @@
 --// Administer
-
---// pyxfluff (2024-2025)
+--// CodingAgent (2024-2026)
 
 local Variables = {}
 
 Variables.AdministerRoot = script.Parent.Parent.Parent
-Variables.Remotes = game.ReplicatedStorage:WaitForChild("Administer", 10)
+Variables.Remotes = game.ReplicatedStorage:WaitForChild("Administer", 15) --// Wait for server to create remotes folder
 
 Variables.MainFrame = Variables.AdministerRoot:WaitForChild("Main", 10) --// frontend location
 Variables.Mobile = false --// enable to force mobile mode

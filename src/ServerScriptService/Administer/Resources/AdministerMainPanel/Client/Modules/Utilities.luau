@@ -11,21 +11,26 @@ local Frontend = { Log = function(...) end }
 local Var = require(script.Parent.Variables)
 
 function Utilities.GetSetting(Setting: string): any
-	local setting = Var.Remotes:WaitForChild("GetSetting", 10):InvokeServer("Administer", Setting)
-
-	return setting
+	-- WaitForChild without timeout: waits indefinitely, never throws (even in Studio)
+	local remote = Var.Remotes:WaitForChild("GetSetting")
+	return remote:InvokeServer("Administer", Setting)
 end
 
 function Utilities.GetSettings(settingsArray: { Types.Setting }, UserID: number?): Types.SettingResponse
-	local settingData = Var.Remotes:WaitForChild("GetSettings", 10):InvokeServer("Administer", settingsArray)
-
-	return settingData
+	local remote = Var.Remotes:WaitForChild("GetSettings")
+	if not remote then
+		return {}
+	end
+	return remote:InvokeServer("Administer", settingsArray)
 end
 
 function Utilities.GetSettingChanged(Setting: string): RemoteEvent
-	local remote = Var.Remotes:WaitForChild("GetRemote", 10):InvokeServer("Administer", Setting)
-
-	return remote
+	local remote = Var.Remotes:WaitForChild("GetRemote")
+	if not remote then
+		return nil
+	end
+	local result = remote:InvokeServer("Administer", Setting)
+	return result
 end
 
 function Utilities.ShortNumber(Number: number): string
@@ -99,8 +104,15 @@ Utilities.Logging.Print = function(...)
 	end
 end
 
+Utilities.Logging.Debug = function(...)
+	if Var.Verbosity == "log" then
+		print("[Administer] [dbg]", ...)
+		Frontend.Log("dbg", ...)
+	end
+end
+
 Utilities.Logging.Warn = function(...)
-	warn("[Administer] [warn]", ..., debug.traceback(""))
+	warn("[Administer] [warn]", ...)
 	Frontend.Log("wrn", ...)
 end
 
@@ -236,9 +248,12 @@ end
 
 function Utilities.Translate(StringIdentifier: string): string | { string }
 	local Locale = string.split(Var.Services.LocalizationService.RobloxLocaleId, "-")[1]
-	local ok, LocaleSetting = pcall(Utilities.GetSetting, "Language")
-	if not ok or LocaleSetting == nil then
-		LocaleSetting = Locale -- fall back to system locale if remotes aren't ready yet
+	local LocaleSetting
+	if Var.Remotes and Var.Remotes:FindFirstChild("GetSetting") then
+		local ok, result = pcall(Utilities.GetSetting, "Language")
+		LocaleSetting = ok and result or Locale
+	else
+		LocaleSetting = Locale
 	end
 
 	if Locale ~= LocaleSetting and LocaleSetting ~= "en" then
@@ -249,7 +264,11 @@ function Utilities.Translate(StringIdentifier: string): string | { string }
 	if Var.LocaleModule["_"] == "_init" then
 		Utilities.Logging.Print(`Getting locale {Locale}`)
 
-		Var.LocaleModule = Var.Remotes.GetTranslationModule:InvokeServer(Locale)
+		local translationRemote = Var.Remotes:FindFirstChild("GetTranslationModule")
+		if translationRemote then
+			Var.LocaleModule = translationRemote:InvokeServer(Locale)
+		end
+		-- if remote isn't ready, leave LocaleModule as-is (_init) so we retry next call
 	end
 
 	if not Var.LocaleModule[StringIdentifier] then

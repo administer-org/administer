@@ -1,4 +1,4 @@
---// Compilation Date: Wed Sep 03 2025 14:25:01 GMT-0400 (Eastern Daylight Time)
+--// Compilation Date: Wed Sep 03 2026 14:25:01 GMT-0400 (Eastern Daylight Time)
 return {
 	["_locale"] = "en_crp",
 	["_locale_display"] = "English (Corporate Speak)",
@@ -72,7 +72,7 @@ return {
 	["Configuration.Apps.Description"] = "%s\n\n%s created by @%s from the instance %s",
 	["Header.AppDrawer.HeaderLabel"] = "Applications",
 	["Header.Mark.HeaderLabel"] = "<b>%s</b> · %s",
-	["Home.Welcome"] = "<stroke color: \"rgb(0,0,0)\" transparency: \"0.85\" thickness: \".4\">Administer is loading...</stroke>",
+	["Home.Welcome"] = '<stroke color: "rgb(0,0,0)" transparency: "0.85" thickness: ".4">Administer is loading...</stroke>',
 	["Home.Widget1.Editing.Last"] = "Prior",
 	["Home.Widget1.Editing.Next"] = "After current",
 	["Import.Select.Header.Head"] = "Let's help ease the transition. Select what to import from where.",
@@ -162,7 +162,7 @@ return {
 	["apps.addserver.Failed"] = "Sorry, but something went wrong while assigning your primary instance. Please make note of the error in your game's logs and report it to the server maintainer",
 	["apps.RunningSince"] = "Execution began at",
 	["apps.BadServer"] = "This is not a valid Administer AOS instance.",
-	["apps.Disable"] = "You can re-enable it from the \"Disabled Apps\" menu. The app may be able to continue running for this session but it will not be started in any new servers.",
+	["apps.Disable"] = 'You can re-enable it from the "Disabled Apps" menu. The app may be able to continue running for this session but it will not be started in any new servers.',
 	["apps.Remove"] = "This app will not start in any new servers but will continue running.",
 	["apps.DupeDetected"] = "This application appears to already be in your experience's library; in order to re-initialzie it, it must be discarded.",
 	["apps.Downloaded"] = "Successfully installed an app!",
@@ -219,9 +219,9 @@ return {
 	["setting.Interface.DisableUnofficialAppWarning.DisplayName"] = "Disable unofficial app warning",
 	["setting.Interface.DisableUnofficialAppWarning.Description"] = "Hides the warning which says if a plugin is external. Useful for new people, otherwise just UI clutter.",
 	["setting.Interface.EnableEditableImages.DisplayName"] = "Enable EditableImages",
-	["setting.Interface.EnableEditableImages.Description"] = "Enables EditableImage features such as app card backgrounds, app card reflections, and other blurring effects. Does not disable \"image glow\". Currently nonfunctional outside of Studio due to Roblox limitations.",
+	["setting.Interface.EnableEditableImages.Description"] = 'Enables EditableImage features such as app card backgrounds, app card reflections, and other blurring effects. Does not disable "image glow". Currently nonfunctional outside of Studio due to Roblox limitations.',
 	["setting.Interface.HomepageGreeting.DisplayName"] = "Homepage Greeting",
-	["setting.Interface.HomepageGreeting.Description"] = "This is the text that displays after the \"Good morning, username!\" text on the homepage.",
+	["setting.Interface.HomepageGreeting.Description"] = 'This is the text that displays after the "Good morning, username!" text on the homepage.',
 	["setting.Interface.HomepageGreeting.Value"] = "Welcome to Administer!",
 	["setting.Interface.PanelKeybind.DisplayName"] = "Panel Keybind",
 	["setting.Interface.PanelKeybind.Description"] = "The key used to open the panel on keyboard-enabled devices.",
@@ -273,5 +273,5 @@ return {
 	["reltime.Hours"] = "hours ago",
 	["reltime.Year"] = "year ago",
 	["reltime.Years"] = "years ago",
-	["reltime.Format"] = "%s %s"
+	["reltime.Format"] = "%s %s",
 }

@@ -1,5 +1,5 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local FrontendAPI = {}
 local Root = script:FindFirstAncestor("Loader")
@@ -47,17 +47,20 @@ function FrontendAPI.VersionCheck(Plr: Player): Types.Response
 		)
 
 		return {
-			false, Info
+			false,
+			Info,
 		}
 	end, nil, nil)
 end
 
 function FrontendAPI.UpdateHomePage(Player, Data)
 	--// do some checks
-	if Data == nil then return {
-		Success = true,
-		Message = "Bad data sent by client."
-		} end
+	if Data == nil then
+		return {
+			Success = true,
+			Message = "Bad data sent by client.",
+		}
+	end
 
 	local HomeInfo
 
@@ -82,12 +85,12 @@ function FrontendAPI.UpdateHomePage(Player, Data)
 	then
 		return {
 			Success = true,
-			Message = "Done!"
+			Message = "Done!",
 		}
 	else
 		return {
 			Success = false,
-			Message = "Something happened on Roblox's end, please try again later."
+			Message = "Something happened on Roblox's end, please try again later.",
 		}
 	end
 end

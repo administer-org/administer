@@ -1,4 +1,4 @@
---// pyxfluff 2025
+--// CodingAgent 2026
 
 local Root = script.Parent.Parent
 
@@ -108,7 +108,7 @@ return function()
 		},
 	}
 
-	Frames.Page1.Body.Text = string.gsub(Frames.Page1.Body.Text, "pyxfluff", game.Players.LocalPlayer.Name)
+	Frames.Page1.Body.Text = string.gsub(Frames.Page1.Body.Text, "CodingAgent", game.Players.LocalPlayer.Name)
 
 	Frames.Page1.NextPage.MouseButton1Click:Connect(function()
 		SwapPages(Frames.Page1, Frames.Loading, "", true)

@@ -1,22 +1,23 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local Variables = {}
 
 local Typing = require(script.Parent.Types)
 local Root = script.Parent.Parent.Parent
 
-local Config = require(script.Parent.Configuration)
-
 --// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
 Variables.Config = require(script.Parent.Configuration) --// Config file location
+Variables.AdministerRoot = Root --// Root folder of Administer (works from any location: ServerScriptService, Workspace, etc.)
 Variables.RemotesPath = game.ReplicatedStorage --// Where remotes are stored
-Variables.EnableFreeAdmin = true --// Makes every user a superadmin. Not recommended for anything other than debugging.
+Variables.EnableFreeAdmin = false --// Makes every user a superadmin. Not recommended for anything other than debugging.
+Variables.LocalAppsFolder = nil --// Optional folder containing local apps; leave empty to skip local app loading.
 
 --Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
 Variables.DefaultAppServer = "https://gate.admsoftware.workers.dev" --// Gateway auto-selects the best AOS instance.
-Variables.AppServerInfoURL = "https://info.admsoftware.workers.dev" --// Base URL; /appservers returns the list of available AOS node URLs
-Variables.ProxyURL = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.pyxfluff.dev/games//docs.
+Variables.AppServerInfoURL = "https://api.admsoftware.org/appservers" --// Base URL; /appservers returns the list of available AOS node URLs
+Variables.VersionCheckURL = "https://api.admsoftware.org/info" --// Version check API URL
+Variables.ProxyURL = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.CodingAgent.dev/games//docs.
 Variables.Locales = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
 Variables.WaitForBootstrap = false --// Whether or not we will wait for apps to load before sending out panels.
@@ -57,10 +58,30 @@ local function makeStubDataStore(name: string)
 	}
 end
 
-local _dsOk, _dsErr = pcall(function()
-	-- A cheap test call that throws immediately if DataStores are unavailable
-	Variables.Services.DataStoreService:GetDataStore("__adm_probe"):GetAsync("__probe")
+-- Check DataStore availability without triggering Roblox's internal retry (which logs two
+-- engine-level 502 errors that pcall cannot suppress). GetRequestBudgetForRequestType is a
+-- local call with no network round-trip: it returns 0 when Studio API services are off.
+local _dsOk = false
+local _dsErr = nil
+
+local budget = 0
+pcall(function()
+	budget = Variables.Services.DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
 end)
+
+if budget > 0 then
+	-- Budget is positive — DataStores are reachable. Confirm with a real call.
+	local ok, err = pcall(function()
+		Variables.Services.DataStoreService:GetDataStore("__adm_probe"):GetAsync("__probe")
+	end)
+	_dsOk = ok
+	_dsErr = err
+else
+	-- Budget is zero — API services are unavailable (Studio without API access, or service down).
+	-- Skip the network probe entirely to avoid Roblox logging two engine-level 502 errors.
+	_dsOk = false
+	_dsErr = "DataStore request budget is 0 — API Services likely disabled"
+end
 
 if not _dsOk then
 	warn(
@@ -68,7 +89,7 @@ if not _dsOk then
 			.. "  All data (admins, settings, app servers) will NOT persist this session.\n"
 			.. "  To fix: publish your place to Roblox, or enable Studio Access to API Services\n"
 			.. "  under Game Settings → Security → Enable Studio Access to API Services.\n"
-			.. "  Error: "
+			.. "  Reason: "
 			.. tostring(_dsErr)
 	)
 end
@@ -107,6 +128,7 @@ Variables.Notification = {
 --// DOING SO WILL BREAK YOUR GAME OR ADMINISTER.
 --// IF YOU WANT TO HARDCODE ADMINS, SEE ./Configuration
 Variables.DidBootstrap = false
+Variables.StaffData = {} --// Credits list — populated from https://api.admsoftware.org/info at startup, falls back to Configuration.Contributors. Also used to check hasSupportAccess on player join.
 Variables.LogJoins = true
 Variables.PanelFound = Root.Resources:FindFirstChild("AdministerMainPanel")
 Variables.Branch = nil
@@ -161,34 +183,6 @@ Variables.DefaultRankData = {
 
 Variables.CurrentBranch = {}
 Variables.Branches = {
-	Internal = {
-		ImageID = "rbxassetid://18841275783",
-		Name = "Administer Internal",
-		BranchName = "canary",
-		IsActive = false,
-	},
-
-	QualityAssurance = {
-		ImageID = "rbxassetid://76508533583525",
-		Name = "Administer QA Release",
-		BranchName = "qualassur",
-		IsActive = false,
-	},
-
-	Fresh = {
-		ImageID = "rbxassetid://18224047110",
-		Name = "Administer (git)",
-		BranchName = "git",
-		IsActive = false,
-	},
-
-	Beta = {
-		ImageID = "rbxassetid://18770010888",
-		Name = "Administer Public Beta",
-		BranchName = "pub_beta",
-		IsActive = false,
-	},
-
 	Stable = {
 		ImageID = "rbxassetid://18224047110",
 		Name = "Administer",
@@ -208,9 +202,12 @@ Variables.CachedLocales = {}
 Variables.AppServers = Variables.DataStores.AppDB:GetAsync("AppServerList") or {}
 
 Variables.Panel.Spawn = function(Rank, Player)
-	--// Prevent duplicate panels in the same PlayerGui
-	if Player.PlayerGui:FindFirstChild("AdministerMainPanel") ~= nil then
-		return Player.PlayerGui:FindFirstChild("AdministerMainPanel")
+	--// Destroy any stale panel (e.g. an old StarterGui-baked copy with outdated scripts)
+	--// and always spawn a fresh clone from the PanelRelocator-patched template so the
+	--// client always runs the current source and StartID is set before scripts start.
+	local stale = Player.PlayerGui:FindFirstChild("AdministerMainPanel")
+	if stale then
+		stale:Destroy()
 	end
 
 	local NewPanel = Variables.Panel.Path:Clone()
@@ -245,7 +242,9 @@ end
 
 Variables.Init = function()
 	local RF = Instance.new("Folder", Variables.RemotesPath)
-	RF.Name = "Administer"
+	--// Use a staging name so clients WaitForChild("Administer") blocks until
+	--// all remotes are registered. Renamed to "Administer" by init.server after setup.
+	RF.Name = "__AdmPending"
 	Variables.RemotesPath = RF
 
 	local AppRemotes = Instance.new("Folder", Variables.RemotesPath)

@@ -1,5 +1,5 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 --// This code sucks, hopefully it will never have to be seen
 
 return function(Input: string): { Command: string, Flags: {} }
@@ -49,6 +49,6 @@ return function(Input: string): { Command: string, Flags: {} }
 
 	return {
 		Command = Split[1],
-		Flags = Options
+		Flags = Options,
 	}
 end

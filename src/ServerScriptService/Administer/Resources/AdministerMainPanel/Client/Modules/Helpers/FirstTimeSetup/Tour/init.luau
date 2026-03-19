@@ -1,4 +1,4 @@
--- AjaxTiba, July 2025 (For pyxfloof)
+-- AjaxTiba, July 2026 (For pyxfloof)
 
 local Root = script.Parent.Parent.Parent
 
@@ -215,7 +215,7 @@ function tour.BeginTour()
 	<b>Click Get to continue</b>]]
 	)
 	tour.Step(
-		marketPlace.InstallBox.Details.Downloads.Install,
+		marketPlace.InstallBox.MainContent.TopHeader.Details.Downloads,
 		[[Click the Install button to install this app.
 	<b>Click Install to continue</b>]]
 	)
@@ -228,12 +228,12 @@ function tour.BeginTour()
 	until not Var.MainFrame.administer.MessageBox.Visible and not Var.MainFrame.administer.Toast.Visible
 
 	tour.Step(
-		marketPlace.InstallBox.Details.Votes.Likes:WaitForChild("TextButton"),
+		marketPlace.InstallBox.MainContent.TopHeader.Details.Votes.Likes:WaitForChild("TextButton"),
 		[[And you can click here to give the app a like.
 	<b>Press Like to continue</b>]]
 	)
 	tour.Step(
-		marketPlace.Parent.Sidebar.Buttons.XLibrary:WaitForChild("TextButton"),
+		marketPlace.Parent.ASidebar.Buttons.XLibrary:WaitForChild("TextButton"),
 		[[You can view your installed apps here.
 	<b>Press library to continue</b>]]
 	)

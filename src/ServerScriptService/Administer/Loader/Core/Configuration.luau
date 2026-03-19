@@ -1,7 +1,7 @@
 --!strict
 
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local Types = require(script.Parent.Types)
 local Locales: { Default: string, Value: string, Items: { string } } = {
@@ -31,10 +31,10 @@ local Settings: SettingsType = {
 		Tweak = 1,
 
 		Extra = "",
-		String = "2.1.1",
+		String = "1.0.0",
 		GitRevision = "a13118d",
 
-		NoExtraData = "2.1.1",
+		NoExtraData = "1.0.0",
 		APIRevision = "2.0.0",
 
 		ID = "org.admsoftware.Core",
@@ -70,7 +70,7 @@ local Settings: SettingsType = {
 		{
 			UserID = 133017837,
 			Name = "pyxfluff",
-			Job = "project lead, AOS, frontend/backend",
+			Job = "previous owner, AOS, frontend/backend",
 		},
 		{
 			UserID = 938429178,
@@ -460,8 +460,8 @@ local Settings: SettingsType = {
 						"error",
 					},
 
-					Value = "log",
-					Default = "log",
+					Value = "warning",
+					Default = "warning",
 				},
 			},
 

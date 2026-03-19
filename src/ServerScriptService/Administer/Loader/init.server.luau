@@ -1,5 +1,5 @@
 --// # Administer #
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 --// https://github.com/administer-org/Administer
 
@@ -9,6 +9,23 @@
 
 --// WARNING: Use of Administer's codebase for AI training is STRICTLY PROHIBITED and you will face consequences if you do it.
 --// Do NOT use this script or any in this model to train your AI or else.
+
+--// Relocate Administer to ServerScriptService if it's not already there
+do
+	local AdministerFolder = script.Parent
+	local SSS = game:GetService("ServerScriptService")
+
+	--// Only move if Administer is NOT already in ServerScriptService
+	if AdministerFolder.Parent ~= SSS then
+		print(
+			"[Administer] Relocating Administer from "
+				.. tostring(AdministerFolder.Parent.Name)
+				.. " to ServerScriptService..."
+		)
+		AdministerFolder.Parent = SSS
+		print("[Administer] Relocation complete")
+	end
+end
 
 local Core = script.Core
 local Modules = script.Modules
@@ -20,7 +37,6 @@ local HttpRunner = require(Modules.HTTPRunner)
 local Utils = require(Modules.Utilities)
 local Debugging = require(Modules.Debugging)
 local SettingsAPI = require(Modules.SettingsAPI)
-local Migrator = require(Modules.Helpers.AdmV1Migrator)
 local PanelRelocator = require(Modules.Helpers.PanelRelocator)
 local Importer = require(Modules.Importer)
 
@@ -36,6 +52,9 @@ Var.Init()
 
 Var.InitClock["InitVars"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 Utils.Logging.Print(`[✓] Init() OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
+
+--// Expose Administer root globally so cloud modules can access it from any install location
+_G._ADMINISTER_ROOT = Var.AdministerRoot
 
 --// Patch panel scripts from Rojo-managed PanelScripts folder into the rbxm template
 do
@@ -58,15 +77,6 @@ xpcall(function()
 	)
 
 	local Settings = SettingsAPI.new(Configuration.Settings)
-
-	if Migrator.CheckForV1() then
-		Utils.Logging.Print("[-] Administer has detected a live Administer 1.x install! Attempting to migrate..")
-		Migrator.Migrate()
-
-		Var.IsFirstBoot = false
-	else
-		Utils.Logging.Print("V1 Installation not found!")
-	end
 
 	if Var.IsFirstBoot then
 		require(script.Modules.Helpers.BootstrapGame)()
@@ -222,9 +232,27 @@ end)
 
 Utils.NewRemote("RemoteEvent", "SettingsLoaded", true, function() end)
 
+--// All critical remotes are now registered — expose the folder to clients
+Var.RemotesPath.Name = "Administer"
+
 Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 
 task.defer(function()
+	-- Fetch Administer staff list from the info API; fall back to Configuration.Contributors on any failure
+	do
+		local ok, result = pcall(function()
+			local raw = Var.Services.HttpService:GetAsync("https://api.admsoftware.org/info", true)
+			local decoded = Var.Services.HttpService:JSONDecode(raw)
+			Var.StaffData = decoded.administer.staff
+		end)
+		if not ok or not Var.StaffData then
+			Utils.Logging.Warn("[StaffFetch] Could not fetch staff from API, using config fallback:", tostring(result))
+			Var.StaffData = Configuration.Contributors
+		else
+			Utils.Logging.Print(`[StaffFetch] Loaded {#Var.StaffData} staff members from API`)
+		end
+	end
+
 	AppsModule.Initialize()
 
 	AdminRunner.Scan(false)
@@ -260,6 +288,9 @@ task.defer(function()
 	end
 
 	Var.Services.Players.PlayerAdded:Connect(OnPlayerAdded)
+	Var.Services.Players.PlayerRemoving:Connect(function(Player: Player)
+		AdminRunner.Removing(Player)
+	end)
 
 	Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
 	Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
@@ -307,13 +338,17 @@ NewRemote("GetPasses", false, false, function()
 		local Success, Error = pcall(function()
 			Attempts += 1
 			_Content = Var.Services.HttpService:GetAsync(
-				`https://proxy.pyxfluff.dev/games/v1/games/1778091660/game-passes?sortOrder=Asc&limit=50`,
+				`https://proxy.CodingAgent.dev/games/v1/games/2208062007/game-passes?sortOrder=Asc&limit=50`,
 				true
 			)
 		end)
 	until Success or Attempts > 5
 
-	return Var.Services.HttpService:JSONDecode(_Content)["data"]
+	local ok, decoded = pcall(function()
+		return Var.Services.HttpService:JSONDecode(_Content)
+	end)
+
+	return (ok and decoded and decoded["data"])
 		or {
 			{
 				price = "Failed to load.",
@@ -346,7 +381,7 @@ NewRemote("GetIconPack", false, false, function()
 end)
 
 NewRemote("GetContributors", false, false, function()
-	return Configuration.Contributors
+	return Var.StaffData
 end)
 
 --// Apps
@@ -356,7 +391,40 @@ end)
 
 NewRemote("GetAppInfo", true, false, AppsModule.ServerAPI.GetApp)
 NewRemote("GetInstalledApps", true, false, AppsModule.GetAll)
-NewRemote("InstallApp", true, false, AppsModule.ServerAPI.InstallFromServer)
+NewRemote("InstallApp", true, true, function(Player: Player, ServerURL: string, AppID: string)
+	local Result = AppsModule.ServerAPI.InstallFromServer(ServerURL, AppID)
+
+	if not Result[1] then
+		return Result
+	end
+
+	-- Push any newly-added ClientFrame from the template into the requesting
+	-- player's live panel, and return metadata so the client can add the
+	-- sidebar button without a full panel reload.
+	local newAppName, newIcon, newFrameName = nil, nil, nil
+
+	local LivePanel = Player.PlayerGui:FindFirstChild("AdministerMainPanel")
+	local livePanelMain = LivePanel and LivePanel:FindFirstChild("Main")
+
+	for appName, RunningApp in AppsModule.RunningApps do
+		if RunningApp.ClientFrameName then
+			local frameExists = livePanelMain and livePanelMain:FindFirstChild(RunningApp.ClientFrameName)
+			if not frameExists then
+				-- Frame is in the template but not in this player's live panel → newly installed
+				local TemplateFrame = Var.Panel.Path.Main:FindFirstChild(RunningApp.ClientFrameName)
+				if TemplateFrame and livePanelMain then
+					TemplateFrame:Clone().Parent = livePanelMain
+				end
+				newFrameName = RunningApp.ClientFrameName
+				newAppName = RunningApp.Name
+				newIcon = RunningApp.Icon
+				break
+			end
+		end
+	end
+
+	return { true, Result[2], newAppName, newIcon, newFrameName }
+end)
 NewRemote("Vote", true, false, AppsModule.ServerAPI.Vote)
 NewRemote("ManageApp", true, false, AppsModule.Uninstall)
 NewRemote("GetAppServers", true, false, AppsModule.ServerAPI.GetServerStatuses)
@@ -364,6 +432,9 @@ NewRemote("RemoveAppServer", true, false, AppsModule.ServerAPI.UninstallServer)
 NewRemote("GetAppCounts", true, false, AppsModule.GetTotals)
 NewRemote("AOSRichSearch", true, false, AppsModule.ServerAPI.Search)
 NewRemote("GetAOSInstances", true, false, AppsModule.ServerAPI.GetAOSInstances)
+if not Var.RemotesPath:FindFirstChild("AppLifecycle") then
+	Utils.NewRemote("RemoteEvent", "AppLifecycle", false, function() end)
+end
 NewRemote("RegisterPrimaryAOS", true, false, AppsModule.ServerAPI.RegisterPrimary)
 NewRemote("InstallServer", true, false, AppsModule.ServerAPI.New)
 NewRemote("GetPrimaryServer", true, false, AppsModule.ServerAPI.GetPrimaryServer)
@@ -492,24 +563,33 @@ end, function()
 	)
 end)
 
-HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...) end, function(...)
-	Utils.Logging.Warn(...)
-end)
+if Var.PrimaryAppServer ~= nil and Var.PrimaryAppServer ~= "" then
+	HttpRunner.GetRoute(Var.PrimaryAppServer, "/api/ping", function(...) end, function(...)
+		Utils.Logging.Warn(...)
+	end)
 
-HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
-	version = Configuration.VersData.NoExtraData,
-	branch = Var.CurrentBranch["BranchName"],
-}, function(...)
-	return { ... }
-end, function(...)
-	Utils.Logging.SWarn(...)
-
-	return { ... }
-end)
+	HttpRunner.PostRoute(Var.PrimaryAppServer, "/api/report-version", {
+		version = Configuration.VersData.NoExtraData,
+		branch = Var.CurrentBranch["BranchName"],
+	}, function(...)
+		return { ... }
+	end, function(...)
+		Utils.Logging.SWarn(...)
+		return { ... }
+	end)
+end
 
 --// Initial version stuff
 Configuration.VersData.InstallDate = Utils.CheckVersion()
-Configuration.VersData.IsUpToDate =
-	not Utils.UpdateCallback({ "org.admsoftware.Core" })["org.admsoftware.Core"].your_version.is_outdated
+do
+	local _updateData = Utils.UpdateCallback({ "org.admsoftware.Core" })
+	local _coreData = _updateData["org.admsoftware.Core"]
+	Configuration.VersData.IsUpToDate = not (
+		_coreData
+		and not _coreData.IsError
+		and _coreData.your_version
+		and _coreData.your_version.is_outdated
+	)
+end
 
 Utils.Logging.Print(`[✓] Startup complete!`)

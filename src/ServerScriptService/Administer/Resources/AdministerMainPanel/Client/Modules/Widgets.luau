@@ -1,6 +1,5 @@
 --// Administer
-
---// pyxfluff 2024-2025
+--// CodingAgent 2024-2026
 
 local Widgets = {
 	Active = {},

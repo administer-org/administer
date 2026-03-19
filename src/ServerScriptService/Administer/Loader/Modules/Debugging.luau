@@ -1,5 +1,5 @@
 --// Administer
---// pyxfluff 2024 - 2025
+--// CodingAgent 2026
 
 local Debugging = {}
 
@@ -20,8 +20,8 @@ Debugging.text = [[
 * LOCATION: RobloxStudio
 * IDENTITY: 4
 * ROBLOX VERSION: 0.642.0.6420636
-* GAME: https://www.roblox.com/games/8787038683
-* PLACEID: 8787038683
+* GAME: https://www.roblox.com/games/82284720720514
+* PLACEID: 82284720720514
 * HTTP ENABLED: YES
 * STUDIO APIS ENABLED: YES
 * UPTIME: 38548563.324873842s
@@ -76,8 +76,8 @@ Debugging.Table = {
 		["Location"] = "RobloxStudio",
 
 		["RobloxVersion"] = "0.642.0.6420636",
-		["GameURL"] = "https://www.roblox.com/games/8787038683",
-		["PlaceID"] = "8787038683",
+		["GameURL"] = "https://www.roblox.com/games/82284720720514",
+		["PlaceID"] = "82284720720514",
 	},
 
 	["Permissions"] = {
