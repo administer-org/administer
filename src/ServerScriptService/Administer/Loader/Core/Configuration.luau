@@ -1,0 +1,572 @@
+--!strict
+
+--// Administer
+--// CodingAgent 2026
+
+local Types = require(script.Parent.Types)
+local Locales: { Default: string, Value: string, Items: { string } } = {
+	Default = "en",
+	Value = "en",
+	Items = {},
+}
+for _, Locale in script.Parent.Locales:GetChildren() do
+	table.insert(Locales.Items, Locale.Name)
+end
+
+type SettingsType = Types.Configuration
+
+local Settings: SettingsType = {
+	Name = "Administer",
+
+	VersData = {
+		Service = {
+			Name = "Administer",
+			Icon = `rbxassetid://{require(script.Parent.Icons).logos["administer-blue"]}`,
+		},
+
+		Major = 2,
+		Minor = 1,
+		Tweak = 1,
+
+		Extra = "",
+		String = "1.0.0",
+		GitRevision = "a13118d",
+
+		NoExtraData = "1.0.0",
+		APIRevision = "2.0.0",
+
+		ID = "org.admsoftware.Core",
+	},
+
+	Admins = {
+
+		Groups = {
+			[0] = {
+				RankNumber = 255,
+				AdminRankID = 1,
+			},
+		},
+
+		Players = {
+			[0] = {
+				AdminRankID = 1,
+			},
+		},
+	},
+
+	Contributors = {
+		{
+			UserID = 1457766451,
+			Name = "theblackwither4",
+			Job = "Project Owner",
+		},
+		{
+			UserID = 133017837,
+			Name = "pyxfluff",
+			Job = "previous owner, AOS, frontend/backend",
+		},
+		{
+			UserID = 938429178,
+			Name = "AjaxTiba",
+			Job = "core features",
+		},
+		{
+			UserID = 3610087630,
+			Name = "dogo8me2",
+			Job = "core assistance, apps",
+		},
+		{
+			UserID = 630064214,
+			Name = "DullerKill7r",
+			Job = "app development",
+		},
+		{
+			UserID = 3239844753,
+			Name = "CDot_NightHawk",
+			Job = "hosting infrastructure",
+		},
+		{
+			UserID = 1381321740,
+			Name = "apexblue1705",
+			Job = "product testing, translation (vi)",
+		},
+		{
+			UserID = 1556153247,
+			Name = "gdr",
+			Job = "translation (ru)",
+		},
+		{
+			UserID = 215537737,
+			Name = "SKrun",
+			Job = "translation (pt)",
+		},
+		{
+			UserID = 1936557762,
+			Name = "WarriorOfLC",
+			Job = "translation (many languages)",
+		},
+		{
+			UserID = 1119454702,
+			Name = "CheekyPine",
+			Job = "translation (es)",
+		},
+		{
+			UserID = 365438147,
+			Name = "pixe_ated",
+			Job = "QuickBlur",
+		},
+	},
+
+	Settings = {
+		_SettingsMeta = {
+			Name = "Administer",
+		},
+
+		Admins = {
+			_CategoryOpts = {
+				DisplayName = "Admins",
+				Color = "#2b32e2",
+				Description = "Change how Administer manages ranks and admins",
+				Icon = "user-clip",
+			},
+
+			RefreshTime = {
+				DisplayName = "Admin check time",
+				Description = "How often to check if admins are still admins, and take away the panel if they are not.",
+				SettingType = "NumberRange",
+				SettingDisplayType = "Slider",
+				RequiresRestart = false,
+
+				Value = {
+					Value = 120,
+					Default = 120,
+					Min = 15,
+					Max = 1000,
+					Step = 1,
+				},
+			},
+
+			LiveUpdate = {
+				DisplayName = "Live rank changes",
+				Description = "If enabled, when a rank is made or edited, Administer will automatically check for new admins.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = false,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+
+			AllowProtectedEdits = {
+				DisplayName = "Edit Protected Ranks",
+				Description = "Allows editing protected ranks (superadmin). Also allows the creation of them. Not recommended as you could potentially break your installation.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = false,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			LoadDelay = {
+				Description = "Enables a 3s delay before loading any admins. Use this to solve apps not initializing.",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+				RequiresRestart = false,
+
+				Value = {
+					Value = "None",
+					Default = "None",
+					Items = {
+						"None",
+						"InStudio",
+						"All",
+					},
+				},
+			},
+
+			sudo = {
+				Description = "Enables free admin for everybody in Studio. Use this as an alternative to `EnableFreeAdmin` if you only need it for configuration within Studio.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = false,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+		},
+
+		Interface = {
+			_CategoryOpts = {
+				DisplayName = "Interface",
+				Color = "#2be274",
+				Description = "Customize the user interface.",
+				Icon = "sidebar-menu",
+			},
+
+			Language = {
+				DisplayName = "Interface Language (BETA)",
+				Description = "This option will override your default Roblox preference. This is a work in progress and will NOT be supported fully by Administer or apps yet.",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+
+				Value = Locales :: Types.SettingValue,
+			},
+
+			AnimationSpeed = {
+				DisplayName = "Animation Speed",
+				Description = "Controls the speed of client-side animations. Higher is slower. Set to 0 to disable animations.",
+				SettingType = "float",
+				SettingDisplayType = "Slider",
+				RequiresRestart = false,
+
+				Value = {
+					Value = 1,
+					Default = 1,
+					Min = 0,
+					Max = 5,
+					Step = 0.1,
+				},
+			},
+
+			AllowThemeScriptHooks = {
+				DisplayName = "Allow themes to run Lua",
+				Description = "If enabled, all themes will be allowed to run external Luau code. This is useful for more advanced themes or other modifications.",
+				SettingType = "boolean",
+				SettingDisplayType = "Toggle",
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+
+			EnableEditableImages = {
+				DisplayName = "Enable EditableImages",
+				Description = "Enables EditableImage features such as app card backgrounds, reflections, and other blurring effects. Requires the game permission and ID verification due to Roblox limitations.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = false,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+
+			HomepageGreeting = {
+				DisplayName = "Homepage Greeting",
+				Description = 'This is the text that displays after the "Hello, username!" text on the homepage.',
+				SettingType = "String",
+				SettingDisplayType = "InputBox",
+				RequiresRestart = false,
+
+				Value = {
+					Value = "Welcome to Administer!",
+					Default = "Welcome to Administer!",
+				},
+			},
+
+			PanelKeybind = {
+				DisplayName = "Panel Keybind",
+				Description = "The key used to open the panel on keyboard-enabled devices.",
+				SettingType = "KeyCode",
+				SettingDisplayType = "KeybindSelector",
+				RequiresRestart = false,
+
+				Value = {
+					Value = Enum.KeyCode.F2.Name,
+					Default = Enum.KeyCode.F2.Name,
+				},
+			},
+
+			PanelFullscreenKeybind = {
+				DisplayName = "Panel Fullscreen Keybind",
+				Description = "The key used to expand the panel to be fullscreen on keyboard-enabled devices.",
+				SettingType = "KeyCode",
+				SettingDisplayType = "KeybindSelector",
+				RequiresRestart = false,
+
+				Value = {
+					Value = "LeftControl,Space",
+					Default = "LeftControl,Space",
+				},
+			},
+
+			AppDrawerKeybind = {
+				Description = "Opens the App Drawer when you push this button",
+				SettingType = "KeyCode",
+				SettingDisplayType = "KeybindSelector",
+				RequiresRestart = false,
+
+				Value = {
+					Value = "Equals",
+					Default = "Equals",
+				},
+			},
+
+			EnableClickEffects = {
+				DisplayName = "Enable button effects",
+				Description = "Adds a ripple & hover effect and some noise.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+		},
+
+		Apps = {
+			_CategoryOpts = {
+				DisplayName = "Apps",
+				Color = "#2be2e1",
+				Description = "Change how Administer treats Apps.",
+				Icon = "apps",
+			},
+
+			DisableAOS = {
+				Description = "Prohibits AOS from being reached for the marketplace.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = false,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			LoadApps = {
+				Description = "Enables the ability for Administer to load apps.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+		},
+
+		Accessibility = {
+			_CategoryOpts = {
+				DisplayName = "Accessibility",
+				Color = "#e4e47f",
+				Description = "Make Administer easier to use.",
+				Icon = "accessibility",
+			},
+
+			ChatCommand = {
+				Description = "Enables an /adm command to open Administer.",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = false,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+
+			AssistiveClose = {
+				Description = "Enables a close button in the top left for desktop. Always enabled on mobile. Does not impact the Control Bar",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			MobileOpenGesture = {
+				Description = "Controls how big the mobile open gesture is from the right side.",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+				RequiresRestart = false,
+
+				Value = {
+					Items = {
+						"disabled",
+						"small",
+						"regular",
+						"medium",
+						"large",
+					},
+
+					Value = "regular",
+					Default = "regular",
+				},
+			},
+
+			GripperIdleOpacity = {
+				Description = "Controls the visibility of the gripper in its idle state.",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+				RequiresRestart = false,
+
+				Value = {
+					Items = {
+						"opaque",
+						"faint",
+						"visible",
+					},
+
+					Value = "opaque",
+					Default = "opaque",
+				},
+			},
+		},
+
+		General = {
+			_CategoryOpts = {
+				DisplayName = "General",
+				Color = "#e22b4d",
+				Description = "General Administer settings.",
+				Icon = "gear",
+			},
+
+			Verbosity = {
+				Description = "The amount of debugging prints Administer makes. To disable remote logging (<-- Remote [1], --> Done (20ms)), set to `warning`.",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+				RequiresRestart = false,
+
+				Value = {
+					Items = {
+						"debug",
+						"log",
+						"warning",
+						"error",
+					},
+
+					Value = "warning",
+					Default = "warning",
+				},
+			},
+
+			KeybindRegisterTime = {
+				Description = "Changes how soon Administer will listen for the keybind to open the panel. Optimistic = Early but quick, some things may not be finished, Safe = registers when ready",
+				SettingType = "Enum",
+				SettingDisplayType = "Dropdown",
+				RequiresRestart = false,
+
+				Value = {
+					Items = {
+						"optimistic",
+						"safe",
+					},
+
+					Value = "optimistic",
+					Default = "optimistic",
+				},
+			},
+
+			ShortNumberDecimals = {
+				Description = "How many decimals to display after a short number (54.123k)",
+				SettingType = "Integer",
+				SettingDisplayType = "InputBox",
+				RequiresRestart = false,
+
+				Value = {
+					Value = 2,
+					Default = 2,
+				},
+			},
+		},
+
+		BetaFeatures = {
+			_CategoryOpts = {
+				DisplayName = "Developer",
+				Color = "#daff00",
+				Description = "Development flags and beta features",
+				Icon = "hammer-idle",
+			},
+
+			MobileModeBeta = {
+				Description = "Beta Mobile-first interface",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			ForceMobile = {
+				Description = "Forces Vars.Mobile to be true",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			ForceAcrylic = {
+				Description = "Forces Vars.UseAcrylic to be true",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			ThemeDebug = {
+				Description = "Enabled test labels to see what Administer auto-classifies GuiObjects as",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = false,
+					Default = false,
+				},
+			},
+
+			ThemeForceSimilarity = {
+				Description = "If enabled, colors will be snapped to the nearest theme color unless it is super different",
+				SettingType = "Boolean",
+				SettingDisplayType = "Toggle",
+				RequiresRestart = true,
+
+				Value = {
+					Value = true,
+					Default = true,
+				},
+			},
+
+			ThemeSimilarityThreshold = {
+				Description = "How similar a color has to be to be overridden with a theme color",
+				SettingType = "Integer",
+				SettingDisplayType = "InputBox",
+				RequiresRestart = true,
+
+				Value = {
+					Value = 12,
+					Default = 12,
+				},
+			},
+		},
+	},
+}
+
+return Settings
