@@ -6,20 +6,22 @@ local Variables = {}
 local Typing = require(script.Parent.Types)
 local Root = script.Parent.Parent.Parent
 
-Variables.Config = require(script.Parent.Configuration)
-Variables.AdministerRoot = Root
-Variables.RemotesPath = game.ReplicatedStorage
-Variables.EnableFreeAdmin = false
-Variables.LocalAppsFolder = nil
+--// The items below this may be edited if you wish and it will not compromise Administer's security or functionality.
+Variables.Config = require(script.Parent.Configuration) --// Config file location
+Variables.AdministerRoot = Root --// Root folder of Administer (works from any location: ServerScriptService, Workspace, etc.)
+Variables.RemotesPath = game.ReplicatedStorage --// Where remotes are stored
+Variables.EnableFreeAdmin = false --// Makes every user a superadmin. Not recommended for anything other than debugging.
+Variables.LocalAppsFolder = nil --// Optional folder containing local apps; leave empty to skip local app loading.
 
-Variables.DefaultAppServer = "https://gate.admsoftware.workers.dev"
-Variables.AppServerInfoURL = "https://api.admsoftware.org/appservers"
-Variables.VersionCheckURL = "https://api.admsoftware.org/info"
-Variables.ProxyURL = "https://proxy.pyxfluff.dev"
-Variables.Locales = script.Parent.Locales
-Variables.AppPollingLimit = 50
-Variables.WaitForBootstrap = false
-Variables.IsFirstBoot = false
+--Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
+Variables.DefaultAppServer = "https://gateway.admsoftware.org" --// Gateway auto-selects the best AOS instance.
+Variables.AppServerInfoURL = "https://api.admsoftware.org/appservers" --// Base URL; /appservers returns the list of available AOS node URLs
+Variables.VersionCheckURL = "https://api.admsoftware.org/info" --// Version check API URL
+Variables.ProxyURL = "https://proxy.admsoftware.org" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.CodingAgent.dev/games//docs.
+Variables.Locales = script.Parent.Locales --// Locales location
+Variables.AppPollingLimit = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
+Variables.WaitForBootstrap = false --// Whether or not we will wait for apps to load before sending out panels.
+Variables.IsFirstBoot = false --// Setting this to true will fully reset your game's Administer store so be careful!! Use the Utilities app to do it properly
 
 Variables.Services = setmetatable({}, {
 	__index = function(self, Service)

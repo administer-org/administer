@@ -38,16 +38,16 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 		},
 
 		Dependencies = {
-			Administer = "2.0.0",
+			Administer = "1.0.0",
 			SettingsAPI = "1.0",
-			AppPlatform = "2.0",
+			AppPlatform = "1.0",
 
 			AdministerModules = {},
 
 			IsAdministerVersionRelevant = true,
 		},
 
-		TextCommands = {},
+		Commands = {},
 		State = {},
 	}
 end

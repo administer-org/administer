@@ -36,6 +36,7 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 			Name = "Default App",
 			Icon = "",
 			Version = "0",
+			ID = "",
 			Description = "This is an application which is improperly configured.",
 		},
 
@@ -49,7 +50,7 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 			IsAdministerVersionRelevant = true,
 		},
 
-		TextCommands = {},
+		Commands = {},
 		State = {},
 	}
 end
@@ -108,12 +109,93 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 			FinishTime = string.sub(tostring(tick() - Ticks[Misc.TechID]), 1, 5),
 			RunContext = Misc.RunContext,
 			RanksWithAccess = 0,
+			RanksWithAccess = 0,
 
 			Modules = Modules :: any,
 		})
 	end)
 
 	return { true, Config }
+end
+
+local function GetLocalAppID(AppMeta: { [any]: any }): string
+	if type(AppMeta) ~= "table" then
+		return ""
+	end
+
+	local candidate = AppMeta.ID
+	if type(candidate) == "number" then
+		return tostring(candidate)
+	end
+	if type(candidate) == "string" then
+		return candidate
+	end
+
+	return ""
+end
+
+local function GetLocalAppInfo(AppInstance: Instance)
+	if not AppInstance or not AppInstance:IsA("ModuleScript") then
+		return nil
+	end
+
+	local ok, Config = xpcall(function()
+		return require(AppInstance)(App.InvocationAPI, { _ReturnConfig = true })
+	end, function(err)
+		Utils.Logging.Warn(`[LocalApps] Failed to inspect local app {AppInstance:GetFullName()}: {tostring(err)}`)
+		return nil
+	end)
+
+	if not ok or not Config or type(Config) ~= "table" then
+		return nil
+	end
+
+	local AppMeta = Config.AppMeta or {}
+	return {
+		AppID = GetLocalAppID(AppMeta),
+		AdministerID = type(AppMeta.AdministerID) == "string" and AppMeta.AdministerID or "",
+	}
+end
+
+function App.HasLocalAppMatch(AppID: string | number?, AppName: string?, AOSID: string?): boolean
+	if not Var.LocalAppsFolder then
+		return false
+	end
+
+	local TargetIDs = {}
+	if AppID ~= nil and tostring(AppID) ~= "" then
+		table.insert(TargetIDs, tostring(AppID))
+	end
+	if AOSID ~= nil and tostring(AOSID) ~= "" then
+		table.insert(TargetIDs, tostring(AOSID))
+	end
+
+	for _, AppInstance in Var.LocalAppsFolder:GetChildren() do
+		local LocalInfo = GetLocalAppInfo(AppInstance)
+		warn(
+			`[LocalApps][DEBUG] child={AppInstance:GetFullName()} info={LocalInfo and Var.Services.HttpService:JSONEncode(
+				LocalInfo
+			) or "nil"}`
+		)
+		if not LocalInfo then
+			continue
+		end
+
+		for _, TargetID in TargetIDs do
+			local LowerTarget = string.lower(TargetID)
+
+			if LocalInfo.AppID ~= "" and string.lower(LocalInfo.AppID) == LowerTarget then
+				return true
+			end
+
+			if LocalInfo.AdministerID ~= "" and string.lower(LocalInfo.AdministerID) == LowerTarget then
+				return true
+			end
+		end
+	end
+
+	warn(`[LocalApps][DEBUG] no match. targets={table.concat(TargetIDs, ", ")}`)
+	return false
 end
 
 function App.LoadLocal(
@@ -144,6 +226,10 @@ function App.LoadLocal(
 
 	xpcall(function()
 		TargetApp.AppID = (typeof(Path) == "number") and Path or AppMeta.AppID
+		if RealApp[2] and RealApp[2].AppMeta then
+			TargetApp.AppID = GetLocalAppID(RealApp[2].AppMeta) ~= "" and GetLocalAppID(RealApp[2].AppMeta)
+				or TargetApp.AppID
+		end
 		TargetApp.BuildTime = string.sub(tostring(tick() - Ticks[Path]), 1, 5)
 		TargetApp.Description = RealApp[2].AppMeta.Description
 		TargetApp.InstallSource = AppMeta.InstallSource
@@ -159,13 +245,15 @@ function App.LoadLocal(
 		App.RunningApps[RealApp[2].AppMeta.Name] = TargetApp
 	end, function(e)
 		Utils.Logging.Warn(`[X] Failed bootstrapping app: {e}`)
+		Utils.Logging.Warn(`[X] Failed bootstrapping app: {e}`)
 	end)
 
 	return { true, TargetApp }
 end
 
 function App.Initialize(): boolean
-	local DelaySetting, Apps = Utils.GetSetting("AppLoadDelay"), Var.DataStores.AppDB:GetAsync("AppList") or {}
+	local DelaySetting = Utils.GetSetting("AppLoadDelay")
+	local BootstrapQueue = {}
 	local i, TotalAttempts, Start = 0, 0, tick()
 
 	Utils.Logging.Print("Bootstrapping apps...")
@@ -182,9 +270,9 @@ function App.Initialize(): boolean
 	end
 
 	if Var.LocalAppsFolder then
-		for _, App in Var.LocalAppsFolder:GetChildren() do
-			table.insert(Apps, {
-				ID = App,
+		for _, AppInstance in Var.LocalAppsFolder:GetChildren() do
+			table.insert(BootstrapQueue, {
+				ID = AppInstance,
 				InstallDate = 0,
 				InstallSource = "",
 				IsPhysicalApp = true,
@@ -192,9 +280,32 @@ function App.Initialize(): boolean
 		end
 	end
 
-	local AppsCount = #Apps
+	local RemoteApps = Var.DataStores.AppDB:GetAsync("AppList") or {}
+	for _, AppEntry in RemoteApps do
+		if not AppEntry then
+			continue
+		end
 
-	for _, AppObj in Apps do
+		if App.HasLocalAppMatch(AppEntry.ID, AppEntry.Name, AppEntry.AOSID) then
+			Utils.Logging.Print(
+				`[Initialize] Skipping remote app {tostring(AppEntry.Name or AppEntry.ID)} because a local copy already exists.`
+			)
+			continue
+		end
+
+		table.insert(BootstrapQueue, {
+			ID = AppEntry.ID,
+			InstallDate = AppEntry.InstallDate or 0,
+			InstallSource = AppEntry.InstallSource or "",
+			IsPhysicalApp = AppEntry.IsPhysicalApp == true,
+			AOSID = AppEntry.AOSID,
+			AosVersionValidated = AppEntry.AosVersionValidated,
+		})
+	end
+
+	local AppsCount = #BootstrapQueue
+
+	for _, AppObj in BootstrapQueue do
 		Utils.Logging.Print(`Importing app:`, AppObj)
 		task.defer(function()
 			App.LoadLocal(AppObj.ID, {
@@ -306,6 +417,8 @@ function App.SyncWithAOS()
 
 		local aosSet = {}
 		local dsSet = {}
+		local aosSet = {}
+		local dsSet = {}
 
 		for _, aosEntry in aosApps do
 			if aosEntry.id then
@@ -398,6 +511,11 @@ function App.RecoverApps()
 
 	for idx, AppObj in ipairs(AppList) do
 		if AppObj.IsPhysicalApp then
+			continue
+		end
+
+		if App.HasLocalAppMatch(AppObj.ID, AppObj.Name, AppObj.AOSID) then
+			Utils.Logging.Print(`[RecoverApps] Skipping app {tostring(AppObj.ID)} because a local copy already exists.`)
 			continue
 		end
 
@@ -609,6 +727,7 @@ function App.Install(
 	AppName: string,
 	AosVersionValidated: boolean?,
 	AOSID: string?
+	AOSID: string?
 ): Types.Response
 	warn(
 		`[AOS-DEBUG][Install] START AppID={tostring(AppID)} AOSID={tostring(AOSID)} Name={tostring(AppName)} Src={tostring(
@@ -616,6 +735,18 @@ function App.Install(
 		)} AosValidated={tostring(AosVersionValidated)}`
 	)
 	Utils.Logging.Print(`[-] Attempting to install app {AppID} from {InstallContext}`)
+
+	if App.HasLocalAppMatch(AppID, AppName, AOSID) then
+		warn(
+			`[AOS-DEBUG][Install] SKIP local-match AppID={tostring(AppID)} AOSID={tostring(AOSID)} Name={tostring(
+				AppName
+			)}`
+		)
+		Utils.Logging.Print(
+			`[Install] Skipping {tostring(AppName or AppID)} because a local app already exists in the Local Apps folder.`
+		)
+		return { true, "Local app already exists; skipping duplicate download." }
+	end
 
 	for _, RunningApp in App.RunningApps do
 		if tostring(RunningApp.AppID) == tostring(AppID) then
@@ -969,11 +1100,11 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 				Content
 			)}`
 		)
-		local RealID = Content.InstallID
+		local RealID = Content and Content.InstallID
 		warn(`[AOS-DEBUG][InstallFromServer] RealID={tostring(RealID)}`)
-		if RealID == 0 then
-			warn(`[AOS-DEBUG][InstallFromServer] FAIL RealID is 0 (bad server data)`)
-			return { false, "This server gave us bad data, please report the error to the server owner." }
+		if not Content or not RealID or RealID == 0 then
+			warn(`[AOS-DEBUG][InstallFromServer] FAIL RealID is 0 or missing (bad server data)`)
+			return { false, Utils.t(nil, "apps.notAvailable") }
 		end
 
 		local AosVersionValidated = false
@@ -1006,6 +1137,11 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 		)
 		local Result: Types.Response = App.Install(RealID, ServerURL, Content["Name"], AosVersionValidated, AppID)
 		warn(`[AOS-DEBUG][InstallFromServer] App.Install returned ok={tostring(Result[1])} msg={tostring(Result[2])}`)
+
+		if Result[1] and tostring(Result[2] or ""):lower():find("local app already exists") then
+			warn(`[AOS-DEBUG][InstallFromServer] Local app already exists, skipping AOS install notification`)
+			return Result
+		end
 
 		if Result[1] then
 			local postURL = `{ServerURL}/api/asset/{AppID}/install`
@@ -1048,6 +1184,9 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 		end
 	end, function(c)
 		warn(`[AOS-DEBUG][InstallFromServer] GET /api/asset/{AppID} FAILED code={tostring(c)}`)
+		if c == 404 or c == 410 then
+			return { false, Utils.t(nil, "apps.notAvailable") }
+		end
 		return { false, string.format(Utils.t(nil, "apps.pulled.Bad"), c) }
 	end)
 end

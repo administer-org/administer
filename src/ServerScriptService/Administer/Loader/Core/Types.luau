@@ -184,6 +184,7 @@ export type RichConfig = {
 		Name: string,
 		Icon: string,
 		Version: string,
+		AdministerID: string?,
 		CardBgID: string?,
 		Copyright: string?,
 		DisplayName: string?,
@@ -203,7 +204,7 @@ export type RichConfig = {
 		},
 	},
 
-	TextCommands: {
+	Commands: {
 		{
 			Name: string,
 			Description: string,

@@ -75,11 +75,42 @@ function Widgets.Edit(ContainingUI): ()
 		ContainingUI:SetAttribute("IsEditing", true)
 	end
 
+	ContainingUI.Content.Visible = false
+
 	local Editing = ContainingUI.Editing
 	local AnimSpeed = Var.AnimationSpeed * 1.2
 	local Selected = ""
 	local SelectedTable = {}
 	local Tweens: { Tween } = {}
+	local HoverConnections = {}
+	local NavConnections = {}
+	local ShouldHover = true
+
+	local function DisconnectConnections(ConnectionList)
+		for _, Connection in ipairs(ConnectionList) do
+			if Connection then
+				Connection:Disconnect()
+			end
+		end
+		table.clear(ConnectionList)
+	end
+
+	local function ClearPreview()
+		for _, Element in Editing.Preview:GetChildren() do
+			if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
+				Element:Destroy()
+			end
+		end
+	end
+
+	local function FinishEdit()
+		ShouldHover = false
+		DisconnectConnections(HoverConnections)
+		DisconnectConnections(NavConnections)
+		Editing.Visible = false
+		ContainingUI.Content.Visible = true
+		ContainingUI:SetAttribute("IsEditing", false)
+	end
 
 	Editing.Visible = true
 	Editing.Preview.Select.Visible = true
@@ -88,6 +119,7 @@ function Widgets.Edit(ContainingUI): ()
 
 	for _, Item in NewPreviewContent:GetChildren() do
 		if
+			Item:IsA("LocalScript") or Item:IsA("Script")
 			Item:IsA("LocalScript") or Item:IsA("Script")
 		then
 			Item:Destroy()
@@ -140,292 +172,311 @@ function Widgets.Edit(ContainingUI): ()
 		end
 	end)
 
-	local HoverFX = {}
-	local ShouldHover = true
+	table.insert(
+		HoverConnections,
+		Editing.Preview.Select.MouseEnter:Connect(function()
+			if not ShouldHover then
+				return
+			end
+			Var.Services.TweenService
+				:Create(
+					Editing.Preview,
+					TweenInfo.new(AnimSpeed * 0.6, Enum.EasingStyle.Quart),
+					{ Size = UDim2.new(0.472, 0, 0.614, 0), Position = UDim2.new(0.264, 0, 0.017, 0) }
+				)
+				:Play()
+		end)
+	)
 
-	HoverFX[1] = Editing.Preview.Select.MouseEnter:Connect(function()
-		if not ShouldHover then
-			return
-		end
-		Var.Services.TweenService
-			:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed * 0.6, Enum.EasingStyle.Quart),
-				{ Size = UDim2.new(0.472, 0, 0.614, 0), Position = UDim2.new(0.264, 0, 0.017, 0) }
-			)
-			:Play()
-	end)
+	table.insert(
+		HoverConnections,
+		Editing.Preview.Select.MouseLeave:Connect(function()
+			if not ShouldHover then
+				return
+			end
+			Var.Services.TweenService
+				:Create(
+					Editing.Preview,
+					TweenInfo.new(AnimSpeed * 0.6, Enum.EasingStyle.Quart),
+					{ Size = UDim2.new(0.459, 0, 0.551, 0), Position = UDim2.new(0.271, 0, 0.057, 0) }
+				)
+				:Play()
+		end)
+	)
 
-	HoverFX[2] = Editing.Preview.Select.MouseLeave:Connect(function()
-		if not ShouldHover then
-			return
-		end
-		Var.Services.TweenService
-			:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed * 0.6, Enum.EasingStyle.Quart),
-				{ Size = UDim2.new(0.459, 0, 0.551, 0), Position = UDim2.new(0.271, 0, 0.057, 0) }
-			)
-			:Play()
-	end)
+	table.insert(
+		HoverConnections,
+		Editing.Preview.Select.MouseButton1Click:Connect(function()
+			DisconnectConnections(HoverConnections)
+			Editing.Preview.Select.Visible = false
 
-	HoverFX["ClickEvent"] = Editing.Preview.Select.MouseButton1Click:Connect(function()
-		for _, v in HoverFX do
-			v:Disconnect()
-		end
+			AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 0.4
 
-		Editing.Preview.Select.Visible = false
-
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 0.4
-
-		Tweens = {
-			Var.Services.TweenService:Create(
-				Editing.Preview,
-				TweenInfo.new(
-					((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2,
-					Enum.EasingStyle.Quart
+			Tweens = {
+				Var.Services.TweenService:Create(
+					Editing.Preview,
+					TweenInfo.new(
+						((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2,
+						Enum.EasingStyle.Quart
+					),
+					{ Position = UDim2.new(0.264, 0, 0.189, 0) }
 				),
-				{ Position = UDim2.new(0.264, 0, 0.189, 0) }
-			),
-			Var.Services.TweenService:Create(Editing.AppName, TweenInfo.new(AnimSpeed), { TextTransparency = 1 }),
-			Var.Services.TweenService:Create(Editing.WidgetName, TweenInfo.new(AnimSpeed), { TextTransparency = 1 }),
-			Var.Services.TweenService:Create(
-				Editing.Last.ImageLabel,
-				TweenInfo.new(AnimSpeed),
-				{ ImageTransparency = 1 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.Next.ImageLabel,
-				TweenInfo.new(AnimSpeed),
-				{ ImageTransparency = 1 }
-			),
-		}
+				Var.Services.TweenService:Create(Editing.AppName, TweenInfo.new(AnimSpeed), { TextTransparency = 1 }),
+				Var.Services.TweenService:Create(
+					Editing.WidgetName,
+					TweenInfo.new(AnimSpeed),
+					{ TextTransparency = 1 }
+				),
+				Var.Services.TweenService:Create(
+					Editing.Last.ImageLabel,
+					TweenInfo.new(AnimSpeed),
+					{ ImageTransparency = 1 }
+				),
+				Var.Services.TweenService:Create(
+					Editing.Next.ImageLabel,
+					TweenInfo.new(AnimSpeed),
+					{ ImageTransparency = 1 }
+				),
+			}
 
-		for _, Tween in Tweens do
-			Tween:Play()
-		end
+			for _, Tween in Tweens do
+				Tween:Play()
+			end
 
-		Tweens[1].Completed:Wait()
-		AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2
+			Tweens[1].Completed:Wait()
+			AnimSpeed = ((tonumber(Utilities.GetSetting("AnimationSpeed")) :: number) or 1) * 1.2
 
-		Var.Services.TweenService
-			:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.043, 0, 0, 0), Size = UDim2.new(0.957, 0, 1, 0), BackgroundTransparency = 1 }
-			)
-			:Play()
-		Var.Services.TweenService:Create(Editing.Background, TweenInfo.new(AnimSpeed), { ImageTransparency = 1 }):Play()
-		Var.Services.TweenService
-			:Create(Editing.Preview.DefaultCorner_, TweenInfo.new(AnimSpeed), { CornerRadius = UDim.new(0, 0) })
-			:Play()
+			Var.Services.TweenService
+				:Create(Editing.Preview, TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart), {
+					Position = UDim2.new(0.043, 0, 0, 0),
+					Size = UDim2.new(0.957, 0, 1, 0),
+					BackgroundTransparency = 1,
+				})
+				:Play()
+			Var.Services.TweenService
+				:Create(Editing.Background, TweenInfo.new(AnimSpeed), { ImageTransparency = 1 })
+				:Play()
+			Var.Services.TweenService
+				:Create(Editing.Preview.DefaultCorner_, TweenInfo.new(AnimSpeed), { CornerRadius = UDim.new(0, 0) })
+				:Play()
 
-		if Selected == "" then
-			Utilities.Logging.Print("Exiting because nothing was selected!")
+			if Selected == "" then
+				Utilities.Logging.Print("Exiting because nothing was selected!")
+				ClearPreview()
+				FinishEdit()
+				return
+			end
+
+			local Success, ErrorMessage = pcall(function()
+				Var.Remotes.UpdateHomePage:InvokeServer({
+					EventType = "UPDATE",
+					EventID = `ChangeWidget-{ContainingUI.Name}`,
+					WidgetID = ContainingUI.Name,
+					NewIdentifier = Selected,
+				})
+			end)
+
+			if not Success then
+				Utilities.Logging.Warn(ErrorMessage)
+				ClearPreview()
+				FinishEdit()
+				return
+			end
+
+			task.wait(AnimSpeed)
+
+			ContainingUI.Content.Visible = true
+			ContainingUI.SideData.Banner.Text = SelectedTable["Name"]
+			ContainingUI.SideData.BannerIcon.Image = SelectedTable["Icon"]
+			ContainingUI.Content:ClearAllChildren()
+
 			for _, Element in Editing.Preview:GetChildren() do
 				if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
 					Element.Parent = ContainingUI.Content
 				end
 			end
 
-			Editing.Visible = false
-			return
-		end
+			FinishEdit()
+		end)
+	)
 
-		Var.Remotes.UpdateHomePage:InvokeServer({
-			EventType = "UPDATE",
-			EventID = `ChangeWidget-{ContainingUI.Name}`,
-			WidgetID = ContainingUI.Name,
-			NewIdentifier = Selected,
-		})
-
-		task.wait(AnimSpeed)
-
-		ContainingUI.SideData.Banner.Text = SelectedTable["Name"]
-		ContainingUI.SideData.BannerIcon.Image = SelectedTable["Icon"]
-		ContainingUI.Content:ClearAllChildren()
-
-		for _, Element in Editing.Preview:GetChildren() do
-			if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
-				Element.Parent = ContainingUI.Content
-			end
-		end
-
-		Editing.Visible = false
-		ContainingUI:SetAttribute("IsEditing", false)
-	end)
-
-	local Widgets = Widgets.GetAvailableWidgets()["Large"]
+	local AvailableWidgets = Widgets.GetAvailableWidgets()["Large"]
 	local Count = 0
-	local Buttons = {}
 
-	local function ClickNext()
-		ShouldHover = false
-		Count += 1
+	local function FindCurrentWidgetIndex()
+		local CurrentIdentifier = ""
+		local Success, AppName = pcall(function()
+			return ContainingUI:GetAttribute("AppName")
+		end)
+		local SuccessName, InitialWidgetName = pcall(function()
+			return ContainingUI:GetAttribute("InitialWidgetName")
+		end)
 
-		if Count > #Widgets then
-			Count = 1
+		if Success and SuccessName and AppName and InitialWidgetName then
+			CurrentIdentifier = `{AppName}\\{InitialWidgetName}`
 		end
 
-		if Widgets[Count].CanDiscover == false then
-			Count += 1
-			return ClickNext()
-		end
-
-		AnimSpeed = Var.AnimationSpeed * 3
-		Tweens = {
-			Var.Services.TweenService:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(-1, 0, 0.057, 0), GroupTransparency = 1 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.AppName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(-1, 0, 0.81, 0), TextTransparency = 1 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.WidgetName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(-1, 0, 0.647, 0), TextTransparency = 1 }
-			),
-		}
-		for _, t in Tweens do
-			t:Play()
-		end
-
-		task.wait(AnimSpeed / 3)
-
-		local Widget = Widgets[Count]
-		local NewWidgetTemplate = Widget["BaseUIFrame"]:Clone()
-		NewWidgetTemplate.Visible = true
-
-		for _, Element in Editing.Preview:GetChildren() do
-			if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
-				Element:Destroy()
+		if CurrentIdentifier ~= "" then
+			for Index, Widget in ipairs(AvailableWidgets) do
+				if Widget["Identifier"] == CurrentIdentifier then
+					return Index
+				end
 			end
 		end
 
-		NewWidgetTemplate.Parent = Editing.Preview
-		Selected = Widget["Identifier"]
-
-		Editing.Preview.Position = UDim2.new(1, 0, 0.075, 0)
-		Editing.AppName.Position = UDim2.new(1, 0, 0.81, 0)
-		Editing.WidgetName.Position = UDim2.new(1, 0, 0.647, 0)
-		Editing.WidgetName.Text = Widget["Name"]
-		Editing.AppName.Text = Widget["AppName"]
-		AnimSpeed = Var.AnimationSpeed * 2.45
-		SelectedTable = Widget
-
-		Tweens = {
-			Var.Services.TweenService:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.271, 0, 0.057, 0), GroupTransparency = 0 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.AppName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.04, 0, 0.81, 0), TextTransparency = 0 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.WidgetName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.04, 0, 0.647, 0), TextTransparency = 0 }
-			),
-		}
-		for _, t in Tweens do
-			t:Play()
-		end
-
-		Tweens[1].Completed:Wait()
-		ShouldHover = true
+		return 0
 	end
 
-	Buttons[1] = Editing.Next.MouseButton1Click:Connect(ClickNext)
-
-	Buttons[2] = Editing.Last.MouseButton1Click:Connect(function()
-		ShouldHover = false
-		Count -= 1
-
-		if Count < 1 then
-			Count = 0
-			return
+	local function SelectWidget(Index, Animate, Direction)
+		if not AvailableWidgets[Index] then
+			return false
 		end
 
-		if Count > #Widgets then
-			Count = 1
+		local Widget = AvailableWidgets[Index]
+		if Widget.CanDiscover == false then
+			return false
 		end
 
-		AnimSpeed = Var.AnimationSpeed * 2
-		Tweens = {
-			Var.Services.TweenService:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(1, 0, 0.057, 0), GroupTransparency = 1 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.AppName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(1, 0, 0.81, 0), TextTransparency = 1 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.WidgetName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(1, 0, 0.647, 0), TextTransparency = 1 }
-			),
-		}
-		for _, t in Tweens do
-			t:Play()
+		local EnterDirection = Direction or 1
+		local SlideOutPosition = EnterDirection > 0 and UDim2.new(-1, 0, 0.057, 0) or UDim2.new(1, 0, 0.057, 0)
+		local SlideOutLabelPosition = EnterDirection > 0 and UDim2.new(-1, 0, 0.81, 0) or UDim2.new(1, 0, 0.81, 0)
+		local SlideOutNamePosition = EnterDirection > 0 and UDim2.new(-1, 0, 0.647, 0) or UDim2.new(1, 0, 0.647, 0)
+		local EnterPosition = EnterDirection > 0 and UDim2.new(1, 0, 0.075, 0) or UDim2.new(-0.7, 0, 0.075, 0)
+		local EnterLabelPosition = EnterDirection > 0 and UDim2.new(1, 0, 0.81, 0) or UDim2.new(-0.7, 0, 0.81, 0)
+		local EnterNamePosition = EnterDirection > 0 and UDim2.new(1, 0, 0.647, 0) or UDim2.new(-0.7, 0, 0.647, 0)
+
+		if Animate then
+			AnimSpeed = Var.AnimationSpeed * 3
+			Tweens = {
+				Var.Services.TweenService:Create(
+					Editing.Preview,
+					TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
+					{ Position = SlideOutPosition, GroupTransparency = 1 }
+				),
+				Var.Services.TweenService:Create(
+					Editing.AppName,
+					TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
+					{ Position = SlideOutLabelPosition, TextTransparency = 1 }
+				),
+				Var.Services.TweenService:Create(
+					Editing.WidgetName,
+					TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
+					{ Position = SlideOutNamePosition, TextTransparency = 1 }
+				),
+			}
+			for _, t in Tweens do
+				t:Play()
+			end
+
+			task.wait(AnimSpeed / 3)
 		end
 
-		task.wait(AnimSpeed / 3)
-
-		local Widget = Widgets[Count]
 		local NewWidgetTemplate = Widget["BaseUIFrame"]:Clone()
 		NewWidgetTemplate.Visible = true
 
-		for _, Element in Editing.Preview:GetChildren() do
-			if not table.find({ "DefaultCorner_", "Select" }, Element.Name) then
-				Element:Destroy()
-			end
-		end
+		ClearPreview()
 
 		NewWidgetTemplate.Parent = Editing.Preview
 		Selected = Widget["Identifier"]
+		Count = Index
 
-		Editing.Preview.Position = UDim2.new(-0.7, 0, 0.075, 0)
-		Editing.AppName.Position = UDim2.new(-0.7, 0, 0.81, 0)
-		Editing.WidgetName.Position = UDim2.new(-0.7, 0, 0.647, 0)
+		Editing.Preview.Position = EnterPosition
+		Editing.AppName.Position = EnterLabelPosition
+		Editing.WidgetName.Position = EnterNamePosition
 		Editing.WidgetName.Text = Widget["Name"]
 		Editing.AppName.Text = Widget["AppName"]
 		AnimSpeed = Var.AnimationSpeed * 2.45
 		SelectedTable = Widget
 
-		Tweens = {
-			Var.Services.TweenService:Create(
-				Editing.Preview,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.271, 0, 0.057, 0), GroupTransparency = 0 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.AppName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.04, 0, 0.81, 0), TextTransparency = 0 }
-			),
-			Var.Services.TweenService:Create(
-				Editing.WidgetName,
-				TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
-				{ Position = UDim2.new(0.04, 0, 0.647, 0), TextTransparency = 0 }
-			),
-		}
-		for _, t in Tweens do
-			t:Play()
+		if Animate then
+			Tweens = {
+				Var.Services.TweenService:Create(
+					Editing.Preview,
+					TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
+					{ Position = UDim2.new(0.271, 0, 0.057, 0), GroupTransparency = 0 }
+				),
+				Var.Services.TweenService:Create(
+					Editing.AppName,
+					TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
+					{ Position = UDim2.new(0.04, 0, 0.81, 0), TextTransparency = 0 }
+				),
+				Var.Services.TweenService:Create(
+					Editing.WidgetName,
+					TweenInfo.new(AnimSpeed, Enum.EasingStyle.Quart),
+					{ Position = UDim2.new(0.04, 0, 0.647, 0), TextTransparency = 0 }
+				),
+			}
+			for _, t in Tweens do
+				t:Play()
+			end
+
+			Tweens[1].Completed:Wait()
+		else
+			Editing.Preview.Position = UDim2.new(0.271, 0, 0.057, 0)
+			Editing.Preview.GroupTransparency = 0
+			Editing.AppName.Position = UDim2.new(0.04, 0, 0.81, 0)
+			Editing.WidgetName.Position = UDim2.new(0.04, 0, 0.647, 0)
+			Editing.AppName.TextTransparency = 0
+			Editing.WidgetName.TextTransparency = 0
 		end
 
-		Tweens[1].Completed:Wait()
 		ShouldHover = true
-	end)
+		return true
+	end
+
+	local function MoveWidget(Step)
+		if #AvailableWidgets == 0 then
+			return false
+		end
+
+		local StartIndex = Count > 0 and Count or FindCurrentWidgetIndex()
+		if StartIndex <= 0 then
+			StartIndex = 1
+		end
+
+		local CandidateIndex = StartIndex
+		for _ = 1, #AvailableWidgets do
+			CandidateIndex += Step
+			if CandidateIndex > #AvailableWidgets then
+				CandidateIndex = 1
+			elseif CandidateIndex < 1 then
+				CandidateIndex = #AvailableWidgets
+			end
+
+			if SelectWidget(CandidateIndex, true, Step) then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local CurrentIndex = FindCurrentWidgetIndex()
+	if CurrentIndex > 0 then
+		SelectWidget(CurrentIndex, false, 1)
+	else
+		for Index = 1, #AvailableWidgets do
+			if SelectWidget(Index, false, 1) then
+				break
+			end
+		end
+	end
+
+	table.insert(
+		NavConnections,
+		Editing.Next.MouseButton1Click:Connect(function()
+			ShouldHover = false
+			MoveWidget(1)
+		end)
+	)
+
+	table.insert(
+		NavConnections,
+		Editing.Last.MouseButton1Click:Connect(function()
+			ShouldHover = false
+			MoveWidget(-1)
+		end)
+	)
 end
 
 function Widgets.ActivateWidget(WidgetNumber, WidgetConfig) end

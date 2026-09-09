@@ -4,7 +4,11 @@
     "$className": "DataModel",
     "ServerScriptService": {
       "$className": "ServerScriptService",
-      "$path": "src/ServerScriptService"
+      "Administer": {
+        "$className": "Folder",
+        "$path": "src/ServerScriptService/Administer"
+      },
+      "$ignoreUnknownInstances": true
     }
   }
 }

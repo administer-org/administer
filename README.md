@@ -49,7 +49,7 @@ If you're adding a new feature, you may want to open an issue before coding some
 
 ## Credits
 
-Administer is owned and maintained by [@theblackdragon5](http://github.com/theblackdragon5).
+Administer is owned and maintained by [@theblackwither](http://github.com/theblackwither).
 
 We utilize many other open-source resources such as:
 - UICons: FlatIcon
@@ -62,4 +62,4 @@ We utilize many other open-source resources such as:
 <img src="https://translate.admsoftware.org/widget/administer/user-guide/multi-auto.svg" alt="Translation status" />
 </a>
 
-&copy; theblackdragon5 2024 - 2026 &bullet; Usage of Administster or its code is governed under the GPL-3.0 License.
+&copy; theblackwither 2024 - 2026 &bullet; Usage of Administster or its code is governed under the GPL-3.0 License.
