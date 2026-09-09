@@ -38,18 +38,23 @@ local Settings: SettingsType = {
 		ID = "org.admsoftware.Core",
 	},
 
+	--// Hardcoded admins, applied before the rank database is consulted.
+	--// AdminRankName is the name of the rank to grant, and must match a rank
+	--// that exists in the panel; it defaults to "Administrator" when omitted.
+	--// The [0] entries below are inert placeholders — replace the key with a
+	--// real group or user id to grant access.
 	Admins = {
 
 		Groups = {
 			[0] = {
 				RankNumber = 255,
-				AdminRankID = 1,
+				AdminRankName = "Administrator",
 			},
 		},
 
 		Players = {
 			[0] = {
-				AdminRankID = 1,
+				AdminRankName = "Administrator",
 			},
 		},
 	},

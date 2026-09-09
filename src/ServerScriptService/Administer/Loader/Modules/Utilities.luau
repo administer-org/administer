@@ -98,34 +98,43 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 
 	local RanksIndex = game:GetService("DataStoreService"):GetDataStore("Administer_Admins"):GetAsync("CurrentRanks")
 
-	if table.find({}, Player.UserId) ~= nil then
+	--// Hardcoded overrides from Core/Configuration. Both lookups below used to
+	--// discard their result (an empty table literal was searched for the player,
+	--// and the group loop returned out of an xpcall callback), so neither
+	--// configuration block had any effect.
+	local HardcodedAdmins = require(Root.Core.Configuration).Admins
+
+	local PlayerOverride = HardcodedAdmins.Players and HardcodedAdmins.Players[Player.UserId]
+
+	if PlayerOverride ~= nil then
+		local RankName = PlayerOverride.AdminRankName or "Administrator"
+
 		return {
 			IsAdmin = true,
 			Reason = Utils.t(Player, "admincheck.OVERRIDE"),
-			RankID = "Administrator",
-			RankName = Utils.t(Player, "admin.RankDefault"),
+			RankID = RankName,
+			RankName = RankName,
 		}
-	else
-		for GroupID, Data in require(Root.Core.Configuration).Admins.Groups do
-			xpcall(function()
-				if Player:GetRankInGroup(GroupID) == Data.RankNumber then
-					return {
-						IsAdmin = true,
-						Reason = Utils.t(Player, "admincheck.OVERRIDE"),
-						RankID = Data.AdminRankName,
-						RankName = "Admin",
-					}
-				end
-			end, function(e)
-				if string.find(e, "of table") ~= nil then
-				else
-					error(e)
-				end
-			end)
+	end
+
+	for GroupID, Data in HardcodedAdmins.Groups or {} do
+		local InGroup, RankInGroup = pcall(function()
+			return Player:GetRankInGroup(GroupID)
+		end)
+
+		if InGroup and RankInGroup == Data.RankNumber then
+			local RankName = Data.AdminRankName or "Administrator"
+
+			return {
+				IsAdmin = true,
+				Reason = Utils.t(Player, "admincheck.OVERRIDE"),
+				RankID = RankName,
+				RankName = RankName,
+			}
 		end
 	end
 
-	local _, Result = xpcall(function(): Types.AdminCheck
+	local _, IndexResult = xpcall(function(): Types.AdminCheck
 		if RanksIndex.AdminIDs[tostring(Player.UserId)] ~= nil then
 			return {
 				IsAdmin = true,
@@ -146,11 +155,11 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		}
 	end)
 
-	if Result.IsAdmin then
-		return Result
+	if IndexResult.IsAdmin then
+		return IndexResult
 	end
 
-	local _, Result = xpcall(function()
+	local _, GroupResult = xpcall(function()
 		for ID, Group in RanksIndex.GroupAdminIDs do
 			ID = string.split(ID, "_")[1]
 			if not Player:IsInGroup(ID) then
@@ -192,8 +201,8 @@ Utils.IsAdmin = function(Player: Player): Types.AdminCheck
 		}
 	end)
 
-	if Result.IsAdmin then
-		return Result
+	if GroupResult.IsAdmin then
+		return GroupResult
 	end
 
 	return {

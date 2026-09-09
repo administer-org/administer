@@ -297,6 +297,13 @@ function Utilities.Heartbeat(): ()
 
 		table.insert(Var.Ping, (tick() - PingStart) * 1000)
 
+		--// Keep only the most recent window. This ran for the lifetime of the
+		--// session without ever trimming, so the table grew without bound and
+		--// the average below covered every ping ever taken.
+		while #Var.Ping > Var.PingTicksLog do
+			table.remove(Var.Ping, 1)
+		end
+
 		pcall(function()
 			Var.MainFrame.AppDrawer.AppHolder.Apps.ZZ_AdministerData.Version.Text =
 				`{Var.Version.String} ({Var.Services.HttpService:JSONDecode(
@@ -312,7 +319,7 @@ function Utilities.Heartbeat(): ()
 				sum += Num
 			end
 
-			Utilities.Logging.Print(`Heartbeat staistics: {sum / #Var.Ping}ms avg, {Var.Ping[#Var.Ping - 1]} currently`)
+			Utilities.Logging.Print(`Heartbeat statistics: {sum / #Var.Ping}ms avg, {Var.Ping[#Var.Ping]} currently`)
 			Ticks = 0
 		end
 

@@ -306,12 +306,12 @@ export type Configuration = {
 		Groups: {
 			[number]: {
 				RankNumber: number,
-				AdminRankID: number,
+				AdminRankName: string?,
 			},
 		},
 		Players: {
 			[number]: {
-				AdminRankID: number,
+				AdminRankName: string?,
 			},
 		},
 	},
