@@ -80,7 +80,9 @@ Utils.Logging = {
 			return
 		end
 
-		print(debug.traceback(...))
+		--// debug.traceback only accepts (message, level), so varargs cannot be
+		--// forwarded into it directly.
+		print(`[{Config.Name}] [debug]`, ..., debug.traceback(""))
 	end,
 }
 

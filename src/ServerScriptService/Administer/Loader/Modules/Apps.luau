@@ -109,7 +109,6 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 			FinishTime = string.sub(tostring(tick() - Ticks[Misc.TechID]), 1, 5),
 			RunContext = Misc.RunContext,
 			RanksWithAccess = 0,
-			RanksWithAccess = 0,
 
 			Modules = Modules :: any,
 		})
@@ -346,16 +345,16 @@ function App.Initialize(): boolean
 end
 
 function App.SyncWithAOS()
-	warn(`[AOS-DEBUG][SyncWithAOS] START PlaceId={tostring(game.PlaceId)}`)
+	Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] START PlaceId={tostring(game.PlaceId)}`)
 	if Utils.GetSetting("DisableAOS") == true then
-		warn(`[AOS-DEBUG][SyncWithAOS] SKIP DisableAOS=true`)
+		Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] SKIP DisableAOS=true`)
 		return
 	end
 
 	local RawList = Var.DataStores.AppDB:GetAsync("AppList") or {}
-	warn(`[AOS-DEBUG][SyncWithAOS] DS AppList has {#RawList} total entries`)
+	Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] DS AppList has {#RawList} total entries`)
 	for idx, v in RawList do
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][SyncWithAOS]   DS[{idx}] ID={tostring(v and v.ID)} AOSID={tostring(v and v.AOSID)} Src={tostring(
 				v and v.InstallSource
 			)} Physical={tostring(v and v.IsPhysicalApp)}`
@@ -383,14 +382,14 @@ function App.SyncWithAOS()
 	for _ in byServer do
 		serverCount += 1
 	end
-	warn(`[AOS-DEBUG][SyncWithAOS] Servers to reconcile: {serverCount}`)
+	Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] Servers to reconcile: {serverCount}`)
 
 	for serverURL, dsEntries in byServer do
-		warn(`[AOS-DEBUG][SyncWithAOS] Reconciling {serverURL} — DS has {#dsEntries} entries`)
+		Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] Reconciling {serverURL} — DS has {#dsEntries} entries`)
 
 		local ok, aosApps = pcall(function()
 			return HTTP.GetRoute(serverURL, "/api/asset/list", function(Data)
-				warn(
+				Utils.Logging.Debug(
 					`[AOS-DEBUG][SyncWithAOS] /api/asset/list hasData={tostring(
 						type(Data) == "table" and Data.data ~= nil
 					)}`
@@ -400,35 +399,33 @@ function App.SyncWithAOS()
 				end
 				return {}
 			end, function(err)
-				warn(`[AOS-DEBUG][SyncWithAOS] /api/asset/list FAILED err={tostring(err)}`)
+				Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] /api/asset/list FAILED err={tostring(err)}`)
 				Utils.Logging.Warn(`[SyncWithAOS] Failed to fetch /api/asset/list from {serverURL}: {tostring(err)}`)
 				return nil
 			end)
 		end)
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][SyncWithAOS] GetRoute ok={tostring(ok)} count={type(aosApps) == "table" and #aosApps or "n/a"}`
 		)
 
 		if not ok or not aosApps then
-			warn(`[AOS-DEBUG][SyncWithAOS] SKIP {serverURL} — list fetch failed`)
+			Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] SKIP {serverURL} — list fetch failed`)
 			Utils.Logging.Warn(`[SyncWithAOS] Skipping {serverURL} — list fetch failed`)
 			continue
 		end
 
 		local aosSet = {}
 		local dsSet = {}
-		local aosSet = {}
-		local dsSet = {}
 
 		for _, aosEntry in aosApps do
 			if aosEntry.id then
 				aosSet[tostring(aosEntry.id)] = true
-				warn(`[AOS-DEBUG][SyncWithAOS]   AOS knows: {tostring(aosEntry.id)}`)
+				Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS]   AOS knows: {tostring(aosEntry.id)}`)
 			end
 		end
 		for _, entry in dsEntries do
 			dsSet[tostring(entry.AOSID)] = entry
-			warn(`[AOS-DEBUG][SyncWithAOS]   DS  wants: {tostring(entry.AOSID)}`)
+			Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS]   DS  wants: {tostring(entry.AOSID)}`)
 		end
 
 		for aosID, entry in dsSet do
@@ -436,7 +433,7 @@ function App.SyncWithAOS()
 				Utils.Logging.Print(`[SyncWithAOS] Re-registering {aosID} on {serverURL}`)
 				task.spawn(function()
 					local postURL = `{serverURL}/api/asset/{aosID}/install`
-					warn(`[AOS-DEBUG][SyncWithAOS] POST (install) {postURL}`)
+					Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] POST (install) {postURL}`)
 					local postOk, postResp = pcall(function()
 						return Var.Services.HttpService:RequestAsync({
 							Url = postURL,
@@ -446,14 +443,14 @@ function App.SyncWithAOS()
 						})
 					end)
 					if postOk then
-						warn(
+						Utils.Logging.Debug(
 							`[AOS-DEBUG][SyncWithAOS] install POST StatusCode={tostring(
 								type(postResp) == "table" and postResp.StatusCode
 							)} Body={tostring(type(postResp) == "table" and postResp.Body)}`
 						)
 						Utils.Logging.Print(`[SyncWithAOS] Re-registered {aosID}`)
 					else
-						warn(`[AOS-DEBUG][SyncWithAOS] install POST FAILED err={tostring(postResp)}`)
+						Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] install POST FAILED err={tostring(postResp)}`)
 						Utils.Logging.Warn(`[SyncWithAOS] Failed to re-register {aosID}: {tostring(postResp)}`)
 					end
 				end)
@@ -465,7 +462,7 @@ function App.SyncWithAOS()
 				Utils.Logging.Print(`[SyncWithAOS] Evicting stale AOS entry {aosID} from {serverURL}`)
 				task.spawn(function()
 					local uninstallURL = `{serverURL}/api/asset/{aosID}/uninstall`
-					warn(`[AOS-DEBUG][SyncWithAOS] POST (uninstall) {uninstallURL}`)
+					Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] POST (uninstall) {uninstallURL}`)
 					local postOk, postResp = pcall(function()
 						return Var.Services.HttpService:RequestAsync({
 							Url = uninstallURL,
@@ -475,21 +472,21 @@ function App.SyncWithAOS()
 						})
 					end)
 					if postOk then
-						warn(
+						Utils.Logging.Debug(
 							`[AOS-DEBUG][SyncWithAOS] uninstall POST StatusCode={tostring(
 								type(postResp) == "table" and postResp.StatusCode
 							)} Body={tostring(type(postResp) == "table" and postResp.Body)}`
 						)
 						Utils.Logging.Print(`[SyncWithAOS] Evicted {aosID}`)
 					else
-						warn(`[AOS-DEBUG][SyncWithAOS] uninstall POST FAILED err={tostring(postResp)}`)
+						Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] uninstall POST FAILED err={tostring(postResp)}`)
 						Utils.Logging.Warn(`[SyncWithAOS] Failed to evict {aosID}: {tostring(postResp)}`)
 					end
 				end)
 			end
 		end
 	end
-	warn(`[AOS-DEBUG][SyncWithAOS] DONE`)
+	Utils.Logging.Debug(`[AOS-DEBUG][SyncWithAOS] DONE`)
 end
 
 function App.RecoverApps()
@@ -598,7 +595,7 @@ function App.Uninstall(AppID: number): Types.Response
 
 	Var.DataStores.AppDB:SetAsync("AppList", Apps)
 
-	warn(
+	Utils.Logging.Debug(
 		`[AOS-DEBUG][Uninstall] DidUninstall={tostring(DidUninstall)} evictedAOSID={tostring(evictedAOSID)} evictedServerURL={tostring(
 			evictedServerURL
 		)}`
@@ -606,7 +603,7 @@ function App.Uninstall(AppID: number): Types.Response
 	if DidUninstall and evictedAOSID and evictedServerURL and evictedServerURL ~= "" then
 		task.spawn(function()
 			local uninstallURL = `{evictedServerURL}/api/asset/{evictedAOSID}/uninstall`
-			warn(`[AOS-DEBUG][Uninstall] POST {uninstallURL} Place-Id={tostring(game.PlaceId)}`)
+			Utils.Logging.Debug(`[AOS-DEBUG][Uninstall] POST {uninstallURL} Place-Id={tostring(game.PlaceId)}`)
 			local ok, resp = pcall(function()
 				return Var.Services.HttpService:RequestAsync({
 					Url = uninstallURL,
@@ -619,15 +616,15 @@ function App.Uninstall(AppID: number): Types.Response
 				})
 			end)
 			if not ok then
-				warn(`[AOS-DEBUG][Uninstall] POST pcall FAILED err={tostring(resp)}`)
+				Utils.Logging.Debug(`[AOS-DEBUG][Uninstall] POST pcall FAILED err={tostring(resp)}`)
 				Utils.Logging.Warn(`[Uninstall] POST /uninstall failed for {evictedAOSID}: {tostring(resp)}`)
 			else
-				warn(`[AOS-DEBUG][Uninstall] POST StatusCode={tostring(resp.StatusCode)} Body={tostring(resp.Body)}`)
+				Utils.Logging.Debug(`[AOS-DEBUG][Uninstall] POST StatusCode={tostring(resp.StatusCode)} Body={tostring(resp.Body)}`)
 				Utils.Logging.Print(`[Uninstall] AOS notified for {evictedAOSID}`)
 			end
 		end)
 	else
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][Uninstall] Skipping AOS POST — DidUninstall={tostring(DidUninstall)} AOSID={tostring(
 				evictedAOSID
 			)} Src={tostring(evictedServerURL)}`
@@ -727,9 +724,8 @@ function App.Install(
 	AppName: string,
 	AosVersionValidated: boolean?,
 	AOSID: string?
-	AOSID: string?
 ): Types.Response
-	warn(
+	Utils.Logging.Debug(
 		`[AOS-DEBUG][Install] START AppID={tostring(AppID)} AOSID={tostring(AOSID)} Name={tostring(AppName)} Src={tostring(
 			InstallContext
 		)} AosValidated={tostring(AosVersionValidated)}`
@@ -737,7 +733,7 @@ function App.Install(
 	Utils.Logging.Print(`[-] Attempting to install app {AppID} from {InstallContext}`)
 
 	if App.HasLocalAppMatch(AppID, AppName, AOSID) then
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][Install] SKIP local-match AppID={tostring(AppID)} AOSID={tostring(AOSID)} Name={tostring(
 				AppName
 			)}`
@@ -750,7 +746,7 @@ function App.Install(
 
 	for _, RunningApp in App.RunningApps do
 		if tostring(RunningApp.AppID) == tostring(AppID) then
-			warn(`[AOS-DEBUG][Install] DUPLICATE BLOCKED AppID={tostring(AppID)}`)
+			Utils.Logging.Debug(`[AOS-DEBUG][Install] DUPLICATE BLOCKED AppID={tostring(AppID)}`)
 			Utils.Logging.Warn(`[x] App {AppID} is already running, blocking duplicate install`)
 			return { false, Utils.t(nil, "apps.DupeDetected") }
 		end
@@ -765,14 +761,14 @@ function App.Install(
 			AosVersionValidated = AosVersionValidated == true,
 		})
 	end)
-	warn(
+	Utils.Logging.Debug(
 		`[AOS-DEBUG][Install] LoadLocal ok={tostring(ok)} result[1]={tostring(LoadResult and LoadResult[1])} err={tostring(
 			err
 		)}`
 	)
 
 	if not ok or not LoadResult or not LoadResult[1] then
-		warn(`[AOS-DEBUG][Install] FAILED load err={tostring(err or (LoadResult and LoadResult[2]))}`)
+		Utils.Logging.Debug(`[AOS-DEBUG][Install] FAILED load err={tostring(err or (LoadResult and LoadResult[2]))}`)
 		Utils.Logging.Warn(`[x] App load failed: {tostring(err or (LoadResult and LoadResult[2]))}\n`)
 		return { false, `Failure: {tostring(err or (LoadResult and LoadResult[2]))}` }
 	end
@@ -780,13 +776,13 @@ function App.Install(
 	Utils.Logging.Print(`[✓] App bootstrap OK, saving to DataStore`)
 
 	local RawList = Var.DataStores.AppDB:GetAsync("AppList") or {}
-	warn(`[AOS-DEBUG][Install] DS AppList has {#RawList} entries before upsert`)
+	Utils.Logging.Debug(`[AOS-DEBUG][Install] DS AppList has {#RawList} entries before upsert`)
 	local AppList = {}
 	local Found = false
 	for _, v in RawList do
 		if v then
 			if tostring(v.ID) == tostring(AppID) then
-				warn(
+				Utils.Logging.Debug(
 					`[AOS-DEBUG][Install] UPSERT replacing existing entry ID={tostring(v.ID)} AOSID={tostring(v.AOSID)}`
 				)
 				table.insert(AppList, {
@@ -805,7 +801,7 @@ function App.Install(
 	end
 
 	if not Found then
-		warn(`[AOS-DEBUG][Install] APPEND new entry ID={tostring(AppID)} AOSID={tostring(AOSID)}`)
+		Utils.Logging.Debug(`[AOS-DEBUG][Install] APPEND new entry ID={tostring(AppID)} AOSID={tostring(AOSID)}`)
 		table.insert(AppList, {
 			ID = AppID,
 			AOSID = AOSID,
@@ -817,9 +813,9 @@ function App.Install(
 	end
 
 	Var.DataStores.AppDB:SetAsync("AppList", AppList)
-	warn(`[AOS-DEBUG][Install] DS saved. Total entries={#AppList}. Final list:`)
+	Utils.Logging.Debug(`[AOS-DEBUG][Install] DS saved. Total entries={#AppList}. Final list:`)
 	for idx, entry in AppList do
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][Install]   [{idx}] ID={tostring(entry.ID)} AOSID={tostring(entry.AOSID)} Name={tostring(
 				entry.Name
 			)} Src={tostring(entry.InstallSource)}`
@@ -1089,27 +1085,27 @@ function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 end
 
 function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Types.Response
-	warn(
+	Utils.Logging.Debug(
 		`[AOS-DEBUG][InstallFromServer] START ServerURL={tostring(ServerURL)} AppID={tostring(AppID)} PlaceId={tostring(
 			game.PlaceId
 		)}`
 	)
 	return HTTP.GetRoute(ServerURL, `/api/asset/{AppID}`, function(Content)
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][InstallFromServer] GET /api/asset/{AppID} response: {Var.Services.HttpService:JSONEncode(
 				Content
 			)}`
 		)
 		local RealID = Content and Content.InstallID
-		warn(`[AOS-DEBUG][InstallFromServer] RealID={tostring(RealID)}`)
+		Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] RealID={tostring(RealID)}`)
 		if not Content or not RealID or RealID == 0 then
-			warn(`[AOS-DEBUG][InstallFromServer] FAIL RealID is 0 or missing (bad server data)`)
+			Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] FAIL RealID is 0 or missing (bad server data)`)
 			return { false, Utils.t(nil, "apps.notAvailable") }
 		end
 
 		local AosVersionValidated = false
 		local AosPrefVersion = Content.Metadata and Content.Metadata.AppAPIPreferredVersion
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][InstallFromServer] AosPrefVersion={tostring(AosPrefVersion)} CurrentVers={tostring(
 				AdmConfig.VersData.String
 			)}`
@@ -1117,7 +1113,7 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 		if AosPrefVersion then
 			AosVersionValidated = IsVersionSupported(AdmConfig.VersData.String, AosPrefVersion)
 			if not AosVersionValidated then
-				warn(
+				Utils.Logging.Debug(
 					`[AOS-DEBUG][InstallFromServer] FAIL version mismatch required={AosPrefVersion} have={AdmConfig.VersData.String}`
 				)
 				return {
@@ -1130,22 +1126,22 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 			)
 		end
 
-		warn(
+		Utils.Logging.Debug(
 			`[AOS-DEBUG][InstallFromServer] Calling App.Install RealID={tostring(RealID)} AOSID={tostring(AppID)} Name={tostring(
 				Content["Name"]
 			)}`
 		)
 		local Result: Types.Response = App.Install(RealID, ServerURL, Content["Name"], AosVersionValidated, AppID)
-		warn(`[AOS-DEBUG][InstallFromServer] App.Install returned ok={tostring(Result[1])} msg={tostring(Result[2])}`)
+		Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] App.Install returned ok={tostring(Result[1])} msg={tostring(Result[2])}`)
 
 		if Result[1] and tostring(Result[2] or ""):lower():find("local app already exists") then
-			warn(`[AOS-DEBUG][InstallFromServer] Local app already exists, skipping AOS install notification`)
+			Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] Local app already exists, skipping AOS install notification`)
 			return Result
 		end
 
 		if Result[1] then
 			local postURL = `{ServerURL}/api/asset/{AppID}/install`
-			warn(`[AOS-DEBUG][InstallFromServer] POST {postURL} with Place-Id={tostring(game.PlaceId)}`)
+			Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] POST {postURL} with Place-Id={tostring(game.PlaceId)}`)
 			local ok, Response = pcall(function()
 				return Var.Services.HttpService:RequestAsync({
 					Url = postURL,
@@ -1159,12 +1155,12 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 			end)
 
 			if not ok then
-				warn(`[AOS-DEBUG][InstallFromServer] POST pcall FAILED err={tostring(Response)}`)
+				Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] POST pcall FAILED err={tostring(Response)}`)
 				Utils.Logging.Warn(`[InstallFromServer] POST /install request failed: {tostring(Response)}`)
 				return { true, `{Utils.t(nil, "generic.Done")}!` }
 			end
 
-			warn(
+			Utils.Logging.Debug(
 				`[AOS-DEBUG][InstallFromServer] POST StatusCode={tostring(Response.StatusCode)} Body={tostring(
 					Response.Body
 				)}`
@@ -1174,16 +1170,16 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 				return { true, `{Utils.t(nil, "generic.Done")}!` }
 			end
 
-			warn(`[AOS-DEBUG][InstallFromServer] FAIL unexpected status {Response.StatusCode}`)
+			Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] FAIL unexpected status {Response.StatusCode}`)
 			Utils.Logging.Warn(`[InstallFromServer] POST /install returned {Response.StatusCode}`)
 			return { false, Utils.t(nil, "generic.error.TryAgainLater") }
 		else
-			warn(`[AOS-DEBUG][InstallFromServer] App.Install failed, skipping AOS POST`)
+			Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] App.Install failed, skipping AOS POST`)
 			Utils.Logging.Warn("App did not install with an OK status code, ignoring request to tell AOS.")
 			return Result
 		end
 	end, function(c)
-		warn(`[AOS-DEBUG][InstallFromServer] GET /api/asset/{AppID} FAILED code={tostring(c)}`)
+		Utils.Logging.Debug(`[AOS-DEBUG][InstallFromServer] GET /api/asset/{AppID} FAILED code={tostring(c)}`)
 		if c == 404 or c == 410 then
 			return { false, Utils.t(nil, "apps.notAvailable") }
 		end

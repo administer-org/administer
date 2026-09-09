@@ -67,7 +67,7 @@ end
 
 Var.InitClock.TempInit = os.clock()
 xpcall(function()
-	Var.IsFirstBoot = (Var.IsFirstBoot or Var.DataStores.Settings:GetAsync("HasInit") == nil and true or false)
+	Var.IsFirstBoot = Var.IsFirstBoot == true or Var.DataStores.Settings:GetAsync("HasInit") == nil
 
 	Utils.Logging.Print(
 		`[✓] DataStoreService connection established in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`
@@ -180,11 +180,15 @@ NewRemote("GetSettings", true, false, function(controllerName: string, settingsA
 		return {}
 	end
 	local controller = SettingsAPI.GetController(controllerName)
+	if not controller then
+		Utils.Logging.Warn(`[GetSettings] No settings controller named "{tostring(controllerName)}".`)
+		return {}
+	end
+
 	local currentValue = {}
 
-	for _, settingName in settingsArray do
-		local value = controller.Get(settingName)
-		currentValue[settingName] = value
+	for _, settingName in settingsArray or {} do
+		currentValue[settingName] = controller.Get(settingName)
 	end
 
 	return currentValue
@@ -195,9 +199,12 @@ NewRemote("GetSetting", true, false, function(controllerName: string, settingNam
 		return nil
 	end
 	local controller = SettingsAPI.GetController(controllerName)
-	local currentValue = controller.Get(settingName)
+	if not controller then
+		Utils.Logging.Warn(`[GetSetting] No settings controller named "{tostring(controllerName)}".`)
+		return nil
+	end
 
-	return currentValue
+	return controller.Get(settingName)
 end)
 
 NewRemote("GetRemote", true, false, function(controllerName: string, settingName: string)
@@ -205,9 +212,12 @@ NewRemote("GetRemote", true, false, function(controllerName: string, settingName
 		return nil
 	end
 	local controller = SettingsAPI.GetController(controllerName)
-	local remote = controller.GetRemote(settingName)
+	if not controller then
+		Utils.Logging.Warn(`[GetRemote] No settings controller named "{tostring(controllerName)}".`)
+		return nil
+	end
 
-	return remote
+	return controller.GetRemote(settingName)
 end)
 
 NewRemote("GetAllSettings", true, false, function()
@@ -226,9 +236,9 @@ Utils.NewRemote("RemoteEvent", "SettingsLoaded", true, function() end)
 
 Var.RemotesPath.Name = "Administer"
 
-Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
-
 task.defer(function()
+	local BootstrapStart = os.clock()
+
 	do
 		local ok, result = pcall(function()
 			local raw = Var.Services.HttpService:GetAsync("https://api.admsoftware.org/info", true)
@@ -281,26 +291,15 @@ task.defer(function()
 		AdminRunner.Removing(Player)
 	end)
 
-	Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
-	Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
-end)
-
-local function NewRemote(
-	Name: string,
-	AuthRequired: boolean,
-	PlayerVar: boolean,
-	Cbk: (Player, ...any) -> any
-): RemoteFunction | RemoteEvent
-	if PlayerVar then
-		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(Player: Player, ...)
-			return Cbk(Player, ...)
-		end)
-	else
-		return Utils.NewRemote("RemoteFunction", Name, AuthRequired, function(_, ...)
-			return Cbk(...)
-		end)
+	--// Startup above yields (DataStore + HTTP), so anyone who joined before the
+	--// connection existed would otherwise never be processed.
+	for _, Player in Var.Services.Players:GetPlayers() do
+		task.spawn(OnPlayerAdded, Player)
 	end
-end
+
+	Var.InitClock["BootstrapApps"] = Utils.RoundMS(os.clock() - BootstrapStart)
+	Utils.Logging.Print(`[✓] OK in {Var.InitClock["BootstrapApps"]}ms`)
+end)
 
 NewRemote("UpdateHomePage", true, true, FrontendAPI.UpdateHomePage)
 
@@ -323,7 +322,7 @@ NewRemote("GetPasses", false, false, function()
 		local Success, Error = pcall(function()
 			Attempts += 1
 			_Content = Var.Services.HttpService:GetAsync(
-				`https://proxy.CodingAgent.dev/games/v1/games/2208062007/game-passes?sortOrder=Asc&limit=50`,
+				`{Var.ProxyURL}/games/v1/games/2208062007/game-passes?sortOrder=Asc&limit=50`,
 				true
 			)
 		end)
@@ -500,7 +499,7 @@ NewRemote("GetRank", true, false, function(Rankname)
 end)
 
 Var.InitClock["LoadRemotes"] = Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])
-Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}s`)
+Utils.Logging.Print(`[✓] OK in {Utils.RoundMS(os.clock() - Var.InitClock["TempInit"])}ms`)
 Utils.Logging.Print(
 	`\n-- Administer {Configuration.VersData.String} {Configuration.VersData.GitRevision} loaded! --`,
 	"\n		> Ready in ",
