@@ -20,6 +20,104 @@ local Var = require(Root.Core.Variables)
 
 local AppLifecycleEvent = Utils.NewRemote("RemoteEvent", "AppLifecycle", false, function() end)
 
+--// Downloaded app modules, keyed by asset id. require() by asset id used to
+--// cache for us; LoadAssetAsync downloads a fresh copy every call, so the
+--// cache is ours to keep.
+local DownloadedApps = {}
+local DownloadFolder
+
+local function GetDownloadFolder(): Folder
+	if DownloadFolder and DownloadFolder.Parent then
+		return DownloadFolder
+	end
+
+	--// ServerStorage, not ServerScriptService: a downloaded app may contain
+	--// Scripts, and parenting it somewhere they auto-run would execute code
+	--// that require() by asset id never would have.
+	local Storage = Var.Services.ServerStorage
+	DownloadFolder = Storage:FindFirstChild("AdministerDownloadedApps")
+
+	if not DownloadFolder then
+		DownloadFolder = Instance.new("Folder")
+		DownloadFolder.Name = "AdministerDownloadedApps"
+		DownloadFolder.Parent = Storage
+	end
+
+	return DownloadFolder
+end
+
+--// Loads an app module published as a Roblox asset.
+--//
+--// require(assetId) is gated behind the LoadUnownedAsset capability, and app
+--// assets are published by their author rather than by the place owner, so
+--// that path now fails for every third-party app. AssetService:LoadAssetAsync
+--// is the documented replacement and the only API that can load assets the
+--// experience creator does not own.
+--//
+--// Two things differ from the old call. It hands back a Model wrapping the
+--// asset instead of the module's return value, so the ModuleScript has to be
+--// found inside it. And that Model arrives sandboxed with no capabilities, so
+--// nothing in it can run until the sandbox is lifted.
+local function LoadAppModule(AssetID: number)
+	if DownloadedApps[AssetID] ~= nil then
+		return DownloadedApps[AssetID]
+	end
+
+	local Ok, ModelOrErr = pcall(function()
+		return Var.Services.AssetService:LoadAssetAsync(AssetID)
+	end)
+
+	if not Ok then
+		--// An asset the place owner does own still loads through the legacy
+		--// path, so it is worth one attempt before reporting failure.
+		local LegacyOk, LegacyResult = pcall(require, AssetID)
+
+		if LegacyOk then
+			DownloadedApps[AssetID] = LegacyResult
+			return LegacyResult
+		end
+
+		error(
+			`could not load app asset {AssetID}: {tostring(ModelOrErr)}.`
+				.. ` If this app is not owned by this experience, enable "Allow Loading Third Party Assets"`
+				.. ` under Experience Settings then Security, and make sure the asset is public.`,
+			0
+		)
+	end
+
+	local Model = ModelOrErr
+
+	if typeof(Model) ~= "Instance" then
+		error(`app asset {AssetID} did not load as an instance`, 0)
+	end
+
+	--// Lifting the sandbox lets the app's own code run. Everything the app
+	--// then does runs with this server's permissions, so an app server you
+	--// install from is as trusted as the rest of the game.
+	pcall(function()
+		Model.Sandboxed = false
+	end)
+
+	local Module = Model:FindFirstChild("MainModule")
+
+	if not Module or not Module:IsA("ModuleScript") then
+		Module = Model:FindFirstChildWhichIsA("ModuleScript", true)
+	end
+
+	if not Module then
+		Model:Destroy()
+		error(`app asset {AssetID} contains no ModuleScript`, 0)
+	end
+
+	Model.Name = `App_{AssetID}`
+	Model.Parent = GetDownloadFolder()
+
+	local Result = require(Module)
+	DownloadedApps[AssetID] = Result
+
+	return Result
+end
+
 --// Versions are compared component by component. String comparison put
 --// "10.0.0" below "9.0.0", and treated "2.0" and "2.0.0" as different
 --// versions, so a range check went wrong as soon as any component reached
@@ -261,8 +359,10 @@ function App.LoadLocal(
 		TechID = Path,
 		AosVersionValidated = AppMeta.AosVersionValidated == true,
 	}
+	local AppLoader = (typeof(Path) == "Instance") and require(Path) or LoadAppModule(Path :: number)
+
 	local TargetApp, RealApp =
-		{}, require(Path)(App.InvocationAPI, Extras) :: { Success: boolean, RichConfig: Types.RichConfig }
+		{}, AppLoader(App.InvocationAPI, Extras) :: { Success: boolean, RichConfig: Types.RichConfig }
 
 	if not RealApp[1] then
 		Utils.Logging.Warn(
@@ -1116,16 +1216,16 @@ function App.ServerAPI.GetApp(AppServer: string, AppID: string): Types.Response
 		Data.Unprocessed = true
 
 		xpcall(function()
-			local RichConfig = require(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
+			local RichConfig = LoadAppModule(Data.InstallID)(App.InvocationAPI, { _ReturnConfig = true })
 
 			Data.CannotDownload = false
 			Data.Unprocessed = false
 			Data.RichConfig = RichConfig
 		end, function(e)
-			warn("------------", e)
-			Utils.Logging.Warn(e)
+			Utils.Logging.SWarn(`[GetApp] Could not load app {tostring(AppID)}: {tostring(e)}`)
 
 			Data.CannotDownload = true
+			Data.DownloadError = tostring(e)
 		end)
 
 		return { true, Data }
