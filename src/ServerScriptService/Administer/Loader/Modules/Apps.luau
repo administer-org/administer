@@ -20,14 +20,46 @@ local Var = require(Root.Core.Variables)
 
 local AppLifecycleEvent = Utils.NewRemote("RemoteEvent", "AppLifecycle", false, function() end)
 
-local function IsVersionSupported(version: string, range: string): boolean
-	local min, max = range:match("min:([%d%.]+);max:([%d%.]+)")
+--// Versions are compared component by component. String comparison put
+--// "10.0.0" below "9.0.0", and treated "2.0" and "2.0.0" as different
+--// versions, so a range check went wrong as soon as any component reached
+--// double digits.
+local function ParseVersion(Version: string): { number }
+	local Parts = {}
 
-	if min and max then
-		return version >= min and version <= max
+	for Part in tostring(Version):gmatch("%d+") do
+		table.insert(Parts, tonumber(Part) or 0)
 	end
 
-	return version == range
+	return Parts
+end
+
+local function CompareVersions(Left: string, Right: string): number
+	local A, B = ParseVersion(Left), ParseVersion(Right)
+
+	for Index = 1, math.max(#A, #B) do
+		local X, Y = A[Index] or 0, B[Index] or 0
+
+		if X ~= Y then
+			return X < Y and -1 or 1
+		end
+	end
+
+	return 0
+end
+
+local function IsVersionSupported(version: string?, range: string?): boolean
+	if version == nil or range == nil then
+		return false
+	end
+
+	local min, max = tostring(range):match("min:([%d%.]+);max:([%d%.]+)")
+
+	if min and max then
+		return CompareVersions(version, min) >= 0 and CompareVersions(version, max) <= 0
+	end
+
+	return CompareVersions(version, range) == 0
 end
 
 function App.InvocationAPI.RichConfig(): Types.RichConfig
@@ -56,8 +88,25 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 end
 
 function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Response
+	--// This check used to sit at the end of the chain below, after Misc had
+	--// already been indexed several times, so it could never actually fire.
+	if Misc == nil then
+		return {
+			false,
+			"misc. data must not be nil, please refer to the documentation for information how to properly return a Construct object",
+		}
+	end
+
 	if Misc._ReturnConfig then
 		return Config
+	end
+
+	if Config.Dependencies == nil then
+		return { false, "this app declares no Dependencies table" }
+	end
+
+	if Config.Dependencies.AdministerModules == nil then
+		Config.Dependencies.AdministerModules = {}
 	end
 
 	if not Config.Bootstrap then
@@ -78,11 +127,6 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 			false,
 			`this app does not support your administer version. please upgrade to the latest version of Administer.`,
 		}
-	elseif Misc == nil then
-		return {
-			false,
-			"misc. data must not be nil, please refer to the documentation for information how to properly return a Construct object",
-		}
 	end
 
 	Utils.Logging.Print("Proceeding with bootstrap")
@@ -90,11 +134,17 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 
 	for _, Request in Config.Dependencies.AdministerModules do
 		if not Request then
-			break
+			continue
 		end
 
 		if Request.Type == "SERVER" then
-			Modules[Request.Name] = require(script.Parent:FindFirstChild(Request.Name)) :: {}
+			local Module = script.Parent:FindFirstChild(Request.Name)
+
+			if not Module then
+				return { false, `this app requested the Administer module "{tostring(Request.Name)}", which does not exist` }
+			end
+
+			Modules[Request.Name] = require(Module) :: {}
 		end
 	end
 

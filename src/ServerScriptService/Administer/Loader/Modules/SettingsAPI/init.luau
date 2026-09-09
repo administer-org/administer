@@ -290,9 +290,19 @@ function SettingsAPI.new(rawSettings)
 
 	function APIController.Save(UserId: number?): boolean
 		if isServer then
+			--// Concatenating a nil UserId threw inside the pcall below, so Save()
+			--// with no argument silently reported failure and wrote nothing.
+			--// Scope 1 is the shared/global settings scope used at startup.
+			local Scope = UserId or 1
+
 			local success, err = pcall(function()
-				saveDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", settingsGroup)
+				saveDataStore(dataStoreKey .. "#" .. Scope, dataStoreKey .. "#1", settingsGroup)
 			end)
+
+			if not success then
+				warn(`[Administer] [SettingsAPI] Failed to save settings for scope {Scope}: {tostring(err)}`)
+			end
+
 			return success
 		else
 			local localPlayer = Players.LocalPlayer
@@ -305,10 +315,16 @@ function SettingsAPI.new(rawSettings)
 
 	function APIController.Load(UserId: number?, customTemplate: SettingsGroup?): boolean
 		if isServer then
+			local Scope = UserId or 1
+
 			local success, err = pcall(function()
 				settingsGroup =
-					loadDataStore(dataStoreKey .. "#" .. UserId, dataStoreKey .. "#1", customTemplate or rawSettings)
+					loadDataStore(dataStoreKey .. "#" .. Scope, dataStoreKey .. "#1", customTemplate or rawSettings)
 			end)
+
+			if not success then
+				warn(`[Administer] [SettingsAPI] Failed to load settings for scope {Scope}: {tostring(err)}`)
+			end
 
 			if success then
 				local remoteFolder = ReplicatedStorage:FindFirstChild("Administer")
