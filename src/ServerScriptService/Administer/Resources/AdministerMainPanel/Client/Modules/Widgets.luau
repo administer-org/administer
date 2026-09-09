@@ -118,10 +118,7 @@ function Widgets.Edit(ContainingUI): ()
 	local NewPreviewContent: CanvasGroup = ContainingUI.Content:Clone()
 
 	for _, Item in NewPreviewContent:GetChildren() do
-		if
-			Item:IsA("LocalScript") or Item:IsA("Script")
-			Item:IsA("LocalScript") or Item:IsA("Script")
-		then
+		if Item:IsA("LocalScript") or Item:IsA("Script") then
 			Item:Destroy()
 		end
 	end

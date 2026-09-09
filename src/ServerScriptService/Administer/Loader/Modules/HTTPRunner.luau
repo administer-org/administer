@@ -29,22 +29,21 @@ function Http.GetRoute(
 			or Var.DefaultAppServer
 	end
 
+	if AppServer == nil or AppServer == "" then
+		error("[Administer] GetRoute called with no app server, and no default is configured.", 2)
+	end
+
 	local Response
 	local ST = tick()
-	local IsAOS = string.match(AppServer, "^https://aos%-.+%.admsoftware%.org$") ~= nil
 
 	Options = Options or {}
 
 	local Timeout = Options.Timeout or 5
 
-	if AppServer == "" then
-		error()
-	end
-
 	Options.Headers = Options.Headers or {}
 
 	Options.Headers["X-Adm-Version"] = Config.VersData.NoExtraData
-	Options.Headers["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName)
+	Options.Headers["X-Adm-Branch"] = string.upper(Var.CurrentBranch.BranchName or "")
 
 	if Options.Debug then
 		print("---- AdmHttpGet Debug ----", "Headers", Options.Headers, "URL", AppServer, "Route", Route)
@@ -111,7 +110,7 @@ function Http.GetRoute(
 	else
 		local ErrorResp
 
-		local R = xpcall(function()
+		xpcall(function()
 			ErrorResp = OnError(Response.StatusCode, {
 				ProcessedMS = RoundMS(tick() - ST),
 				RespMessage = Response.StatusMessage,
@@ -135,18 +134,21 @@ function Http.PostRoute(
 	DoAnyways: (() -> ())?
 )
 	local ST = tick()
-	local FinalHeaders = {}
 
-	if MiscConfig ~= nil then
+	--// Version/branch headers are always sent; caller-supplied headers are merged
+	--// on top of them rather than replacing them outright.
+	local FinalHeaders = {
+		["X-Adm-Version"] = Config.VersData.String,
+		["X-Adm-Branch"] = string.lower(Var.CurrentBranch.BranchName or ""),
+	}
+
+	if MiscConfig ~= nil and MiscConfig.Headers ~= nil then
 		for Key, Header in MiscConfig.Headers do
 			FinalHeaders[Key] = Header
 		end
-	else
-		FinalHeaders = {
-			["X-Adm-Version"] = Config.VersData.String,
-			["X-Adm-Branch"] = string.lower(Var.CurrentBranch.BranchName),
-		}
 	end
+
+	local Response
 
 	local ok, ResponseOrErr = pcall(function()
 		return Var.Services.HttpService:RequestAsync({

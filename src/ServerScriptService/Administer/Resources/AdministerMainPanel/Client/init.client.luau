@@ -58,11 +58,21 @@ local success, errormsg = pcall(function()
 		end
 	end
 
-	Var.Remotes:WaitForChild("Ping", 15):InvokeServer()
+	local PingRemote = Var.Remotes:WaitForChild("Ping", 15)
+
+	if not PingRemote then
+		error("The Ping remote never appeared — Administer's server half is not running")
+	end
+
+	PingRemote:InvokeServer()
 
 	CacheSettings()
 
-	Var.Remotes:WaitForChild("SettingsLoaded", 15).OnClientEvent:Connect(CacheSettings)
+	local SettingsLoaded = Var.Remotes:WaitForChild("SettingsLoaded", 15)
+
+	if SettingsLoaded then
+		SettingsLoaded.OnClientEvent:Connect(CacheSettings)
+	end
 end)
 
 if not success then
@@ -108,7 +118,32 @@ task.defer(function()
 	end)
 end)
 
-Var.Remotes:WaitForChild("SettingsLoaded", 15).OnClientEvent:Wait()
+do
+	local SettingsLoaded = Var.Remotes:WaitForChild("SettingsLoaded", 15)
+
+	if SettingsLoaded then
+		--// Bounded wait. The event is fired by the deferred ClientSettings
+		--// require above, so waiting on it unconditionally would hang the panel
+		--// if that require errored or if the event fired before this point.
+		local Loaded = false
+
+		local Connection
+		Connection = SettingsLoaded.OnClientEvent:Connect(function()
+			Loaded = true
+		end)
+
+		local Elapsed = 0
+		while not Loaded and Elapsed < 15 do
+			Elapsed += task.wait(0.1)
+		end
+
+		Connection:Disconnect()
+
+		if not Loaded then
+			Utilities.Logging.Warn("[Startup] Settings did not load in time; continuing with defaults.")
+		end
+	end
+end
 
 local essentialSettings = Utilities.GetSettings({
 	"KeybindRegisterTime",
@@ -354,13 +389,17 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 		)
 	end)
 
-	Var.MainFrame.Parent
-		:WaitForChild("MobileOpen", 10).Hit.TouchSwipe
-		:Connect(function(SwipeDirection: Enum.SwipeDirection)
+	local MobileOpen = Var.MainFrame.Parent:WaitForChild("MobileOpen", 10)
+
+	if MobileOpen then
+		MobileOpen.Hit.TouchSwipe:Connect(function(SwipeDirection: Enum.SwipeDirection)
 			if SwipeDirection == Enum.SwipeDirection.Left then
 				Frontend.Open(true)
 			end
 		end)
+	else
+		Utilities.Logging.Warn("[Mobile] MobileOpen never appeared; swipe-to-open is unavailable.")
+	end
 
 	Var.MainFrame.Header.AssistiveClose.Visible = true
 	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)

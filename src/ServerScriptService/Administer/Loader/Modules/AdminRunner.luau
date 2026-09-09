@@ -14,10 +14,9 @@ local Var = require(Root.Parent.Core.Variables)
 
 type Response = Types.Response
 
-local LastAdminResult
 local SupportAccessPlayers = {}
 
-function AR.Bootstrap(Player: Player, AdminRankID: string, IsSupportAccess: boolean): ()
+function AR.Bootstrap(Player: Player, AdminRankID: string, IsSupportAccess: boolean?): Types.Response?
 	local Rank = Var.DataStores.AdminsDS:GetAsync(AdminRankID)
 
 	if Rank == nil and IsSupportAccess then
@@ -30,16 +29,16 @@ function AR.Bootstrap(Player: Player, AdminRankID: string, IsSupportAccess: bool
 		SupportAccessPlayers[Player.UserId] = true
 	end
 
-	local VersionStatus = Util.CheckVersionStatus()
-
-	local NewPanel = Var.Panel.Spawn(Rank, Player)
-
 	if Rank == nil or Rank.Apps == nil then
 		Util.Logging.Warn(
 			`RankStore seems to be corrupt! \nRankData: {game:GetService("HttpService"):JSONEncode(Rank)}\nRankID: {AdminRankID}`
 		)
 		return { false, "Corrupt RankStore, please reset your database" }
 	end
+
+	local VersionStatus = Util.CheckVersionStatus()
+
+	local NewPanel = Var.Panel.Spawn(Rank, Player)
 
 	NewPanel.Parent = Player.PlayerGui
 
@@ -118,17 +117,24 @@ function AR.CanUseApp(Identifier: Player | string, AppID: string)
 		Rank = Var.DataStores.AdminsDS:GetAsync(Identifier)
 	end
 
+	if Rank == nil or Rank.Apps == nil then
+		Util.Logging.Warn(`[CanUseApp] No rank data found for {tostring(Identifier)}; denying access to {AppID}.`)
+		return false
+	end
+
 	return Rank.Apps.SuperAdmin and true
 		or (Rank.Apps[AppID] ~= nil and Rank.Apps[AppID] or (Rank.Apps.NewAppsOn == true and true or false))
 end
 
-function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): Types.Response
-	LastAdminResult = Util.IsAdmin(Player)
+function AR.PlayerAdded(Player: Player, ForceAdmin: boolean?, IsScan: boolean?): Types.Response
+	--// Kept local: this is read from a deferred thread below, and a module-level
+	--// value would be overwritten by the next join before that thread runs.
+	local AdminResult = Util.IsAdmin(Player)
 
-	if not LastAdminResult.IsAdmin and Var.StaffData then
+	if not AdminResult.IsAdmin and Var.StaffData then
 		for _, Staff in Var.StaffData do
 			if Staff.UserID == Player.UserId and Staff.hasSupportAccess == true then
-				LastAdminResult = {
+				AdminResult = {
 					IsAdmin = true,
 					Reason = "Administer Support Access",
 					RankID = "Administrator",
@@ -139,7 +145,7 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 		end
 	end
 
-	Util.Logging.Print("New join:", LastAdminResult)
+	Util.Logging.Print("New join:", AdminResult)
 
 	if Var.WaitForBootstrap then
 		repeat
@@ -155,9 +161,9 @@ function AR.PlayerAdded(Player: Player, ForceAdmin: boolean, IsScan: boolean): T
 	end
 
 	task.spawn(function()
-		if LastAdminResult.IsAdmin then
-			local IsSupportAccess = LastAdminResult.Reason == "Administer Support Access"
-			AR.Bootstrap(Player, LastAdminResult.RankName, IsSupportAccess)
+		if AdminResult.IsAdmin then
+			local IsSupportAccess = AdminResult.Reason == "Administer Support Access"
+			AR.Bootstrap(Player, AdminResult.RankName, IsSupportAccess)
 		elseif
 			(Var.Services.RunService:IsStudio() and Util.GetSetting("SandboxMode") == true)
 			or Var.EnableFreeAdmin
