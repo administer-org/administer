@@ -7,6 +7,7 @@ local App = {
 	InvocationAPI = {},
 
 	RunningApps = {},
+	RegisteredCommands = {},
 }
 
 local Ticks = {}
@@ -18,6 +19,7 @@ local HTTP = require(Root.Modules.HTTPRunner)
 local Types = require(Root.Core.Types)
 local Utils = require(Root.Modules.Utilities)
 local Var = require(Root.Core.Variables)
+local AdminRunner = require(Root.Modules.AdminRunner)
 
 -- RemoteEvent used to push install/uninstall lifecycle updates to clients
 local AppLifecycleEvent = Utils.NewRemote("RemoteEvent", "AppLifecycle", false, function() end)
@@ -38,6 +40,7 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 			Name = "Default App",
 			Icon = "",
 			Version = "0",
+			ID = "",
 			Description = "This is an application which is improperly configured.",
 		},
 
@@ -51,7 +54,8 @@ function App.InvocationAPI.RichConfig(): Types.RichConfig
 			IsAdministerVersionRelevant = true,
 		},
 
-		TextCommands = {},
+		Commands = {},
+		Widgets = {},
 		State = {},
 	}
 end
@@ -102,9 +106,72 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 
 	if Config.ClientFrame ~= nil then
 		local UIClone = Config.ClientFrame:Clone()
+		-- The published Player Management asset supplies the UI, while the local
+		-- Studio copy carries patched client code and widget assets. Preserve the
+		-- published frame while overlaying those local pieces when they exist.
+		if Config.AppMeta.Name == "Player Management" and Var.LocalAppsFolder then
+			local LocalPackage = Var.LocalAppsFolder:FindFirstChild("PlayerManagement")
+			local LocalContent = LocalPackage and LocalPackage:FindFirstChild("PlayerManagement")
+			local LocalUI = LocalContent and LocalContent:FindFirstChild("UI")
+			local LocalFrame = LocalUI and LocalUI:FindFirstChild("PlayerManagement")
+			local PatchedClient = LocalFrame and LocalFrame:FindFirstChild("Client")
+			local AssetClient = UIClone:FindFirstChild("Client")
+			if PatchedClient and PatchedClient:IsA("LocalScript") and AssetClient then
+				AssetClient:Destroy()
+				PatchedClient:Clone().Parent = UIClone
+			end
+
+			local LocalWidgets = LocalUI and LocalUI:FindFirstChild(".widgets")
+			local LocalWidgetConfig = LocalWidgets and LocalWidgets:FindFirstChild(".widgetconfig")
+			if
+				LocalWidgets
+				and LocalWidgets:IsA("Folder")
+				and LocalWidgetConfig
+				and LocalWidgetConfig:IsA("ModuleScript")
+			then
+				local WidgetFolder = UIClone:FindFirstChild(".widgets")
+				if LocalWidgets:FindFirstChild("ServerStats") then
+					if WidgetFolder then
+						WidgetFolder:Destroy()
+					end
+					WidgetFolder = LocalWidgets:Clone()
+				elseif not WidgetFolder then
+					WidgetFolder = LocalWidgets:Clone()
+				end
+
+				local ExistingConfig = WidgetFolder:FindFirstChild(".widgetconfig")
+				if ExistingConfig then
+					ExistingConfig:Destroy()
+				end
+
+				local WidgetConfig = LocalWidgetConfig:Clone()
+				WidgetConfig.Name = ".widgetconfig"
+				WidgetConfig.Parent = WidgetFolder
+				WidgetFolder.Parent = UIClone
+			end
+		end
 
 		UIClone.Parent = Var.Panel.Path.Main
 	end
+
+	-- Commands belong to their app. The published Player Management package does not
+	-- include this checkout's Kill module, so use its local app command definitions.
+	local Commands = Config.Commands or {}
+	if Config.AppMeta.Name == "Player Management" and Var.LocalAppsFolder then
+		local LocalPackage = Var.LocalAppsFolder:FindFirstChild("PlayerManagement")
+		local LocalContent = LocalPackage and LocalPackage:FindFirstChild("PlayerManagement")
+		local LocalConfig = LocalContent and LocalContent:FindFirstChild("Config")
+		local LocalCommands = LocalConfig and LocalConfig:FindFirstChild(".commandConfig")
+		if LocalCommands and LocalCommands:IsA("ModuleScript") then
+			local ok, result = pcall(require, LocalCommands)
+			if ok and type(result) == "table" then
+				Commands = result
+			else
+				Utils.Logging.Warn("[Apps] Failed to load Player Management commands: " .. tostring(result))
+			end
+		end
+	end
+	App.RegisteredCommands[Config.AppMeta.Name] = Commands
 
 	-- Bootstrap runs asynchronously: apps may call WaitForChild on their
 	-- ClientFrame UI, which only exists for live player panels, not on the
@@ -122,7 +189,145 @@ function App.InvocationAPI.Construct(Config: Types.RichConfig, Misc): Types.Resp
 	return { true, Config }
 end
 
+local function CanRunAppCommand(Player: Player, AppName: string): boolean
+	if not App.RunningApps[AppName] then
+		return false
+	end
+	local ok, allowed = pcall(AdminRunner.CanUseApp, Player, AppName == "Player Management" and "PlayerManagement" or AppName)
+	return ok and allowed == true
+end
+
+function App.GetCommands(Player: Player)
+	local results = {}
+	for appName, commands in App.RegisteredCommands do
+		if CanRunAppCommand(Player, appName) then
+			for _, command in commands do
+				if type(command) == "table" and type(command.Name) == "string" then
+					table.insert(results, {
+						ActionName = command.Name,
+						Description = command.Description or "",
+						FromApp = appName,
+						Icon = command.Icon or "AppDefaults",
+						Flags = command.Flags or {},
+					})
+				end
+			end
+		end
+	end
+	return results
+end
+
+function App.ExecuteCommand(Player: Player, AppName: any, CommandName: any, Arguments: any)
+	if type(AppName) ~= "string" or type(CommandName) ~= "string" or type(Arguments) ~= "string" or #Arguments > 2048 then
+		return { false, "Invalid command." }
+	end
+	if not CanRunAppCommand(Player, AppName) then
+		return { false, "You do not have access to this app's commands." }
+	end
+	for _, command in App.RegisteredCommands[AppName] or {} do
+		if type(command.Name) == "string" and string.lower(command.Name) == string.lower(CommandName) then
+			if type(command.Execute) ~= "function" then
+				return { false, "This command is not available." }
+			end
+			local ok, result = pcall(command.Execute, Player, Arguments)
+			return ok and result or { false, "Command failed: " .. tostring(result) }
+		end
+	end
+	return { false, "Unknown app command." }
+end
+
 --// Core App functions
+local function GetLocalAppID(AppMeta: { [any]: any }): string
+	if type(AppMeta) ~= "table" then
+		return ""
+	end
+
+	local candidate = AppMeta.ID
+	if type(candidate) == "number" then
+		return tostring(candidate)
+	end
+	if type(candidate) == "string" then
+		return candidate
+	end
+
+	return ""
+end
+
+local function GetLocalAppInfo(AppInstance: Instance)
+	if not AppInstance or not AppInstance:IsA("ModuleScript") then
+		return nil
+	end
+	if Var.LocalAppExclusions and Var.LocalAppExclusions[AppInstance.Name] then
+		return nil
+	end
+
+	local ok, Config = xpcall(function()
+		return require(AppInstance)(App.InvocationAPI, { _ReturnConfig = true })
+	end, function(err)
+		Utils.Logging.Warn(`[LocalApps] Failed to inspect local app {AppInstance:GetFullName()}: {tostring(err)}`)
+		return nil
+	end)
+
+	if not ok or not Config or type(Config) ~= "table" then
+		return nil
+	end
+
+	local AppMeta = Config.AppMeta or {}
+	if type(Config.Bootstrap) ~= "function" then
+		Utils.Logging.Warn(`[LocalApps] {AppInstance:GetFullName()} has no bootstrap function; ignoring incomplete local app`)
+		return nil
+	end
+	return {
+		AppID = GetLocalAppID(AppMeta),
+		AdministerID = type(AppMeta.AdministerID) == "string" and AppMeta.AdministerID or "",
+	}
+end
+
+function App.HasLocalAppMatch(AppID: string | number?, AppName: string?, AOSID: string?): boolean
+	if not Var.LocalAppsFolder then
+		return false
+	end
+
+	local TargetIDs = {}
+	if AppID ~= nil and tostring(AppID) ~= "" then
+		table.insert(TargetIDs, tostring(AppID))
+	end
+	if AOSID ~= nil and tostring(AOSID) ~= "" then
+		table.insert(TargetIDs, tostring(AOSID))
+	end
+
+	for _, AppInstance in Var.LocalAppsFolder:GetChildren() do
+		if Var.LocalAppExclusions and Var.LocalAppExclusions[AppInstance.Name] then
+			continue
+		end
+
+		local LocalInfo = GetLocalAppInfo(AppInstance)
+		Utils.Logging.Print(
+			`[LocalApps][DEBUG] child={AppInstance:GetFullName()} info={LocalInfo and Var.Services.HttpService:JSONEncode(
+				LocalInfo
+			) or "nil"}`
+		)
+		if not LocalInfo then
+			continue
+		end
+
+		for _, TargetID in TargetIDs do
+			local LowerTarget = string.lower(TargetID)
+
+			if LocalInfo.AppID ~= "" and string.lower(LocalInfo.AppID) == LowerTarget then
+				return true
+			end
+
+			if LocalInfo.AdministerID ~= "" and string.lower(LocalInfo.AdministerID) == LowerTarget then
+				return true
+			end
+		end
+	end
+
+	Utils.Logging.Print(`[LocalApps][DEBUG] no match. targets={table.concat(TargetIDs, ", ")}`)
+	return false
+end
+
 function App.LoadLocal(
 	Path: number | Instance,
 	AppMeta: { InstallDate: number, InstallSource: string, AppID: number }
@@ -153,6 +358,10 @@ function App.LoadLocal(
 
 	xpcall(function()
 		TargetApp.AppID = (typeof(Path) == "number") and Path or AppMeta.AppID
+		if RealApp[2] and RealApp[2].AppMeta then
+			TargetApp.AppID = GetLocalAppID(RealApp[2].AppMeta) ~= "" and GetLocalAppID(RealApp[2].AppMeta)
+				or TargetApp.AppID
+		end
 		TargetApp.BuildTime = string.sub(tostring(tick() - Ticks[Path]), 1, 5)
 		TargetApp.Description = RealApp[2].AppMeta.Description
 		TargetApp.InstallSource = AppMeta.InstallSource
@@ -174,7 +383,8 @@ function App.LoadLocal(
 end
 
 function App.Initialize(): boolean
-	local DelaySetting, Apps = Utils.GetSetting("AppLoadDelay"), Var.DataStores.AppDB:GetAsync("AppList") or {}
+	local DelaySetting = Utils.GetSetting("AppLoadDelay")
+	local BootstrapQueue = {}
 	local i, TotalAttempts, Start = 0, 0, tick()
 
 	Utils.Logging.Print("Bootstrapping apps...")
@@ -192,9 +402,12 @@ function App.Initialize(): boolean
 	end
 
 	if Var.LocalAppsFolder then
-		for _, App in Var.LocalAppsFolder:GetChildren() do
-			table.insert(Apps, {
-				ID = App,
+		for _, AppInstance in Var.LocalAppsFolder:GetChildren() do
+			if not GetLocalAppInfo(AppInstance) then
+				continue
+			end
+			table.insert(BootstrapQueue, {
+				ID = AppInstance,
 				InstallDate = 0,
 				InstallSource = "",
 				IsPhysicalApp = true,
@@ -202,10 +415,32 @@ function App.Initialize(): boolean
 		end
 	end
 
-	-- AppsCount must be computed AFTER local apps are appended
-	local AppsCount = #Apps
+	local RemoteApps = Var.DataStores.AppDB:GetAsync("AppList") or {}
+	for _, AppEntry in RemoteApps do
+		if not AppEntry then
+			continue
+		end
 
-	for _, AppObj in Apps do
+		if App.HasLocalAppMatch(AppEntry.ID, AppEntry.Name, AppEntry.AOSID) then
+			Utils.Logging.Print(
+				`[Initialize] Skipping remote app {tostring(AppEntry.Name or AppEntry.ID)} because a local copy already exists.`
+			)
+			continue
+		end
+
+		table.insert(BootstrapQueue, {
+			ID = AppEntry.ID,
+			InstallDate = AppEntry.InstallDate or 0,
+			InstallSource = AppEntry.InstallSource or "",
+			IsPhysicalApp = AppEntry.IsPhysicalApp == true,
+			AOSID = AppEntry.AOSID,
+			AosVersionValidated = AppEntry.AosVersionValidated,
+		})
+	end
+
+	local AppsCount = #BootstrapQueue
+
+	for _, AppObj in BootstrapQueue do
 		Utils.Logging.Print(`Importing app:`, AppObj)
 		task.defer(function()
 			App.LoadLocal(AppObj.ID, {
@@ -252,16 +487,16 @@ end
 -- Apps in DS but missing from AOS  → POST /install   (re-register)
 -- Apps in AOS but missing from DS  → POST /uninstall (evict stale)
 function App.SyncWithAOS()
-	warn(`[AOS-DEBUG][SyncWithAOS] START PlaceId={tostring(game.PlaceId)}`)
+	Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] START PlaceId={tostring(game.PlaceId)}`)
 	if Utils.GetSetting("DisableAOS") == true then
-		warn(`[AOS-DEBUG][SyncWithAOS] SKIP DisableAOS=true`)
+		Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] SKIP DisableAOS=true`)
 		return
 	end
 
 	local RawList = Var.DataStores.AppDB:GetAsync("AppList") or {}
-	warn(`[AOS-DEBUG][SyncWithAOS] DS AppList has {#RawList} total entries`)
+	Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] DS AppList has {#RawList} total entries`)
 	for idx, v in RawList do
-		warn(
+		Utils.Logging.Print(
 			`[AOS-DEBUG][SyncWithAOS]   DS[{idx}] ID={tostring(v and v.ID)} AOSID={tostring(v and v.AOSID)} Src={tostring(
 				v and v.InstallSource
 			)} Physical={tostring(v and v.IsPhysicalApp)}`
@@ -292,15 +527,15 @@ function App.SyncWithAOS()
 	for _ in byServer do
 		serverCount += 1
 	end
-	warn(`[AOS-DEBUG][SyncWithAOS] Servers to reconcile: {serverCount}`)
+	Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] Servers to reconcile: {serverCount}`)
 
 	for serverURL, dsEntries in byServer do
-		warn(`[AOS-DEBUG][SyncWithAOS] Reconciling {serverURL} — DS has {#dsEntries} entries`)
+		Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] Reconciling {serverURL} — DS has {#dsEntries} entries`)
 
 		-- Fetch the current AOS install list for this server
 		local ok, aosApps = pcall(function()
 			return HTTP.GetRoute(serverURL, "/api/asset/list", function(Data)
-				warn(
+				Utils.Logging.Print(
 					`[AOS-DEBUG][SyncWithAOS] /api/asset/list hasData={tostring(
 						type(Data) == "table" and Data.data ~= nil
 					)}`
@@ -310,17 +545,17 @@ function App.SyncWithAOS()
 				end
 				return {}
 			end, function(err)
-				warn(`[AOS-DEBUG][SyncWithAOS] /api/asset/list FAILED err={tostring(err)}`)
+				Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] /api/asset/list FAILED err={tostring(err)}`)
 				Utils.Logging.Warn(`[SyncWithAOS] Failed to fetch /api/asset/list from {serverURL}: {tostring(err)}`)
 				return nil
 			end)
 		end)
-		warn(
+		Utils.Logging.Print(
 			`[AOS-DEBUG][SyncWithAOS] GetRoute ok={tostring(ok)} count={type(aosApps) == "table" and #aosApps or "n/a"}`
 		)
 
 		if not ok or not aosApps then
-			warn(`[AOS-DEBUG][SyncWithAOS] SKIP {serverURL} — list fetch failed`)
+			Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] SKIP {serverURL} — list fetch failed`)
 			Utils.Logging.Warn(`[SyncWithAOS] Skipping {serverURL} — list fetch failed`)
 			continue
 		end
@@ -332,12 +567,12 @@ function App.SyncWithAOS()
 		for _, aosEntry in aosApps do
 			if aosEntry.id then
 				aosSet[tostring(aosEntry.id)] = true
-				warn(`[AOS-DEBUG][SyncWithAOS]   AOS knows: {tostring(aosEntry.id)}`)
+				Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS]   AOS knows: {tostring(aosEntry.id)}`)
 			end
 		end
 		for _, entry in dsEntries do
 			dsSet[tostring(entry.AOSID)] = entry
-			warn(`[AOS-DEBUG][SyncWithAOS]   DS  wants: {tostring(entry.AOSID)}`)
+			Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS]   DS  wants: {tostring(entry.AOSID)}`)
 		end
 
 		-- (1) DS has it, AOS doesn't → POST /install
@@ -346,7 +581,7 @@ function App.SyncWithAOS()
 				Utils.Logging.Print(`[SyncWithAOS] Re-registering {aosID} on {serverURL}`)
 				task.spawn(function()
 					local postURL = `{serverURL}/api/asset/{aosID}/install`
-					warn(`[AOS-DEBUG][SyncWithAOS] POST (install) {postURL}`)
+					Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] POST (install) {postURL}`)
 					local postOk, postResp = pcall(function()
 						return Var.Services.HttpService:RequestAsync({
 							Url = postURL,
@@ -356,14 +591,14 @@ function App.SyncWithAOS()
 						})
 					end)
 					if postOk then
-						warn(
+						Utils.Logging.Print(
 							`[AOS-DEBUG][SyncWithAOS] install POST StatusCode={tostring(
 								type(postResp) == "table" and postResp.StatusCode
 							)} Body={tostring(type(postResp) == "table" and postResp.Body)}`
 						)
 						Utils.Logging.Print(`[SyncWithAOS] Re-registered {aosID}`)
 					else
-						warn(`[AOS-DEBUG][SyncWithAOS] install POST FAILED err={tostring(postResp)}`)
+						Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] install POST FAILED err={tostring(postResp)}`)
 						Utils.Logging.Warn(`[SyncWithAOS] Failed to re-register {aosID}: {tostring(postResp)}`)
 					end
 				end)
@@ -376,7 +611,7 @@ function App.SyncWithAOS()
 				Utils.Logging.Print(`[SyncWithAOS] Evicting stale AOS entry {aosID} from {serverURL}`)
 				task.spawn(function()
 					local uninstallURL = `{serverURL}/api/asset/{aosID}/uninstall`
-					warn(`[AOS-DEBUG][SyncWithAOS] POST (uninstall) {uninstallURL}`)
+					Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] POST (uninstall) {uninstallURL}`)
 					local postOk, postResp = pcall(function()
 						return Var.Services.HttpService:RequestAsync({
 							Url = uninstallURL,
@@ -386,21 +621,21 @@ function App.SyncWithAOS()
 						})
 					end)
 					if postOk then
-						warn(
+						Utils.Logging.Print(
 							`[AOS-DEBUG][SyncWithAOS] uninstall POST StatusCode={tostring(
 								type(postResp) == "table" and postResp.StatusCode
 							)} Body={tostring(type(postResp) == "table" and postResp.Body)}`
 						)
 						Utils.Logging.Print(`[SyncWithAOS] Evicted {aosID}`)
 					else
-						warn(`[AOS-DEBUG][SyncWithAOS] uninstall POST FAILED err={tostring(postResp)}`)
+						Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] uninstall POST FAILED err={tostring(postResp)}`)
 						Utils.Logging.Warn(`[SyncWithAOS] Failed to evict {aosID}: {tostring(postResp)}`)
 					end
 				end)
 			end
 		end
 	end
-	warn(`[AOS-DEBUG][SyncWithAOS] DONE`)
+	Utils.Logging.Print(`[AOS-DEBUG][SyncWithAOS] DONE`)
 end
 
 -- Removes permanently-failed entries and rewrites a compact AppList to DataStore.
@@ -424,6 +659,11 @@ function App.RecoverApps()
 
 	for idx, AppObj in ipairs(AppList) do
 		if AppObj.IsPhysicalApp then
+			continue
+		end
+
+		if App.HasLocalAppMatch(AppObj.ID, AppObj.Name, AppObj.AOSID) then
+			Utils.Logging.Print(`[RecoverApps] Skipping app {tostring(AppObj.ID)} because a local copy already exists.`)
 			continue
 		end
 
@@ -656,6 +896,20 @@ function App.Install(
 		)} AosValidated={tostring(AosVersionValidated)}`
 	)
 	Utils.Logging.Print(`[-] Attempting to install app {AppID} from {InstallContext}`)
+
+	-- Local apps take precedence: if the same app already exists in ReplicatedStorage.Apps,
+	-- skip the AOS download and keep the local version.
+	if App.HasLocalAppMatch(AppID, AppName, AOSID) then
+		warn(
+			`[AOS-DEBUG][Install] SKIP local-match AppID={tostring(AppID)} AOSID={tostring(AOSID)} Name={tostring(
+				AppName
+			)}`
+		)
+		Utils.Logging.Print(
+			`[Install] Skipping {tostring(AppName or AppID)} because a local app already exists in the Local Apps folder.`
+		)
+		return { true, "Local app already exists; skipping duplicate download." }
+	end
 
 	-- Only block if the app is already live in this server session
 	for _, RunningApp in App.RunningApps do
@@ -1018,11 +1272,11 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 				Content
 			)}`
 		)
-		local RealID = Content.InstallID
+		local RealID = Content and Content.InstallID
 		warn(`[AOS-DEBUG][InstallFromServer] RealID={tostring(RealID)}`)
-		if RealID == 0 then
-			warn(`[AOS-DEBUG][InstallFromServer] FAIL RealID is 0 (bad server data)`)
-			return { false, "This server gave us bad data, please report the error to the server owner." }
+		if not Content or not RealID or RealID == 0 then
+			warn(`[AOS-DEBUG][InstallFromServer] FAIL RealID is 0 or missing (bad server data)`)
+			return { false, Utils.t(nil, "apps.notAvailable") }
 		end
 
 		--// Use AOS metadata version range to validate compatibility instead of the app's bundled check
@@ -1057,6 +1311,11 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 		)
 		local Result: Types.Response = App.Install(RealID, ServerURL, Content["Name"], AosVersionValidated, AppID)
 		warn(`[AOS-DEBUG][InstallFromServer] App.Install returned ok={tostring(Result[1])} msg={tostring(Result[2])}`)
+
+		if Result[1] and tostring(Result[2] or ""):lower():find("local app already exists") then
+			warn(`[AOS-DEBUG][InstallFromServer] Local app already exists, skipping AOS install notification`)
+			return Result
+		end
 
 		if Result[1] then
 			local postURL = `{ServerURL}/api/asset/{AppID}/install`
@@ -1101,6 +1360,9 @@ function App.ServerAPI.InstallFromServer(ServerURL: string, AppID: string): Type
 		end
 	end, function(c)
 		warn(`[AOS-DEBUG][InstallFromServer] GET /api/asset/{AppID} FAILED code={tostring(c)}`)
+		if c == 404 or c == 410 then
+			return { false, Utils.t(nil, "apps.notAvailable") }
+		end
 		return { false, string.format(Utils.t(nil, "apps.pulled.Bad"), c) }
 	end)
 end

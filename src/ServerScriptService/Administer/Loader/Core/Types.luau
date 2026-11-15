@@ -185,6 +185,7 @@ export type RichConfig = {
 		Name: string,
 		Icon: string,
 		Version: string,
+		ID: string?,
 		CardBgID: string?,
 		Copyright: string?,
 		DisplayName: string?,
@@ -204,15 +205,30 @@ export type RichConfig = {
 		},
 	},
 
-	TextCommands: {
+	Commands: {
 		{
 			Name: string,
 			Description: string,
 			Icon: string,
-
-			PermissionLevel: "0" | "1" | "2" | "3" | "4" | "5",
-			Executed: () -> (Player, RunContext, { CommandOption }),
+			Flags: { [string]: { Type: string, Description: string, Required: boolean } }?,
+			Execute: ((Player, string) -> { boolean | string })?,
+			ReccomendedPermissionLevel: number?,
+			Executed: (() -> (Player, RunContext, { CommandOption }))?,
 		}
+	}?,
+	Widgets: {
+		_generator: string?,
+		Widgets: {
+			{
+				Type: "SMALL_LABEL" | "LARGE_BOX",
+				Name: string,
+				Icon: string,
+				RenderFrequency: number?,
+				DefaultValue: string | number?,
+				BaseUIFrame: GuiObject?,
+				OnRender: (...any) -> any,
+			}
+		}?,
 	}?,
 
 	State: {},

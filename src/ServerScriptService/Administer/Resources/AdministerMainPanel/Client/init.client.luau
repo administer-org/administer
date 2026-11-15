@@ -6,6 +6,11 @@ local Assets = script.Assets
 local Modules = script.Modules
 
 local Var = require(Modules.Variables)
+local UserInputService = Var.Services.UserInputService
+
+-- Device emulation can enable touch before settings finish loading. Set this
+-- before the initial Close so it cannot schedule a desktop resize tween.
+Var.Mobile = UserInputService.TouchEnabled
 
 -- Kill any BlurEffects immediately and prevent new ones from being visible
 task.spawn(function()
@@ -126,7 +131,12 @@ local essentialSettings = Utilities.GetSettings({
 local KeybindRegisterTimeframe = essentialSettings.KeybindRegisterTime
 
 Var.Mobile = essentialSettings.ForceMobile == true
+	or UserInputService.TouchEnabled
 Var.UseAcrylic = essentialSettings.ForceAcrylic == true
+
+if Var.Mobile then
+	require(Modules.MobileLayout).Initialize()
+end
 
 if KeybindRegisterTimeframe == "optimistic" then
 	Frontend.RegisterPanelKeybind()
@@ -249,8 +259,6 @@ if Home and Home:IsA("Frame") then
 		end
 	end
 
-	Frontend.SpawnOverlay(Var.MainFrame)
-
 	Home.Welcome.Text = `<stroke color="rgb(0,0,0)" transparency = "0.85" thickness="0.4">{string.format(
 		t("Welcome.Initial.HeaderLabel") :: string,
 		Var.Services.Players.LocalPlayer.DisplayName,
@@ -354,9 +362,18 @@ end, function(e)
 	Utilities.Logging.Warn(`[x] [thread Admins] {e}`)
 end)
 
-if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputService.KeyboardEnabled or Var.Mobile then
-	Utilities.Logging.Print("Mobile mode has been enabled!")
+local mobileControlsConnected = false
+local assistiveCloseConnected = false
+local function EnableMobileMode()
 	Var.Mobile = true
+	Frontend.HideOverlay(Var.MainFrame)
+	Frontend.ToggleFullscreen(false, Var.MainFrame)
+	if mobileControlsConnected then
+		return
+	end
+	mobileControlsConnected = true
+
+	Utilities.Logging.Print("Mobile mode has been enabled!")
 
 	task.defer(function()
 		Utilities.NewNotification(
@@ -368,29 +385,48 @@ if Var.Services.UserInputService.TouchEnabled and not Var.Services.UserInputServ
 		)
 	end)
 
-	Var.MainFrame.Parent
-		:WaitForChild("MobileOpen", 10).Hit.TouchSwipe
-		:Connect(function(SwipeDirection: Enum.SwipeDirection)
+	local MobileOpen = Var.MainFrame.Parent:WaitForChild("MobileOpen", 10)
+	if MobileOpen then
+		MobileOpen.Visible = true
+		MobileOpen.Hit.TouchSwipe:Connect(function(SwipeDirection: Enum.SwipeDirection)
 			if SwipeDirection == Enum.SwipeDirection.Left then
 				Frontend.Open(true)
 			end
 		end)
+	end
 
 	Var.MainFrame.Header.AssistiveClose.Visible = true
-	Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
+	if not assistiveCloseConnected then
+		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
+		assistiveCloseConnected = true
+	end
 
 	--// Grid changes
 	Var.MainFrame.Configuration.Marketplace.MainMarketplace.InstallBox.MainContent.MainContent.MetadataBox.UIGridLayout.CellSize =
 		UDim2.fromOffset(150, 115)
-else
-	Var.Mobile = false
+end
 
-	Var.MainFrame.Parent.MobileOpen:Destroy()
+-- Studio's device emulator can switch TouchEnabled after this script starts.
+-- Once touch is seen, keep this panel in mobile mode for the session.
+UserInputService:GetPropertyChangedSignal("TouchEnabled"):Connect(function()
+	if UserInputService.TouchEnabled then
+		EnableMobileMode()
+	end
+end)
+
+if Var.Mobile then
+	EnableMobileMode()
+else
+	-- Keep this available if Studio enables touch emulation after startup.
+	Var.MainFrame.Parent.MobileOpen.Visible = false
 
 	if essentialSettings["AssistiveClose"] == true then
 		Var.MainFrame.Header.AssistiveClose.Visible = true
 		Var.MainFrame.Header.AssistiveClose.MouseButton1Click:Connect(Frontend.Close)
+		assistiveCloseConnected = true
 	end
+
+	Frontend.SpawnOverlay(Var.MainFrame)
 end
 
 local IsDonating = false

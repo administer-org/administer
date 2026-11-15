@@ -11,13 +11,15 @@ Variables.Config = require(script.Parent.Configuration) --// Config file locatio
 Variables.AdministerRoot = Root --// Root folder of Administer (works from any location: ServerScriptService, Workspace, etc.)
 Variables.RemotesPath = game.ReplicatedStorage --// Where remotes are stored
 Variables.EnableFreeAdmin = false --// Makes every user a superadmin. Not recommended for anything other than debugging.
-Variables.LocalAppsFolder = nil --// Optional folder containing local apps; leave empty to skip local app loading.
+Variables.LocalAppsFolder = game.ReplicatedStorage.Apps --// Optional folder containing local apps; leave empty to skip local app loading.
+--// This checkout's PlayerManagement local package is incomplete (missing UI and bootstrap code).
+--// Let the published AOS version load instead of shadowing it.
+Variables.LocalAppExclusions = { PlayerManagement = true }
 
---Variables.DefaultAppServer           = "http://192.168.0.40:8020" --// Dev instance, ignore this
-Variables.DefaultAppServer = "https://gate.admsoftware.workers.dev" --// Gateway auto-selects the best AOS instance.
+Variables.DefaultAppServer = "https://gateway.admsoftware.org" --// Gateway auto-selects the best AOS instance.
 Variables.AppServerInfoURL = "https://api.admsoftware.org/appservers" --// Base URL; /appservers returns the list of available AOS node URLs
 Variables.VersionCheckURL = "https://api.admsoftware.org/info" --// Version check API URL
-Variables.ProxyURL = "https://proxy.pyxfluff.dev" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.CodingAgent.dev/games//docs.
+Variables.ProxyURL = "" --// Roblox proxy URL following format /RobloxSubdomain/<path>, so https://games.roblox.com//docs would resolve to https://proxy.CodingAgent.dev/games//docs.
 Variables.Locales = script.Parent.Locales --// Locales location
 Variables.AppPollingLimit = 50 --// How many times Administer will poll apps for being loaded before declaring the thread frozen.
 Variables.WaitForBootstrap = false --// Whether or not we will wait for apps to load before sending out panels.

@@ -320,6 +320,53 @@ Utils.NewNotification = function(Admin: Player, Body, Title, Icon, Duration, Not
 	return { true }
 end
 
+local function SearchRobloxUsers(Data)
+	local Query = type(Data) == "table" and Data.Query or nil
+	if type(Query) ~= "string" or Query == "" or #Query > 50 then
+		return {}
+	end
+
+	local Results = {}
+	if type(Var.ProxyURL) == "string" and Var.ProxyURL ~= "" then
+		local Cursor = ""
+		for _ = 1, 5 do
+			local URL = `{Var.ProxyURL}/users/v1/users/search?keyword={Var.Services.HttpService:UrlEncode(Query)}&limit=100&cursor={Var.Services.HttpService:UrlEncode(Cursor)}`
+			local Ok, Response = pcall(function()
+				return Var.Services.HttpService:RequestAsync({ Url = URL, Method = "GET" })
+			end)
+			if not Ok or not Response.Success then
+				break
+			end
+			local ParsedOk, Body = pcall(function()
+				return Var.Services.HttpService:JSONDecode(Response.Body)
+			end)
+			if not ParsedOk or type(Body) ~= "table" or type(Body.data) ~= "table" then
+				break
+			end
+			for _, User in Body.data do
+				if type(User.id) == "number" then
+					table.insert(Results, User.id)
+				end
+			end
+			if type(Body.nextPageCursor) ~= "string" or Body.nextPageCursor == "" then
+				break
+			end
+			Cursor = Body.nextPageCursor
+		end
+	end
+
+	-- An exact username still works when no search proxy is configured or reachable.
+	if #Results == 0 then
+		local Ok, UserID = pcall(function()
+			return Var.Services.Players:GetUserIdFromNameAsync(Query)
+		end)
+		if Ok then
+			table.insert(Results, UserID)
+		end
+	end
+	return Results
+end
+
 function Utils.NewRemote(
 	RemoteType: "RemoteEvent" | "RemoteFunction",
 	RemoteName: string,
@@ -357,7 +404,14 @@ function Utils.NewRemote(
 				Utils.Logging.Print(`<-- [{Player.UserId}] {RemoteName}`)
 			end
 
-			local t, cbk = tick(), Callback(Player, ...)
+			local t = tick()
+			local Message, Data = ...
+			local cbk
+			if AppName == "PlayerManagement" and RemoteName == "ServerComm" and Message == "SearchFromRoblox" then
+				cbk = SearchRobloxUsers(Data)
+			else
+				cbk = Callback(Player, ...)
+			end
 
 			if not table.find(blacklist, RemoteName) then
 				Utils.Logging.Print(
@@ -451,31 +505,21 @@ end
 function Utils.GetGameMedia()
 	local Default = "rbxassetid://75024044611103"
 
-	local MediaData = Var.Services.HttpService:JSONDecode(
-		Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v2/games/{game.GameId}/media`)
-	)["data"]
-	if MediaData == {} then
+	if type(Var.ProxyURL) ~= "string" or not string.match(Var.ProxyURL, "^https?://") then
 		return Default
 	end
 
-	local Tries = 0
-	local Selected = false
-	while not Selected do
-		local Next = MediaData[Tries]
+	local Success, MediaData = pcall(function()
+		local Response = Var.Services.HttpService:GetAsync(`{Var.ProxyURL}/games/v2/games/{game.GameId}/media`)
+		return Var.Services.HttpService:JSONDecode(Response)["data"]
+	end)
+	if not Success or type(MediaData) ~= "table" then
+		return Default
+	end
 
-		if Next == nil or Next.videoHash ~= nil then
-			if Tries >= 50 then
-				return Default
-			end
-
-			if Tries ~= #MediaData then
-				Tries += 1
-				continue
-			else
-				return Default --// exhausted all of our images, none good
-			end
-		else
-			return "rbxassetid://" .. MediaData[Tries]["imageId"]
+	for _, Media in MediaData do
+		if type(Media) == "table" and Media.videoHash == nil and type(Media.imageId) == "number" then
+			return `rbxassetid://{Media.imageId}`
 		end
 	end
 

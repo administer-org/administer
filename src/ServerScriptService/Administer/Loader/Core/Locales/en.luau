@@ -190,6 +190,7 @@ return {
 	["apps.search.NoResults"] = "Sorry, but we couldn't find any results for that",
 	["apps.search.FoundMatch"] = "We think you meant %s (%s% confidence), results for it may be included.",
 	["apps.load.Fail"] = "Error loading apps",
+	["apps.notAvailable"] = "This app is no longer available from this app server.",
 	["apps.load.Ratelimit"] = "Rate limit exceeded, please slow down",
 	["apps.score.Detail"] = "Why is this here?",
 	["apps.sidebar.Featured"] = "Featured",

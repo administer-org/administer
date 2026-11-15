@@ -385,6 +385,8 @@ NewRemote("GetContributors", false, false, function()
 end)
 
 --// Apps
+NewRemote("GetAppCommands", true, true, AppsModule.GetCommands)
+NewRemote("ExecuteAppCommand", true, true, AppsModule.ExecuteCommand)
 NewRemote("GetAppList", true, false, function(QueryType)
 	return AppsModule.ServerAPI.GetList(nil, QueryType)
 end)

@@ -39,6 +39,15 @@ function Frontend.ToggleFullscreen(ForceClose: boolean, TargetFrame: Frame | Can
 		Utilities.Logging.Error("A TargetFrame is required to resize")
 	end
 
+	-- Mobile panels are always full screen and do not expose resize controls.
+	if Var.Mobile then
+		local MobileLayout = require(Modules.MobileLayout)
+		MobileLayout.Initialize()
+		MobileLayout.FillScreen()
+
+		return
+	end
+
 	local Speed = Var.AnimationSpeed * 0.75
 	local Header = Var.MainFrame:FindFirstChild("Header")
 
@@ -98,8 +107,6 @@ end
 
 function Frontend.Open(WaitForCompletion: boolean): ()
 	local AS = Var.AnimationSpeed
-	local X = 0.85
-	local Y = 0.7
 	Var.MainFrame.GroupTransparency = 1
 
 	Var.IsPanelAnimating = true
@@ -127,16 +134,8 @@ function Frontend.Open(WaitForCompletion: boolean): ()
 		})
 	else
 		Var.MainFrame.Position = UDim2.fromScale(1.5, 0.5)
-
-		Var.Services.TweenService
-			:Create(
-				Var.MainFrame,
-				TweenInfo.new(AS, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, 0, false, AS * 0.2),
-				{
-					Size = UDim2.fromScale(X, Y),
-				}
-			)
-			:Play()
+		local Scale = Var.MainFrame:FindFirstChild("MobileUIScale")
+		Var.MainFrame.Size = UDim2.fromScale(1 / (Scale and Scale.Scale or 1), 1 / (Scale and Scale.Scale or 1))
 
 		PopupTween = Var.Services.TweenService:Create(
 			Var.MainFrame,
@@ -192,7 +191,6 @@ function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForComple
 	else
 		Var.Services.TweenService
 			:Create(Frame, TweenInfo.new(Duration, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-				Size = UDim2.fromScale(Var.MainFrame.Size.X.Scale / 1.5, Var.MainFrame.Size.Y.Scale / 1.5),
 				Position = UDim2.fromScale(1.5, 0.5),
 				GroupTransparency = 1,
 			})
@@ -203,15 +201,21 @@ function Frontend.Close(Instant: boolean? | CanvasGroup? | Frame?, WaitForComple
 		Frame.Visible = false
 
 		if Frame == Var.MainFrame then
+			if Var.Mobile then
+				require(Modules.MobileLayout).FillScreen()
+			end
+
 			Var.IsPanelAnimating = false
 			Var.MainFrame.Visible = false
 			Var.IsOpen = false
 		end
 	end)
 
-	task.defer(function()
-		Frontend.ToggleFullscreen(true, Var.MainFrame)
-	end)
+	if not Var.Mobile then
+		task.defer(function()
+			Frontend.ToggleFullscreen(true, Var.MainFrame)
+		end)
+	end
 
 	if WaitForCompletion then
 		task.wait(Duration)
@@ -224,8 +228,58 @@ local IsQueued = false
 local CurrentlyActive
 local Ready = true
 local Card
+local MobileMenuOpen = false
+local MobileMenuClosing = false
+local MobilePageVisibility = {}
+local MobilePreviousPage
+local MOBILE_SLIDE_TIME = 0.24
+
+local function SlideMobilePage(Page)
+	local Destination = Page.Position
+	Page.Position = UDim2.new(Destination.X.Scale + 1, Destination.X.Offset, Destination.Y.Scale, Destination.Y.Offset)
+	Page.Visible = true
+	Var.Services.TweenService
+		:Create(Page, TweenInfo.new(MOBILE_SLIDE_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+			Position = Destination,
+		})
+		:Play()
+end
 
 function Frontend.Drawer.Open(): ()
+	if Var.Mobile then
+		if MobileMenuOpen then
+			if not MobileMenuClosing then
+				Frontend.Drawer.Close()
+			end
+			return
+		end
+		if Var.PopupOpen then
+			return
+		end
+
+		local Apps = Var.MainFrame.AppDrawer
+		require(Modules.MobileLayout).StyleMenu()
+		MobileMenuOpen = true
+		MobilePreviousPage = Var.ActivePage
+		table.clear(MobilePageVisibility)
+		for _, Child in Var.MainFrame:GetChildren() do
+			if Child:IsA("GuiObject") and Child ~= Var.MainFrame.Header and Child ~= Apps then
+				MobilePageVisibility[Child] = Child.Visible
+				Child.Visible = false
+			end
+		end
+		Apps.Position = UDim2.fromScale(-1, 0)
+		Apps.AppHolder.Position = UDim2.fromScale(0, 0)
+		Apps.AppHolder.GroupTransparency = 0
+		Apps.Visible = true
+		Var.Services.TweenService
+			:Create(Apps, TweenInfo.new(MOBILE_SLIDE_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Position = UDim2.fromScale(0, 0),
+			})
+			:Play()
+		return
+	end
+
 	if not Var.DoHeaderEffects then
 		return
 	end --// Stops clicking the button multiple times which results in broken UI
@@ -315,9 +369,12 @@ function Frontend.Drawer.Open(): ()
 
 	for _, Child in Var.MainFrame:GetChildren() do
 		if
-			(Child:IsA("Frame") or Child:IsA("CanvasGroup")) and Child.Name == Var.ActivePage.Name
-			or Child.Name == "Header"
-			or Child:FindFirstChild(Var.ActivePage.Name)
+			(Child:IsA("Frame") or Child:IsA("CanvasGroup"))
+			and (
+				Child.Name == Var.ActivePage.Name
+				or (Child.Name == "Header" and not Var.Mobile)
+				or Child:FindFirstChild(Var.ActivePage.Name)
+			)
 		then
 			Child.Parent = Container
 
@@ -392,6 +449,36 @@ function Frontend.Drawer.Open(): ()
 end
 
 function Frontend.Drawer.Close(): ()
+	if Var.Mobile then
+		if not MobileMenuOpen or MobileMenuClosing then
+			return
+		end
+		MobileMenuClosing = true
+		local Apps = Var.MainFrame.AppDrawer
+		local SlideOut = Var.Services.TweenService:Create(
+			Apps,
+			TweenInfo.new(MOBILE_SLIDE_TIME, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
+			{ Position = UDim2.fromScale(-1, 0) }
+		)
+		SlideOut:Play()
+		SlideOut.Completed:Wait()
+		Apps.Visible = false
+		for Child, WasVisible in MobilePageVisibility do
+			if Child.Parent then
+				Child.Visible = WasVisible
+			end
+		end
+		if MobilePreviousPage and MobilePreviousPage ~= Var.ActivePage then
+			MobilePreviousPage.Visible = false
+		end
+		SlideMobilePage(Var.ActivePage)
+		table.clear(MobilePageVisibility)
+		MobilePreviousPage = nil
+		MobileMenuOpen = false
+		MobileMenuClosing = false
+		return
+	end
+
 	local Apps = Var.MainFrame.AppDrawer
 	local Container = Apps.AppDrawerCover.CanvasGroup
 	local TimeToComplete = Var.AnimationSpeed
@@ -881,6 +968,22 @@ function Frontend.SwapApps(AppConfig: Types.ButtonConfig, Clicked: number)
 		return
 	end
 
+	if Var.Mobile then
+		Var.ActivePage.Visible = false
+		Var.ActivePage = NewFrame
+		if MobileMenuOpen then
+			NewFrame.Visible = false
+		else
+			SlideMobilePage(NewFrame)
+		end
+		local Mark = Var.MainFrame.Header.Mark
+		Mark.HeaderTitle.Text = Clicked ~= 0 and AppConfig.AppName or "Administer"
+		Mark.HeaderSubapp.Text = Clicked == 0 and AppConfig.AppName or AppConfig.SubIcons[Clicked].Name
+		Mark.AppLogo.AppIcon.Image = AppConfig.Icon
+		Mark.Logo.Image = Clicked == 0 and Utilities.Icon("administer") or AppConfig.SubIcons[Clicked].Icon
+		return
+	end
+
 	local OGFramePos, OGFrameAP, NewFramePos, NewFrameAP =
 		Var.ActivePage.Position, Var.ActivePage.AnchorPoint, NewFrame.Position, NewFrame.AnchorPoint
 	local TInfo = TweenInfo.new(Var.AnimationSpeed * 0.75, Enum.EasingStyle.Quart)
@@ -931,7 +1034,18 @@ local MinX, MinY = -350, -300
 local MaxX, MaxY = workspace.Camera.ViewportSize.X, workspace.Camera.ViewportSize.Y
 local OverlayConnections: { [string]: RBXScriptConnection } = {}
 
+function Frontend.HideOverlay(Frame: Frame | CanvasGroup)
+	local Overlay = Var.AdministerRoot.AdmOverlays:FindFirstChild(`{Frame.Name}_Overlay`)
+	if Overlay then
+		Overlay.Visible = false
+	end
+end
+
 function Frontend.SpawnOverlay(Frame: Frame | CanvasGroup)
+	if Var.Mobile then
+		return
+	end
+
 	local Speed = Var.AnimationSpeed
 	local ButtonsOpen = false
 	local MovementConnection: RBXScriptConnection
@@ -961,7 +1075,7 @@ function Frontend.SpawnOverlay(Frame: Frame | CanvasGroup)
 	--// ?
 	Frame:GetPropertyChangedSignal("GroupTransparency"):Connect(function()
 		OverlayClone.Grabber.BackgroundTransparency = Frame.GroupTransparency
-		OverlayClone.Visible = OverlayClone.Grabber.BackgroundTransparency ~= 1
+		OverlayClone.Visible = not Var.Mobile and OverlayClone.Grabber.BackgroundTransparency ~= 1
 	end)
 
 	if Frame:FindFirstChild("UISizeConstraint") then
